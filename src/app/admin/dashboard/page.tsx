@@ -13,7 +13,7 @@ import {
 } from "recharts";
 import {
   AdminPage, StatCard, Card, Table, StatusBadge, Btn,
-  fmt₹, fmtDate, fmtDateTime, A, Spinner, EmptyState,
+  fmtRupee, fmtDate, fmtDateTime, A, Spinner, EmptyState,
 } from "@/components/admin/AdminUI";
 
 // ─── Order status colour map (for donut chart) ────────────────────────────────
@@ -91,7 +91,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
           title="Today's Revenue"
-          value={kpis ? fmt₹(kpis.revenueToday) : "—"}
+          value={kpis ? fmtRupee(kpis.revenueToday) : "—"}
           sub="Online payments + COD"
           loading={loading}
           accent="#C8960C"
@@ -99,10 +99,10 @@ export default function DashboardPage() {
         />
         <StatCard
           title="Month Revenue"
-          value={kpis ? fmt₹(kpis.revenueMonth) : "—"}
+          value={kpis ? fmtRupee(kpis.revenueMonth) : "—"}
           trend={kpis ? `${kpis.revenueGrowthPercent > 0 ? "+" : ""}${kpis.revenueGrowthPercent}% vs last month` : undefined}
           trendPositive={kpis ? kpis.revenueGrowthPercent >= 0 : undefined}
-          sub={kpis ? `Last month: ${fmt₹(kpis.revenueLastMonth)}` : ""}
+          sub={kpis ? `Last month: ${fmtRupee(kpis.revenueLastMonth)}` : ""}
           loading={loading}
           accent="#C8960C"
           icon={<TrendIcon/>}
@@ -267,7 +267,7 @@ export default function DashboardPage() {
                     <p style={{ fontSize:10, color:A.grey }}>{o.customer_mobile}</p>
                   </div>
                 ),
-                amount:   <span style={{ fontWeight:700, fontSize:13 }}>{fmt₹(o.total)}</span>,
+                amount:   <span style={{ fontWeight:700, fontSize:13 }}>{fmtRupee(o.total)}</span>,
                 method:   <span style={{ fontSize:11, color:A.grey, textTransform:"capitalize" }}>{o.payment_method?.replace(/_/g," ")}</span>,
                 status:   <StatusBadge status={o.status}/>,
                 date:     <span style={{ fontSize:11, color:A.grey }}>{fmtDate(o.created_at)}</span>,
@@ -455,7 +455,7 @@ function TopProductsChart({ products }: { products: { name: string; revenue: num
                   style={{ width:`${pct}%`, background: PRODUCT_COLOURS[i % PRODUCT_COLOURS.length] }}
                 />
               </div>
-              <span style={{ color:A.grey, fontSize:10, minWidth:45, textAlign:"right" }}>{fmt₹(p.revenue)}</span>
+              <span style={{ color:A.grey, fontSize:10, minWidth:45, textAlign:"right" }}>{fmtRupee(p.revenue)}</span>
             </div>
           </div>
         );

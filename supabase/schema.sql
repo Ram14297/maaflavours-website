@@ -540,7 +540,8 @@ CREATE TABLE IF NOT EXISTS expenses (
 );
 CREATE INDEX IF NOT EXISTS idx_expenses_date     ON expenses (expense_date DESC);
 CREATE INDEX IF NOT EXISTS idx_expenses_category ON expenses (category);
-CREATE INDEX IF NOT EXISTS idx_expenses_month    ON expenses (DATE_TRUNC('month', expense_date));
+-- idx_expenses_month removed: DATE_TRUNC is STABLE not IMMUTABLE, cannot be used in index expressions.
+-- Monthly grouping in analytics queries works without this index.
 
 
 -- ─── 4.18  settings ──────────────────────────────────────────────────────
@@ -907,9 +908,9 @@ CREATE POLICY "Public submit contact form"
 -- ─── 8.1  Categories ─────────────────────────────────────────────────────
 
 INSERT INTO categories (id, name, slug, description, sort_order) VALUES
-  ('c1000000-0000-0000-0000-000000000001', 'Spicy Collection',  'spicy',      'Bold, fiery pickles. Traditional Andhra heat.',                   1),
-  ('c1000000-0000-0000-0000-000000000002', 'Sour & Tangy',      'sour-tangy', 'Bright, tangy pickles with South Indian sourness.',               2),
-  ('c1000000-0000-0000-0000-000000000003', 'Seasonal Specials', 'seasonal',   'Made when ingredients peak. Limited batches, unforgettable taste.', 3)
+  ('b1000000-0000-0000-0000-000000000001', 'Spicy Collection',  'spicy',      'Bold, fiery pickles. Traditional Andhra heat.',                   1),
+  ('b1000000-0000-0000-0000-000000000002', 'Sour & Tangy',      'sour-tangy', 'Bright, tangy pickles with South Indian sourness.',               2),
+  ('b1000000-0000-0000-0000-000000000003', 'Seasonal Specials', 'seasonal',   'Made when ingredients peak. Limited batches, unforgettable taste.', 3)
 ON CONFLICT (slug) DO NOTHING;
 
 
@@ -918,52 +919,52 @@ ON CONFLICT (slug) DO NOTHING;
 INSERT INTO products (id, slug, name, subtitle, tag, spice_level, short_description, description, ingredients, shelf_life_days, is_featured, category_id) VALUES
 
   -- Product 1: Drumstick Pickle
-  ('p1000000-0000-0000-0000-000000000001', 'drumstick-pickle', 'Drumstick Pickle', 'Murungakkai Urugai',
+  ('a1000000-0000-0000-0000-000000000001', 'drumstick-pickle', 'Drumstick Pickle', 'Murungakkai Urugai',
    'Authentic Andhra Taste', 'medium',
    'Tender drumsticks slow-pickled in cold-pressed sesame oil with traditional Andhra spices. The one that started it all.',
    '<p>Our Drumstick Pickle is Maa Flavours'' most beloved recipe — handed down through three generations of our family kitchen in Ongole. We select only firm, fresh drumsticks, cut them at peak season, and slow-pickle them in cold-pressed sesame oil with a proprietary blend of freshly ground red chillies, mustard, fenugreek, and asafoetida.</p>',
    'Drumsticks, Red Chilli Powder, Turmeric, Rock Salt, Mustard Seeds, Fenugreek Seeds, Asafoetida, Lemon Juice, Cold-Pressed Sesame Oil, Curry Leaves',
-   90, TRUE, 'c1000000-0000-0000-0000-000000000001'),
+   90, TRUE, 'b1000000-0000-0000-0000-000000000001'),
 
   -- Product 2: Amla Pickle
-  ('p1000000-0000-0000-0000-000000000002', 'amla-pickle', 'Amla Pickle', 'Usirikaya Urugai',
+  ('a1000000-0000-0000-0000-000000000002', 'amla-pickle', 'Amla Pickle', 'Usirikaya Urugai',
    'Rich in Vitamin C', 'medium',
    'Plump Indian gooseberries pickled with mustard tempering in sesame oil. Sour, spicy, and loaded with Vitamin C.',
    '<p>Amla (Indian Gooseberry) is one of Ayurveda''s most celebrated ingredients. Our Amla Pickle honours this tradition using whole, fresh usirikaya, pickled with a mustard-curry leaf tempering in cold-pressed sesame oil. Each piece retains its firm texture and remarkable Vitamin C content.</p>',
    'Amla (Indian Gooseberry), Red Chilli Powder, Turmeric, Rock Salt, Mustard Seeds, Curry Leaves, Cold-Pressed Sesame Oil',
-   120, TRUE, 'c1000000-0000-0000-0000-000000000002'),
+   120, TRUE, 'b1000000-0000-0000-0000-000000000002'),
 
   -- Product 3: Pulihora Gongura
-  ('p1000000-0000-0000-0000-000000000003', 'pulihora-gongura', 'Pulihora Gongura', 'Gongura Pacchadi',
+  ('a1000000-0000-0000-0000-000000000003', 'pulihora-gongura', 'Pulihora Gongura', 'Gongura Pacchadi',
    'Rare & Traditional', 'spicy',
    'The iconic red-stem sorrel leaf pickle — Andhra''s soul food. Tangy, fiery, utterly irresistible.',
    '<p>If there is one thing that defines Andhra food culture, it is Gongura. The tart, vibrant red-stemmed sorrel leaf is grown throughout Andhra Pradesh and has been part of the cuisine for centuries. No Andhra wedding feast is complete without it.</p>',
    'Gongura Leaves (Red Stem), Red Chilli, Garlic, Mustard Seeds, Cumin, Fenugreek, Asafoetida, Rock Salt, Cold-Pressed Sesame Oil, Curry Leaves',
-   60, TRUE, 'c1000000-0000-0000-0000-000000000001'),
+   60, TRUE, 'b1000000-0000-0000-0000-000000000001'),
 
   -- Product 4: Lemon Pickle
-  ('p1000000-0000-0000-0000-000000000004', 'lemon-pickle', 'Lemon Pickle', 'Nimmakaya Urugai',
+  ('a1000000-0000-0000-0000-000000000004', 'lemon-pickle', 'Lemon Pickle', 'Nimmakaya Urugai',
    'Classic Andhra Staple', 'medium',
    'The everyday classic. Small Indian lemons pickled until perfectly soft and intensely sour with a spicy kick.',
    '<p>There is a reason Lemon Pickle has been on every Andhra dining table for generations — it is the perfect balance of sour, salty, and spicy. We use small Indian lemons, sun-dried to intensify their natural citric acid before pickling in cold-pressed sesame oil.</p>',
    'Indian Lemons, Red Chilli Powder, Turmeric, Rock Salt, Mustard Seeds, Fenugreek Seeds, Asafoetida, Cold-Pressed Sesame Oil',
-   180, FALSE, 'c1000000-0000-0000-0000-000000000002'),
+   180, FALSE, 'b1000000-0000-0000-0000-000000000002'),
 
   -- Product 5: Maamidi Allam
-  ('p1000000-0000-0000-0000-000000000005', 'maamidi-allam', 'Maamidi Allam', 'Mango Ginger Pickle',
+  ('a1000000-0000-0000-0000-000000000005', 'maamidi-allam', 'Maamidi Allam', 'Mango Ginger Pickle',
    'Best with Rice & Dosa', 'medium',
    'Raw mango meets fresh ginger in this uniquely layered Andhra pickle. Sweet, sour, spicy, and warming all at once.',
    '<p>Maamidi Allam is the pickle that surprises everyone who tries it. Raw mango brings tangy sourness while fresh ginger adds warmth and subtle sweetness. The result is a four-flavour experience — sour, sweet, spicy, warm — all in a single jar. Best made in April–June at peak mango season.</p>',
    'Raw Mango, Fresh Ginger, Red Chilli Powder, Turmeric, Rock Salt, Mustard Seeds, Jaggery, Fenugreek, Cold-Pressed Sesame Oil, Curry Leaves',
-   90, TRUE, 'c1000000-0000-0000-0000-000000000002'),
+   90, TRUE, 'b1000000-0000-0000-0000-000000000002'),
 
   -- Product 6: Red Chilli Pickle
-  ('p1000000-0000-0000-0000-000000000006', 'red-chilli-pickle', 'Red Chilli Pickle', 'Mirapakaya Urugai',
+  ('a1000000-0000-0000-0000-000000000006', 'red-chilli-pickle', 'Red Chilli Pickle', 'Mirapakaya Urugai',
    'Best with Rice', 'spicy',
    'Whole Guntur red chillies pickled in sesame oil. Pure heat, pure Andhra. For those who can take it.',
    '<p>Guntur, Andhra Pradesh, produces some of India''s most famous red chillies. Our Red Chilli Pickle celebrates them in their most unapologetic form — whole, plump Guntur chillies slit, marinated, and slow-pickled in cold-pressed sesame oil until meltingly tender.</p>',
    'Guntur Red Chillies, Turmeric, Rock Salt, Mustard Seeds, Fenugreek Seeds, Asafoetida, Garlic, Cold-Pressed Sesame Oil',
-   120, FALSE, 'c1000000-0000-0000-0000-000000000001')
+   120, FALSE, 'b1000000-0000-0000-0000-000000000001')
 
 ON CONFLICT (slug) DO NOTHING;
 
@@ -973,23 +974,23 @@ ON CONFLICT (slug) DO NOTHING;
 
 INSERT INTO product_variants (product_id, weight_grams, label, sku, price, stock_quantity, low_stock_threshold) VALUES
   -- Drumstick Pickle: ₹180 / ₹320
-  ('p1000000-0000-0000-0000-000000000001', 250, '250g', 'MF-DRUM-250',   18000, 50, 10),
-  ('p1000000-0000-0000-0000-000000000001', 500, '500g', 'MF-DRUM-500',   32000, 30, 8),
+  ('a1000000-0000-0000-0000-000000000001', 250, '250g', 'MF-DRUM-250',   18000, 50, 10),
+  ('a1000000-0000-0000-0000-000000000001', 500, '500g', 'MF-DRUM-500',   32000, 30, 8),
   -- Amla Pickle: ₹160 / ₹290
-  ('p1000000-0000-0000-0000-000000000002', 250, '250g', 'MF-AMLA-250',   16000, 45, 10),
-  ('p1000000-0000-0000-0000-000000000002', 500, '500g', 'MF-AMLA-500',   29000, 25, 8),
+  ('a1000000-0000-0000-0000-000000000002', 250, '250g', 'MF-AMLA-250',   16000, 45, 10),
+  ('a1000000-0000-0000-0000-000000000002', 500, '500g', 'MF-AMLA-500',   29000, 25, 8),
   -- Pulihora Gongura: ₹200 / ₹370
-  ('p1000000-0000-0000-0000-000000000003', 250, '250g', 'MF-GONG-250',   20000, 35, 10),
-  ('p1000000-0000-0000-0000-000000000003', 500, '500g', 'MF-GONG-500',   37000, 20, 8),
+  ('a1000000-0000-0000-0000-000000000003', 250, '250g', 'MF-GONG-250',   20000, 35, 10),
+  ('a1000000-0000-0000-0000-000000000003', 500, '500g', 'MF-GONG-500',   37000, 20, 8),
   -- Lemon Pickle: ₹150 / ₹270
-  ('p1000000-0000-0000-0000-000000000004', 250, '250g', 'MF-LEMON-250',  15000, 60, 12),
-  ('p1000000-0000-0000-0000-000000000004', 500, '500g', 'MF-LEMON-500',  27000, 40, 10),
+  ('a1000000-0000-0000-0000-000000000004', 250, '250g', 'MF-LEMON-250',  15000, 60, 12),
+  ('a1000000-0000-0000-0000-000000000004', 500, '500g', 'MF-LEMON-500',  27000, 40, 10),
   -- Maamidi Allam: ₹190 / ₹350
-  ('p1000000-0000-0000-0000-000000000005', 250, '250g', 'MF-MAAM-250',   19000, 40, 10),
-  ('p1000000-0000-0000-0000-000000000005', 500, '500g', 'MF-MAAM-500',   35000, 22, 8),
+  ('a1000000-0000-0000-0000-000000000005', 250, '250g', 'MF-MAAM-250',   19000, 40, 10),
+  ('a1000000-0000-0000-0000-000000000005', 500, '500g', 'MF-MAAM-500',   35000, 22, 8),
   -- Red Chilli Pickle: ₹170 / ₹310
-  ('p1000000-0000-0000-0000-000000000006', 250, '250g', 'MF-RCHILI-250', 17000, 35, 10),
-  ('p1000000-0000-0000-0000-000000000006', 500, '500g', 'MF-RCHILI-500', 31000, 20, 8)
+  ('a1000000-0000-0000-0000-000000000006', 250, '250g', 'MF-RCHILI-250', 17000, 35, 10),
+  ('a1000000-0000-0000-0000-000000000006', 500, '500g', 'MF-RCHILI-500', 31000, 20, 8)
 ON CONFLICT (sku) DO NOTHING;
 
 

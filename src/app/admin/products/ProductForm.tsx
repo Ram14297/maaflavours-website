@@ -16,7 +16,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   AdminPage, Card, Btn, Input, Select, Textarea,
-  Alert, Modal, fmt₹, A, Spinner,
+  Alert, Modal, fmtRupee, A, Spinner,
 } from "@/components/admin/AdminUI";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -507,7 +507,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
                     variant={v}
                     index={idx}
                     productName={name}
-                    onChange={(field, value) => updateVariant(idx, field, value)}
+                    onChange={(field, value) => updateVariant(idx, field as keyof Variant, value)}
                   />
                 ))}
               </div>

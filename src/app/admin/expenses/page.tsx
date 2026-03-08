@@ -20,7 +20,7 @@ import {
 } from "recharts";
 import {
   AdminPage, Card, Btn, Input, Select, Modal,
-  Alert, Textarea, fmt₹, fmtDate, A, Spinner,
+  Alert, Textarea, fmtRupee, fmtDate, A, Spinner,
 } from "@/components/admin/AdminUI";
 
 // ─── Category config ─────────────────────────────────────────────────────────
@@ -329,9 +329,9 @@ export default function ExpensesPage() {
       {/* ── P&L KPI Cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label:"Revenue",      value:fmt₹(s.totalRevenue  || 0), colour:A.gold,      icon:"💰", border:A.gold },
-          { label:"Expenses",     value:fmt₹(s.totalExpenses || 0), colour:"#C0272D",   icon:"📤", border:"#C0272D" },
-          { label:"Gross Profit", value:fmt₹(s.grossProfit   || 0), colour:profitColour, icon: (s.grossProfit || 0) >= 0 ? "📈" : "📉", border:profitColour },
+          { label:"Revenue",      value:fmtRupee(s.totalRevenue  || 0), colour:A.gold,      icon:"💰", border:A.gold },
+          { label:"Expenses",     value:fmtRupee(s.totalExpenses || 0), colour:"#C0272D",   icon:"📤", border:"#C0272D" },
+          { label:"Gross Profit", value:fmtRupee(s.grossProfit   || 0), colour:profitColour, icon: (s.grossProfit || 0) >= 0 ? "📈" : "📉", border:profitColour },
           { label:"Margin",       value:`${s.profitMargin    || 0}%`, colour:marginColour,icon:"📊", border:marginColour },
         ].map(k => (
           <div key={k.label}
@@ -419,7 +419,7 @@ export default function ExpensesPage() {
                       </span>
                       <div className="text-right">
                         <span style={{ fontSize:12, fontWeight:700, color: total > 0 ? cat.colour : A.grey }}>
-                          {fmt₹(total)}
+                          {fmtRupee(total)}
                         </span>
                         {total > 0 && (
                           <span style={{ fontSize:10, color:A.grey, marginLeft:4 }}>{share}%</span>
@@ -439,7 +439,7 @@ export default function ExpensesPage() {
               {/* Total row */}
               <div className="pt-3 mt-1 border-t flex justify-between items-center" style={{ borderColor:A.border }}>
                 <span style={{ fontWeight:700, fontSize:13, color:A.brown }}>Total</span>
-                <span style={{ fontWeight:700, fontSize:15, color:"#C0272D" }}>{fmt₹(s.totalExpenses || 0)}</span>
+                <span style={{ fontWeight:700, fontSize:15, color:"#C0272D" }}>{fmtRupee(s.totalExpenses || 0)}</span>
               </div>
 
               {/* Highest category callout */}
@@ -519,7 +519,7 @@ export default function ExpensesPage() {
                       {/* Amount + actions */}
                       <div className="flex items-center gap-3 shrink-0">
                         <p style={{ fontWeight:700, fontSize:15, color:"#C0272D" }}>
-                          {fmt₹(e.amount)}
+                          {fmtRupee(e.amount)}
                         </p>
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
@@ -551,7 +551,7 @@ export default function ExpensesPage() {
               <div className="flex items-center justify-between px-5 py-3 border-t"
                 style={{ borderColor:A.border, background:A.cream }}>
                 <span style={{ fontWeight:600, fontSize:13, color:A.brown }}>Total Expenses</span>
-                <span style={{ fontWeight:700, fontSize:16, color:"#C0272D" }}>{fmt₹(s.totalExpenses || 0)}</span>
+                <span style={{ fontWeight:700, fontSize:16, color:"#C0272D" }}>{fmtRupee(s.totalExpenses || 0)}</span>
               </div>
             )}
           </div>
@@ -565,8 +565,8 @@ export default function ExpensesPage() {
             {/* Left: calculation breakdown */}
             <div className="space-y-3">
               {[
-                { label:"Gross Revenue",     value: fmt₹(s.totalRevenue  || 0), colour:A.gold,      symbol:"" },
-                { label:"Total Expenses",    value: fmt₹(s.totalExpenses || 0), colour:"#C0272D",   symbol:"−" },
+                { label:"Gross Revenue",     value: fmtRupee(s.totalRevenue  || 0), colour:A.gold,      symbol:"" },
+                { label:"Total Expenses",    value: fmtRupee(s.totalExpenses || 0), colour:"#C0272D",   symbol:"−" },
               ].map(row => (
                 <div key={row.label} className="flex items-center justify-between py-2.5 border-b" style={{ borderColor:A.border }}>
                   <div className="flex items-center gap-2">
@@ -592,7 +592,7 @@ export default function ExpensesPage() {
                 </div>
                 <div className="text-right">
                   <p style={{ fontFamily:"'Playfair Display',serif", fontSize:24, fontWeight:700, color:profitColour }}>
-                    {fmt₹(s.grossProfit || 0)}
+                    {fmtRupee(s.grossProfit || 0)}
                   </p>
                   <p style={{ fontSize:12, fontWeight:600, color:profitColour }}>
                     {s.profitMargin || 0}% margin
@@ -733,7 +733,7 @@ export default function ExpensesPage() {
                 <p style={{ fontSize:11, color:A.grey }}>{CAT_MAP[form.category]?.label} · {form.expenseDate}</p>
               </div>
               <p style={{ fontWeight:700, fontSize:16, color:"#C0272D" }}>
-                {parseFloat(form.amount) > 0 ? fmt₹(Math.round(parseFloat(form.amount) * 100)) : "—"}
+                {parseFloat(form.amount) > 0 ? fmtRupee(Math.round(parseFloat(form.amount) * 100)) : "—"}
               </p>
             </div>
           )}
@@ -757,7 +757,7 @@ export default function ExpensesPage() {
               <div>
                 <p style={{ fontWeight:700, color:A.brown }}>{deleteTarget.description}</p>
                 <p style={{ fontSize:12, color:A.grey }}>
-                  {fmt₹(deleteTarget.amount)} · {fmtDate(deleteTarget.expense_date)}
+                  {fmtRupee(deleteTarget.amount)} · {fmtDate(deleteTarget.expense_date)}
                 </p>
               </div>
             </div>

@@ -14,7 +14,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   AdminPage, Card, Table, StatusBadge, Btn, Input, Select,
-  Pagination, Alert, fmt₹, fmtDateTime, fmtDate, A,
+  Pagination, Alert, fmtRupee, fmtDateTime, fmtDate, A,
 } from "@/components/admin/AdminUI";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -235,7 +235,7 @@ export default function OrdersPage() {
             Showing <strong style={{ color:A.brown }}>{orders.length}</strong> of <strong style={{ color:A.brown }}>{total}</strong> orders
           </span>
           <span style={{ color:A.grey }}>
-            This page revenue: <strong style={{ color:A.gold }}>{fmt₹(visibleRevenue)}</strong>
+            This page revenue: <strong style={{ color:A.gold }}>{fmtRupee(visibleRevenue)}</strong>
           </span>
           {status && (
             <span style={{ color:A.grey }}>
@@ -292,7 +292,7 @@ export default function OrdersPage() {
               ),
               amount: (
                 <div className="text-right">
-                  <p style={{ fontWeight:700, fontSize:14 }}>{fmt₹(o.total)}</p>
+                  <p style={{ fontWeight:700, fontSize:14 }}>{fmtRupee(o.total)}</p>
                   {o.coupon_code && (
                     <p style={{ fontSize:9, color:A.grey }}>🏷 {o.coupon_code}</p>
                   )}

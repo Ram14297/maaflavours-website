@@ -80,7 +80,7 @@ export function buildProductJsonLd(slug: string) {
       "@type": "Offer",
       priceCurrency: "INR",
       price: (variant.price / 100).toFixed(2),
-      availability: variant.stock_quantity > 0
+      availability: ((variant as { stock_quantity?: number }).stock_quantity ?? 1) > 0
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
       seller: {

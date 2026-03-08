@@ -22,7 +22,7 @@ import {
   Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 import {
-  AdminPage, Card, StatCard, Btn, fmt₹, A, Spinner,
+  AdminPage, Card, StatCard, Btn, fmtRupee, A, Spinner,
 } from "@/components/admin/AdminUI";
 
 // ─── Brand colours for charts ─────────────────────────────────────────────────
@@ -101,7 +101,7 @@ export default function AnalyticsPage() {
     .map(([k, v]) => ({
       name:  k === "razorpay_upi" ? "UPI" : k === "cod" ? "COD" : k === "razorpay_card" ? "Card" : "NetBanking",
       value: v as number,
-      fill:  PAYMENT_COLS[k] || CHART.grey,
+      fill:  PAYMENT_COLS[k] || CHART.amber,
     }));
 
   // ── Product performance shortened names ───────────────────────────────────
@@ -155,9 +155,9 @@ export default function AnalyticsPage() {
       {/* ── KPI Summary Row ── */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { icon:"₹",  label:"Revenue",       value: s.totalRevenue    ? fmt₹(s.totalRevenue)   : "—", colour:CHART.gold    },
+          { icon:"₹",  label:"Revenue",       value: s.totalRevenue    ? fmtRupee(s.totalRevenue)   : "—", colour:CHART.gold    },
           { icon:"🛒", label:"Orders",         value: s.totalOrders     ? String(s.totalOrders)  : "—", colour:CHART.brown   },
-          { icon:"📊", label:"Avg Order",      value: s.avgOrderValue   ? fmt₹(s.avgOrderValue)  : "—", colour:CHART.amber   },
+          { icon:"📊", label:"Avg Order",      value: s.avgOrderValue   ? fmtRupee(s.avgOrderValue)  : "—", colour:CHART.amber   },
           { icon:"👤", label:"New Customers",  value: s.newCustomers    ? String(s.newCustomers)  : "—", colour:CHART.green   },
           { icon:"❌", label:"Cancelled",      value: s.cancelledOrders ? String(s.cancelledOrders):"0", colour:CHART.crimson },
           { icon:"📉", label:"Cancel Rate",    value: s.cancellationRate !== undefined ? `${s.cancellationRate}%` : "—", colour: s.cancellationRate > 10 ? CHART.crimson : CHART.green },
@@ -600,7 +600,7 @@ export default function AnalyticsPage() {
             <InsightTile
               icon="💰"
               label="Revenue per Customer"
-              value={s.totalCustomers > 0 ? fmt₹(Math.round(s.totalRevenue / s.totalCustomers)) : "—"}
+              value={s.totalCustomers > 0 ? fmtRupee(Math.round(s.totalRevenue / s.totalCustomers)) : "—"}
               sub="avg lifetime value"
               colour={CHART.gold}
             />

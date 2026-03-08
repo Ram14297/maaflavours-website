@@ -25,14 +25,7 @@ export default function AddToCartClient({
   const addItem = useCartStore((s) => s.addItem);
 
   const handleAdd = () => {
-    addItem({
-      productSlug,
-      productName,
-      variantIndex,
-      variantLabel,
-      price,
-      quantity: 1,
-    });
+    addItem(productSlug, variantIndex, 1);
     toast.success(`${productName} added to cart! 🛒`, { duration: 1800 });
   };
 

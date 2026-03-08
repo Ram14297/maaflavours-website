@@ -1,3 +1,4 @@
+import React from "react";
 // src/components/order/OrderPriceSummary.tsx
 // Maa Flavours — Order Price Summary breakdown
 // Shows: Subtotal, Coupon Discount, Delivery, COD Charge, Total
@@ -71,7 +72,7 @@ export default function OrderPriceSummary({
       {/* Price rows */}
       <div
         className="flex flex-col divide-y"
-        style={{ divideColor: "rgba(200,150,12,0.08)" }}
+        style={{ "--tw-divide-color": "rgba(200,150,12,0.08)" } as React.CSSProperties}
       >
         {rows.map((row) => (
           <div key={row.label} className="flex items-center justify-between py-2.5">

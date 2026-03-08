@@ -1,3 +1,4 @@
+import React from "react";
 // src/components/checkout/OrderSummaryPanel.tsx
 // Maa Flavours — Order Summary sidebar (right column on checkout page)
 // Shows all cart items, applied coupon, price breakdown
@@ -75,7 +76,7 @@ export default function OrderSummaryPanel({ isCOD = false }: { isCOD?: boolean }
       {/* Item list */}
       <div
         className="flex flex-col divide-y px-5 py-2 max-h-[320px] overflow-y-auto scrollbar-brand"
-        style={{ divideColor: "rgba(200,150,12,0.08)" }}
+        style={{ "--tw-divide-color": "rgba(200,150,12,0.08)" } as React.CSSProperties}
       >
         {items.map((item) => (
           <div key={item.id} className="flex items-center gap-3 py-3">

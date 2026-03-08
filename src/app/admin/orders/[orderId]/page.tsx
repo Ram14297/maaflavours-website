@@ -11,12 +11,12 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   AdminPage, Card, Table, StatusBadge, Btn, Select, Input,
-  Alert, Modal, fmt₹, fmtDate, fmtDateTime, A, Spinner,
+  Alert, Modal, fmtRupee, fmtDate, fmtDateTime, A, Spinner,
 } from "@/components/admin/AdminUI";
 
 // ─── Status flow with icons ───────────────────────────────────────────────────
@@ -328,24 +328,24 @@ export default function OrderDetailPage() {
                     {item.quantity}
                   </span>
                 ),
-                price:   <span style={{ fontSize:13 }}>{fmt₹(item.unit_price)}</span>,
-                total:   <span style={{ fontWeight:700, fontSize:14 }}>{fmt₹(item.total_price)}</span>,
+                price:   <span style={{ fontSize:13 }}>{fmtRupee(item.unit_price)}</span>,
+                total:   <span style={{ fontWeight:700, fontSize:14 }}>{fmtRupee(item.total_price)}</span>,
               }))}
             />
 
             {/* Pricing breakdown */}
             <div className="px-5 py-4 space-y-2.5 border-t" style={{ borderColor:A.border }}>
-              {[
-                ["Subtotal (incl. GST)",  fmt₹(order.subtotal),       false],
+              {([
+                ["Subtotal (incl. GST)",  fmtRupee(order.subtotal),       false],
                 order.coupon_discount > 0
                   ? [`Coupon Discount${order.coupon_code ? ` — ${order.coupon_code}` : ""}`,
-                     `−${fmt₹(order.coupon_discount)}`, true]
+                     `−${fmtRupee(order.coupon_discount)}`, true]
                   : null,
-                ["Delivery Charge",       fmt₹(order.delivery_charge  || 0), false],
+                ["Delivery Charge",       fmtRupee(order.delivery_charge  || 0), false],
                 order.cod_charge > 0
-                  ? ["COD Handling Charge", fmt₹(order.cod_charge),         false]
+                  ? ["COD Handling Charge", fmtRupee(order.cod_charge),         false]
                   : null,
-              ].filter(Boolean).map(([k, v, discount], i) => (
+              ].filter(Boolean) as [string, string, boolean][]).map(([k, v, discount], i) => (
                 <div key={i} className="flex justify-between items-center">
                   <span style={{ color: discount ? "#2E7D32" : A.grey, fontSize:13 }}>{k}</span>
                   <span style={{ color: discount ? "#2E7D32" : A.brown, fontSize:13, fontWeight: discount ? 600 : 400 }}>{v}</span>
@@ -365,18 +365,18 @@ export default function OrderDetailPage() {
                     <>
                       <div className="flex justify-between">
                         <span style={{ fontSize:11, color:A.grey }}>CGST ({order.cgst_rate}%)</span>
-                        <span style={{ fontSize:11, color:A.grey }}>{fmt₹(order.cgst_amount)}</span>
+                        <span style={{ fontSize:11, color:A.grey }}>{fmtRupee(order.cgst_amount)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span style={{ fontSize:11, color:A.grey }}>SGST ({order.sgst_rate}%)</span>
-                        <span style={{ fontSize:11, color:A.grey }}>{fmt₹(order.sgst_amount)}</span>
+                        <span style={{ fontSize:11, color:A.grey }}>{fmtRupee(order.sgst_amount)}</span>
                       </div>
                     </>
                   )}
                   {order.igst_amount > 0 && (
                     <div className="flex justify-between">
                       <span style={{ fontSize:11, color:A.grey }}>IGST ({order.igst_rate}%)</span>
-                      <span style={{ fontSize:11, color:A.grey }}>{fmt₹(order.igst_amount)}</span>
+                      <span style={{ fontSize:11, color:A.grey }}>{fmtRupee(order.igst_amount)}</span>
                     </div>
                   )}
                 </div>
@@ -391,7 +391,7 @@ export default function OrderDetailPage() {
                   Grand Total
                 </span>
                 <span style={{ fontWeight:700, fontSize:20, color:A.gold, fontFamily:"'Playfair Display',serif" }}>
-                  {fmt₹(order.total)}
+                  {fmtRupee(order.total)}
                 </span>
               </div>
             </div>
@@ -619,7 +619,7 @@ export default function OrderDetailPage() {
           {/* Payment Info */}
           <Card title="Payment Summary">
             <div className="space-y-2.5">
-              {[
+              {([
                 ["Payment Method",  (
                   <span key="pm" className="font-medium text-sm capitalize" style={{ color:A.brown }}>
                     {order.payment_method?.replace(/_/g," ") || "—"}
@@ -632,7 +632,7 @@ export default function OrderDetailPage() {
                 ["Order Placed",  fmtDateTime(order.created_at)],
                 order.dispatched_at ? ["Dispatched",   fmtDate(order.dispatched_at)] : null,
                 order.delivered_at  ? ["Delivered",    fmtDate(order.delivered_at)]  : null,
-              ].filter(Boolean).map(([k, v], i) => (
+              ].filter(Boolean) as [string, React.ReactNode][]).map(([k, v], i) => (
                 <div key={i} className="flex justify-between items-center gap-3">
                   <span style={{ color:A.grey, fontSize:12 }}>{k}</span>
                   <span style={{ color:A.brown, fontSize:12 }}>{v}</span>
@@ -814,14 +814,14 @@ function GstInvoice({ data }: { data: any }) {
       <div style={{ display:"flex", justifyContent:"flex-end", marginBottom:20 }}>
         <table style={{ fontSize:12, minWidth:280 }}>
           <tbody>
-            {[
+            {([
               ["Subtotal",          `₹${((totals.subtotal || 0)/100).toFixed(2)}`],
               totals.couponDiscount > 0 ? [`Coupon (${totals.couponCode || ""})`, `−₹${(totals.couponDiscount/100).toFixed(2)}`] : null,
               totals.deliveryCharge > 0 ? ["Delivery", `₹${(totals.deliveryCharge/100).toFixed(2)}`] : null,
               isIntrastate ? [`CGST @ ${(totals.cgstRate || 6)}%`, `₹${((totals.cgstAmount || 0)/100).toFixed(2)}`]   : null,
               isIntrastate ? [`SGST @ ${(totals.sgstRate || 6)}%`, `₹${((totals.sgstAmount || 0)/100).toFixed(2)}`]   : null,
               !isIntrastate && totals.igstAmount > 0 ? [`IGST @ ${(totals.igstRate || 12)}%`, `₹${(totals.igstAmount/100).toFixed(2)}`] : null,
-            ].filter(Boolean).map(([k,v],i) => (
+            ].filter(Boolean) as [string, string][]).map(([k,v],i) => (
               <tr key={i}>
                 <td style={{ padding:"3px 12px 3px 0", color:"#6B6B6B" }}>{k}</td>
                 <td style={{ padding:"3px 0", textAlign:"right" }}>{v}</td>

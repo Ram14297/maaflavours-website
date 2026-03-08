@@ -26,11 +26,13 @@ import { z } from "zod";
 import { PRODUCTS } from "@/lib/constants/products";
 import { createServerClient, createAdminSupabaseClient } from "@/lib/supabase/server";
 
-// ─── Razorpay client ─────────────────────────────────────────────────────────
-const razorpay = new Razorpay({
-  key_id:     process.env.RAZORPAY_KEY_ID!,
-  key_secret: process.env.RAZORPAY_KEY_SECRET!,
-});
+// ─── Razorpay client (lazy — initialized inside handler so env vars are available at runtime) ──
+function getRazorpay() {
+  return new Razorpay({
+    key_id:     process.env.RAZORPAY_KEY_ID!,
+    key_secret: process.env.RAZORPAY_KEY_SECRET!,
+  });
+}
 
 // ─── Validation schemas ──────────────────────────────────────────────────────
 const CartItemSchema = z.object({
@@ -328,7 +330,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ─── 7. Create Razorpay order ─────────────────────────────────────────
-    const rzpOrder = await razorpay.orders.create({
+    const rzpOrder = await getRazorpay().orders.create({
       amount:   total,                                // Already in paise
       currency: "INR",
       receipt:  (supabaseOrderId || `mf-${Date.now()}`).slice(0, 40),

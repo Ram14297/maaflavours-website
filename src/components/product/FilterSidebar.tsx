@@ -1,3 +1,4 @@
+import React from "react";
 // src/components/product/FilterSidebar.tsx
 // Maa Flavours — Desktop Filter Sidebar
 // Sticky left panel: spice level, weight, price range filters
@@ -113,7 +114,7 @@ export default function FilterSidebar({
           )}
         </div>
 
-        <div className="px-5 divide-y" style={{ divideColor: "rgba(200,150,12,0.08)" }}>
+        <div className="px-5 divide-y" style={{ "--tw-divide-color": "rgba(200,150,12,0.08)" } as React.CSSProperties}>
 
           {/* ─── Spice Level ──────────────────────────────────────────── */}
           <FilterSection title="Spice Level">

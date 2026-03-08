@@ -10,6 +10,7 @@ import { ShoppingBag, Star } from "lucide-react";
 import { PRODUCTS } from "@/lib/constants/products";
 import { formatPrice, getSpiceLevelConfig } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { useCartStore } from "@/store/cartStore";
 
 interface ProductCardProps {
   product: (typeof PRODUCTS)[0];
@@ -19,15 +20,20 @@ function ProductCard({ product }: ProductCardProps) {
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
   const [adding, setAdding] = useState(false);
 
-  const selectedVariant = product.variants[selectedVariantIndex];
+  const selectedVariant = product.variants[selectedVariantIndex] as typeof product.variants[0] & { discounted_price?: number };
   const spiceConfig = getSpiceLevelConfig(product.spice_level);
+  const addItem = useCartStore((s) => s.addItem);
 
   const handleAddToCart = async () => {
     setAdding(true);
-    // Cart store integration — see cart component
-    await new Promise((r) => setTimeout(r, 600));
-    setAdding(false);
-    toast.success(`${product.name} added to cart!`);
+    try {
+      await addItem(product.slug, selectedVariantIndex, 1);
+      toast.success(`${product.name} added to cart!`);
+    } catch {
+      toast.error("Could not add to cart. Please try again.");
+    } finally {
+      setAdding(false);
+    }
   };
 
   return (

@@ -12,8 +12,9 @@ import { Star, ChevronRight, MessageCircle } from "lucide-react";
 import { PRODUCTS, SITE } from "@/lib/constants/products";
 import { formatPrice, getSpiceLevelConfig, calculateDeliveryCharge, amountForFreeShipping } from "@/lib/utils";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
-import Navbar from "@/components/layout/Navbar";
+import NavbarWithCart from "@/components/layout/NavbarWithCart";
 import Footer from "@/components/layout/Footer";
+import { useCartStore } from "@/store/cartStore";
 import ProductImageGallery from "@/components/product/ProductImageGallery";
 import VariantSelector from "@/components/product/VariantSelector";
 import QuantityPicker from "@/components/product/QuantityPicker";
@@ -134,26 +135,29 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   // ─── State ─────────────────────────────────────────────────────────────
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [cartCount, setCartCount] = useState(0);
   const [loginOpen, setLoginOpen] = useState(false);
 
-  const selectedVariant = product.variants[selectedVariantIndex];
+  const addItem = useCartStore((s) => s.addItem);
+
+  const selectedVariant = product.variants[selectedVariantIndex] as typeof product.variants[0] & { discounted_price?: number; stock_quantity?: number };
   const totalPrice = selectedVariant.price * quantity;
   const deliveryCharge = calculateDeliveryCharge(totalPrice);
 
   // ─── Handlers ──────────────────────────────────────────────────────────
-  const handleAddToCart = useCallback(() => {
-    setCartCount((c) => c + quantity);
-    toast.success(
-      `${product.name} (${selectedVariant.label} × ${quantity}) added to cart!`,
-      { duration: 3000 }
-    );
-    // TODO: Connect to cart store (Step 5 — Cart & Checkout)
-  }, [product.name, selectedVariant.label, quantity]);
+  const handleAddToCart = useCallback(async () => {
+    try {
+      await addItem(product.slug, selectedVariantIndex, quantity);
+      toast.success(
+        `${product.name} (${selectedVariant.label} × ${quantity}) added to cart!`,
+        { duration: 3000 }
+      );
+    } catch {
+      toast.error("Could not add to cart. Please try again.");
+    }
+  }, [addItem, product.slug, product.name, selectedVariantIndex, selectedVariant.label, quantity]);
 
-  const handleBuyNow = useCallback(() => {
-    handleAddToCart();
-    // TODO: Navigate to checkout
+  const handleBuyNow = useCallback(async () => {
+    await handleAddToCart();
     toast("Redirecting to checkout…", { icon: "⚡" });
     setTimeout(() => { window.location.href = "/checkout"; }, 500);
   }, [handleAddToCart]);
@@ -164,11 +168,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       style={{ background: "var(--color-warm-white)" }}
     >
       <AnnouncementBar />
-      <Navbar
-        cartCount={cartCount}
-        onCartClick={() => toast("Cart coming in Step 5!")}
-        onAccountClick={() => setLoginOpen(true)}
-      />
+      <NavbarWithCart onAccountClick={() => setLoginOpen(true)} />
 
       <main className="flex-1">
         <div className="section-container py-6 lg:py-10">
@@ -365,8 +365,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               <QuantityPicker
                 quantity={quantity}
                 onChange={setQuantity}
-                max={selectedVariant.stock_quantity > 0
-                  ? Math.min(selectedVariant.stock_quantity, 10)
+                max={(selectedVariant.stock_quantity ?? 10) > 0
+                  ? Math.min(selectedVariant.stock_quantity ?? 10, 10)
                   : 0}
               />
 
@@ -380,7 +380,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   variantLabel={selectedVariant.label}
                   price={selectedVariant.price}
                   quantity={quantity}
-                  inStock={selectedVariant.stock_quantity > 0}
+                  inStock={(selectedVariant.stock_quantity ?? 10) > 0}
                   onAddToCart={handleAddToCart}
                   onBuyNow={handleBuyNow}
                 />
@@ -430,7 +430,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           variantLabel={selectedVariant.label}
           price={selectedVariant.price}
           quantity={quantity}
-          inStock={selectedVariant.stock_quantity > 0}
+          inStock={(selectedVariant.stock_quantity ?? 10) > 0}
           onAddToCart={handleAddToCart}
           onBuyNow={handleBuyNow}
         />

@@ -61,14 +61,7 @@ function WishlistCard({
   const emoji = EMOJI_MAP[slug] || "🫙";
 
   const handleAddToCart = () => {
-    addToCart({
-      productSlug: product.slug,
-      productName: product.name,
-      variantIndex: selectedVariant,
-      variantLabel: variant.label,
-      price: variant.price,
-      quantity: 1,
-    });
+    addToCart(product.slug, selectedVariant, 1);
     toast.success(`${product.name} added to cart! 🛒`);
   };
 

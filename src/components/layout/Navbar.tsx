@@ -6,6 +6,7 @@
 // Cart badge | Account opens OTP modal if not logged in
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag, User, Menu, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -94,43 +95,15 @@ export default function Navbar({
               className="flex items-center gap-2.5 flex-shrink-0 group"
               aria-label="Maa Flavours Home"
             >
-              {/* Logo mark — placeholder, replace with actual SVG logo */}
-              {/* REPLACE with actual logo SVG */}
-              <div
-                className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-105"
-                style={{
-                  background: "linear-gradient(135deg, #C0272D, #9E1F24)",
-                  boxShadow: "0 2px 8px rgba(192, 39, 45, 0.3)",
-                }}
-              >
-                <span
-                  className="font-dancing font-bold text-white"
-                  style={{ fontSize: "18px" }}
-                >
-                  M
-                </span>
-              </div>
-              <div className="flex flex-col leading-none">
-                <span
-                  className="font-playfair font-bold tracking-tight"
-                  style={{
-                    color: "var(--color-brown)",
-                    fontSize: "1.1875rem",
-                    lineHeight: 1.1,
-                  }}
-                >
-                  Maa Flavours
-                </span>
-                <span
-                  className="font-dancing hidden sm:block"
-                  style={{
-                    color: "var(--color-gold)",
-                    fontSize: "0.7rem",
-                    letterSpacing: "0.03em",
-                  }}
-                >
-                  Authentic Andhra Taste
-                </span>
+              <div className="relative h-10 w-36 flex-shrink-0 transition-transform duration-300 group-hover:scale-105">
+                <Image
+                  src="/maa-flavours-logo.png"
+                  alt="Maa Flavours — Authentic Andhra Pickles"
+                  fill
+                  className="object-contain object-left"
+                  priority
+                  sizes="144px"
+                />
               </div>
             </Link>
 
@@ -270,18 +243,15 @@ export default function Navbar({
             onClick={() => setMobileOpen(false)}
             className="flex items-center gap-2.5"
           >
-            <div
-              className="w-8 h-8 rounded-full flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #C0272D, #9E1F24)" }}
-            >
-              <span className="font-dancing font-bold text-white text-base">M</span>
+            <div className="relative h-9 w-32 flex-shrink-0">
+              <Image
+                src="/maa-flavours-logo.png"
+                alt="Maa Flavours"
+                fill
+                className="object-contain object-left"
+                sizes="128px"
+              />
             </div>
-            <span
-              className="font-playfair font-bold"
-              style={{ color: "var(--color-brown)", fontSize: "1.0625rem" }}
-            >
-              Maa Flavours
-            </span>
           </Link>
           <button
             onClick={() => setMobileOpen(false)}

@@ -796,21 +796,3 @@ export default function OrderConfirmationPage() {
   );
 }
 
-// ─── Skeleton (also exported for Suspense fallback) ───────────────────────
-function ConfirmationSkeleton() {
-  return (
-    <div className="max-w-3xl mx-auto px-4 py-10 flex flex-col gap-5">
-      {[240, 320, 200, 180].map((h, i) => (
-        <div
-          key={i}
-          className="rounded-2xl animate-pulse"
-          style={{
-            height: `${h}px`,
-            background: "rgba(200,150,12,0.07)",
-            border: "1px solid rgba(200,150,12,0.1)",
-          }}
-        />
-      ))}
-    </div>
-  );
-}

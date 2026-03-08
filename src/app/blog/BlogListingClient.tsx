@@ -5,7 +5,7 @@
 // Receives all posts from the server component (no fetch needed)
 
 import { useState, useMemo } from "react";
-import { PostCard } from "./page";
+import { PostCard } from "./PostCard";
 import { CATEGORY_CONFIG, type BlogPost, type PostCategory } from "@/lib/constants/blog";
 
 interface Props {

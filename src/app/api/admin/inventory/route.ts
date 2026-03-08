@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
       .select(`
         id, product_id, label, sku, weight_grams,
         price, stock_quantity, low_stock_threshold, is_active,
-        products!inner(id, name, slug, spice_level, is_active, primary_image_url)
+        products!inner(id, name, slug, spice_level, is_active)
       `)
       .order("stock_quantity", { ascending: true }); // most critical (low) first
 

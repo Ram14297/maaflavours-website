@@ -16,7 +16,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   AdminPage, Card, Table, StatusBadge, Btn, Input, Select,
-  Modal, Alert, Textarea, fmt₹, fmtDateTime, A, Spinner,
+  Modal, Alert, Textarea, fmtRupee, fmtDateTime, A, Spinner,
 } from "@/components/admin/AdminUI";
 
 // ─── Adjustment types ─────────────────────────────────────────────────────────
@@ -557,7 +557,7 @@ function ProductInventoryCard({
               <div style={{ minWidth:100, flex:"0 0 auto" }}>
                 <p style={{ fontWeight:600, fontSize:13, color:A.brown }}>{v.label}</p>
                 <p style={{ fontFamily:"monospace", fontSize:10, color:A.grey }}>{v.sku}</p>
-                <p style={{ fontSize:11, color:A.gold, fontWeight:600 }}>{fmt₹(v.price)}</p>
+                <p style={{ fontSize:11, color:A.gold, fontWeight:600 }}>{fmtRupee(v.price)}</p>
               </div>
 
               {/* Status badge */}

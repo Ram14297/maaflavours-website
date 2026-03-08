@@ -3,6 +3,7 @@
 // Shows: subtotal, coupon discount, delivery charge, grand total
 // Matches Razorpay order creation data structure
 
+import React from "react";
 import { formatPrice } from "@/lib/utils";
 import { AppliedCoupon } from "@/store/cartStore";
 
@@ -88,7 +89,7 @@ export default function CartOrderSummary({
 
         <div
           className="flex flex-col divide-y px-4"
-          style={{ divideColor: "rgba(200,150,12,0.08)" }}
+          style={{ "--tw-divide-color": "rgba(200,150,12,0.08)" } as React.CSSProperties}
         >
           {/* Subtotal */}
           <div className="flex items-center justify-between py-3">

@@ -299,15 +299,19 @@ export function Btn({
   onClick,
   type    = "button",
   className = "",
+  style,
+  title,
 }: {
   children:   ReactNode;
   variant?:   "primary" | "secondary" | "danger" | "ghost";
   size?:      "sm" | "md" | "lg";
   loading?:   boolean;
   disabled?:  boolean;
-  onClick?:   () => void;
+  onClick?:   (e?: React.MouseEvent<HTMLButtonElement>) => unknown;
   type?:      "button" | "submit" | "reset";
   className?: string;
+  style?:     React.CSSProperties;
+  title?:     string;
 }) {
   const VARIANTS = {
     primary:   { bg: A.gold,     color: "#fff",   border: A.gold     },
@@ -328,6 +332,7 @@ export function Btn({
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
+      title={title}
       className={`inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-opacity ${className}`}
       style={{
         background:  v.bg,
@@ -339,6 +344,7 @@ export function Btn({
         cursor:      disabled ? "not-allowed" : "pointer",
         whiteSpace:  "nowrap",
         fontFamily:  "'DM Sans', sans-serif",
+        ...style,
       }}
     >
       {loading && (
@@ -536,7 +542,7 @@ export function Spinner({ size = 20 }: { size?: number }) {
 // ─────────────────────────────────────────────────────────────────────────────
 // FORMAT HELPERS (re-exported for use in admin pages)
 // ─────────────────────────────────────────────────────────────────────────────
-export function fmt₹(paise: number): string {
+export function fmtRupee(paise: number): string {
   return `₹${(paise / 100).toLocaleString("en-IN")}`;
 }
 

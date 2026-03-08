@@ -1,3 +1,4 @@
+import React from "react";
 // src/components/order/OrderItemsTable.tsx
 // Maa Flavours — Order Items Table
 // Displays all items in an order with image, name, variant, qty, price
@@ -50,7 +51,7 @@ export default function OrderItemsTable({
   }
 
   return (
-    <div className="flex flex-col divide-y" style={{ divideColor: "rgba(200,150,12,0.08)" }}>
+    <div className="flex flex-col divide-y" style={{ "--tw-divide-color": "rgba(200,150,12,0.08)" } as React.CSSProperties}>
       {items.map((item, idx) => {
         const emoji = item.emoji || PRODUCT_EMOJIS[item.productSlug] || "🫙";
 

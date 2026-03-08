@@ -2,13 +2,13 @@
 // Maa Flavours — Supabase server-side client
 // Used in Server Components, API Routes, and Server Actions
 
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient as createSSRClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 export function createServerSupabaseClient() {
   const cookieStore = cookies();
 
-  return createServerClient(
+  return createSSRClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -41,7 +41,7 @@ export function createServerSupabaseClient() {
  * NEVER expose service role key to browser
  */
 export function createAdminSupabaseClient() {
-  return createServerClient(
+  return createSSRClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {

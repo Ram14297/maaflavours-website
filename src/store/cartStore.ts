@@ -126,7 +126,7 @@ export const useCartStore = create<CartStore>()(
               variantLabel: variant.label,
               unitPrice: variant.price,
               quantity,
-              maxQuantity: Math.min(variant.stock_quantity || 10, 10),
+              maxQuantity: Math.min((variant as { stock_quantity?: number }).stock_quantity || 10, 10),
               emoji: PRODUCT_EMOJIS[productSlug] || "🫙",
               imageUrl: "", // REPLACE with Supabase Storage URL
             }],

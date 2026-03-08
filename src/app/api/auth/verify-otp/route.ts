@@ -84,10 +84,11 @@ export async function POST(request: NextRequest) {
     try {
       // Try to sign in with phone OTP (Supabase Phone Auth)
       // This works when Supabase Phone Auth is enabled in the dashboard
-      const { data: signInData, error: signInError } = await supabase.auth.admin.getUserByPhone(`+91${mobile}`)
+      const { data: listData } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      const existingAuthUser = listData?.users?.find((u) => u.phone === `+91${mobile}`);
 
-      if (signInData?.user) {
-        authUserId = signInData.user.id;
+      if (existingAuthUser) {
+        authUserId = existingAuthUser.id;
       } else {
         // Create new auth user
         const { data: newUser, error: createError } = await supabase.auth.admin.createUser({

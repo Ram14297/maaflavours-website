@@ -7,7 +7,7 @@
 import { formatPrice } from "@/lib/utils";
 import { PRODUCTS } from "@/lib/constants/products";
 
-type Variant = (typeof PRODUCTS)[0]["variants"][0];
+type Variant = (typeof PRODUCTS)[0]["variants"][0] & { discounted_price?: number };
 
 interface VariantSelectorProps {
   variants: Variant[];

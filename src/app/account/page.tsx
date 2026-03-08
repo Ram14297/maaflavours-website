@@ -134,8 +134,8 @@ export default function AccountDashboard() {
     fetchOrders();
   }, []);
 
-  const recentDisplayId = recentOrder?.id?.length > 12
-    ? `MF-${recentOrder.id.slice(-8).toUpperCase()}`
+  const recentDisplayId = (recentOrder?.id?.length ?? 0) > 12
+    ? `MF-${recentOrder!.id.slice(-8).toUpperCase()}`
     : recentOrder?.id?.toUpperCase() || "";
 
   return (

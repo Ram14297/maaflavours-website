@@ -20,7 +20,7 @@ import Link from "next/link";
 import {
   AdminPage, Card, Table, Btn, Input, Select,
   StatusBadge, Modal, Alert, Pagination,
-  fmt₹, fmtDate, fmtDateTime, A, Spinner,
+  fmtRupee, fmtDate, fmtDateTime, A, Spinner,
 } from "@/components/admin/AdminUI";
 
 // ─── Sort options ─────────────────────────────────────────────────────────────
@@ -161,8 +161,8 @@ export default function CustomersPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label:"Total Customers",   value: summary.totalCustomers?.toLocaleString("en-IN") || "—",        icon:"👥", colour:A.brown  },
-          { label:"Total Revenue",     value: summary.totalRevenue   ? fmt₹(summary.totalRevenue) : "—",     icon:"₹",  colour:A.gold   },
-          { label:"Avg Order Value",   value: summary.avgOrderValue  ? fmt₹(summary.avgOrderValue) : "—",   icon:"🛒", colour:"#2E7D32"},
+          { label:"Total Revenue",     value: summary.totalRevenue   ? fmtRupee(summary.totalRevenue) : "—",     icon:"₹",  colour:A.gold   },
+          { label:"Avg Order Value",   value: summary.avgOrderValue  ? fmtRupee(summary.avgOrderValue) : "—",   icon:"🛒", colour:"#2E7D32"},
           { label:"Repeat Customers",  value: `${repeatPct}%`,                                               icon:"🔄", colour:"#B8750A"},
         ].map(s => (
           <div key={s.label} className="rounded-2xl p-5"
@@ -271,7 +271,7 @@ export default function CustomersPage() {
                       {/* Stats */}
                       <div className="text-right shrink-0 hidden sm:block">
                         <p style={{ fontWeight:700, fontSize:13, color:A.gold }}>
-                          {fmt₹(c.total_spent || 0)}
+                          {fmtRupee(c.total_spent || 0)}
                         </p>
                         <p style={{ fontSize:11, color:A.grey }}>
                           {c.total_orders || 0} order{c.total_orders !== 1 ? "s" : ""}
@@ -408,11 +408,11 @@ export default function CustomersPage() {
                     {/* Lifetime stats */}
                     <div className="grid grid-cols-2 gap-3">
                       {[
-                        { label:"Total Spent",  value:fmt₹(detail.customer.total_spent || 0),  colour:A.gold   },
+                        { label:"Total Spent",  value:fmtRupee(detail.customer.total_spent || 0),  colour:A.gold   },
                         { label:"Total Orders", value:String(detail.customer.total_orders || 0), colour:A.brown  },
                         { label:"Avg per Order",
                           value: detail.customer.total_orders > 0
-                            ? fmt₹(Math.round((detail.customer.total_spent || 0) / detail.customer.total_orders))
+                            ? fmtRupee(Math.round((detail.customer.total_spent || 0) / detail.customer.total_orders))
                             : "—",
                           colour:"#2E7D32",
                         },
@@ -453,7 +453,7 @@ export default function CustomersPage() {
                               </p>
                             </div>
                             <p style={{ fontSize:11, color:A.grey }}>
-                              {p.times_ordered}× · {fmt₹(p.total_spent)}
+                              {p.times_ordered}× · {fmtRupee(p.total_spent)}
                             </p>
                           </div>
                           <div className="h-1.5 rounded-full" style={{ background:`rgba(74,44,10,0.08)` }}>
@@ -506,7 +506,7 @@ export default function CustomersPage() {
                             </p>
                           </div>
                           <div className="text-right">
-                            <p style={{ fontWeight:700, fontSize:13, color:A.gold }}>{fmt₹(o.total)}</p>
+                            <p style={{ fontWeight:700, fontSize:13, color:A.gold }}>{fmtRupee(o.total)}</p>
                             <p style={{ fontSize:10, color:A.grey, textTransform:"capitalize" }}>
                               {o.payment_method?.replace(/_/g," ")}
                             </p>

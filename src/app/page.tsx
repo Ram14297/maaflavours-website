@@ -152,6 +152,7 @@ export default function HomePage() {
       {/* OTP Login Modal */}
       {loginOpen && (
         <OtpLoginModal
+          isOpen={loginOpen}
           onClose={() => setLoginOpen(false)}
           onSuccess={handleLoginSuccess}
         />

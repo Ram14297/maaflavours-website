@@ -11,11 +11,11 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   AdminPage, Card, Table, StatusBadge, Btn, Input, Select,
-  Modal, Alert, Pagination, fmt₹, A, Spinner,
+  Modal, Alert, Pagination, fmtRupee, A, Spinner,
 } from "@/components/admin/AdminUI";
 
 // ─── Spice level helpers ──────────────────────────────────────────────────────
@@ -257,7 +257,7 @@ export default function ProductsPage() {
                   {(p.variants || []).map((v: any) => (
                     <div key={v.id} style={{ fontSize:11 }}>
                       <span style={{ color:A.grey }}>{v.label}:</span>{" "}
-                      <strong style={{ color:A.gold }}>{fmt₹(v.price)}</strong>
+                      <strong style={{ color:A.gold }}>{fmtRupee(v.price)}</strong>
                     </div>
                   ))}
                 </div>
@@ -288,7 +288,7 @@ export default function ProductsPage() {
                   <Btn
                     variant={p.is_active ? "ghost" : "secondary"}
                     size="sm"
-                    onClick={e => toggleActive(p.id, p.is_active, e)}
+                    onClick={() => toggleActive(p.id, p.is_active, {} as React.MouseEvent)}
                   >
                     {p.is_active ? "Disable" : "Enable"}
                   </Btn>
@@ -343,11 +343,6 @@ export default function ProductsPage() {
     </AdminPage>
   );
 
-  function stockColour(qty: number, threshold: number): string {
-    if (qty === 0)        return "#C0272D";
-    if (qty <= threshold) return "#B8750A";
-    return "#2E7D32";
-  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -450,7 +445,7 @@ function ProductCard({
             <div key={v.id} className="text-center px-2 py-1 rounded-lg flex-1 min-w-0"
               style={{ background:A.cream, border:`1px solid ${A.border}` }}>
               <p style={{ fontSize:11, color:A.grey }}>{v.label}</p>
-              <p style={{ fontWeight:700, fontSize:13, color:A.gold }}>{fmt₹(v.price)}</p>
+              <p style={{ fontWeight:700, fontSize:13, color:A.gold }}>{fmtRupee(v.price)}</p>
               <p style={{ fontSize:10, color: v.stock_quantity === 0 ? "#C0272D" : v.stock_quantity <= v.low_stock_threshold ? "#B8750A" : "#2E7D32" }}>
                 {v.stock_quantity} left
               </p>
@@ -466,7 +461,7 @@ function ProductCard({
           <Btn
             variant={p.is_active ? "ghost" : "secondary"}
             size="sm"
-            onClick={e => onToggle(p.id, p.is_active, e)}
+            onClick={() => onToggle(p.id, p.is_active, {} as React.MouseEvent)}
             title={p.is_active ? "Disable product" : "Enable product"}
           >
             {p.is_active ? "●" : "○"}
