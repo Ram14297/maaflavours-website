@@ -1,6 +1,6 @@
 // src/app/contact/page.tsx
 // Maa Flavours — Contact Us Page
-// Sections: hero, contact form, contact details, WhatsApp CTA, map placeholder
+// Contact info fetched from Supabase settings (server-side, no flash)
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -9,12 +9,31 @@ import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import NavbarWithCart from "@/components/layout/NavbarWithCart";
 import Footer from "@/components/layout/Footer";
 import ContactFormClient from "./ContactFormClient";
+import { createAdminSupabaseClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "Contact Us — Maa Flavours | Authentic Andhra Homemade Pickles",
   description:
     "Reach out to the Maa Flavours team for orders, queries, wholesale enquiries, or any help. We're based in Ongole, Andhra Pradesh.",
 };
+
+// ─── Fetch settings from Supabase ─────────────────────────────────────────
+async function getContactSettings() {
+  try {
+    const supabase = createAdminSupabaseClient();
+    const { data } = await supabase
+      .from("settings")
+      .select("key, value")
+      .in("key", ["business", "social"]);
+
+    const business = (data || []).find((r) => r.key === "business")?.value || {};
+    const social   = (data || []).find((r) => r.key === "social")?.value   || {};
+
+    return { business, social };
+  } catch {
+    return { business: {}, social: {} };
+  }
+}
 
 function OrnamentLine({ className = "" }: { className?: string }) {
   return (
@@ -23,7 +42,6 @@ function OrnamentLine({ className = "" }: { className?: string }) {
   );
 }
 
-// ─── Contact Detail Card ──────────────────────────────────────────────────
 function ContactCard({
   icon: Icon, label, value, href, color, bg,
 }: {
@@ -31,8 +49,7 @@ function ContactCard({
 }) {
   const inner = (
     <div className="flex items-start gap-4">
-      <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-        style={{ background: bg }}>
+      <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: bg }}>
         <Icon size={20} strokeWidth={1.75} style={{ color }} />
       </div>
       <div>
@@ -46,7 +63,8 @@ function ContactCard({
 
   if (href) {
     return (
-      <a href={href} className="block p-5 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+      <a href={href}
+        className="block p-5 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
         style={{ background: "white", border: "1px solid rgba(200,150,12,0.12)", boxShadow: "0 2px 8px rgba(74,44,10,0.05)" }}
         target={href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer">
         {inner}
@@ -61,7 +79,21 @@ function ContactCard({
   );
 }
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const { business, social } = await getContactSettings();
+
+  // Build dynamic contact values with sensible fallbacks
+  const phone     = business.phone     || "";
+  const email     = business.email     || "support@maaflavours.com";
+  const address   = business.address   || "Ongole, Andhra Pradesh, India — 523001";
+  const waNumber  = (social.whatsapp_number || "").replace(/\D/g, "") || "919876543210";
+  const waLink    = (msg: string) => `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
+  const instagram = social.instagram || "https://instagram.com/maaflavours";
+  const facebook  = social.facebook  || "https://facebook.com/maaflavours";
+  const youtube   = social.youtube   || "https://youtube.com/@maaflavours";
+
+  const phoneDisplay = phone || "+91 XXXXX XXXXX";
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--color-warm-white)" }}>
       <AnnouncementBar />
@@ -124,37 +156,48 @@ export default function ContactPage() {
                   <OrnamentLine className="w-16 mt-3 mb-6" />
                 </div>
 
+                {/* WhatsApp */}
                 <ContactCard
                   icon={MessageCircle}
                   label="WhatsApp (Fastest)"
-                  value="+91 98765 43210"
-                  href="https://wa.me/919876543210?text=Hello%2C%20I%20have%20a%20query%20about%20Maa%20Flavours%20pickles!"
+                  value={phoneDisplay}
+                  href={waLink("Hello, I have a query about Maa Flavours pickles!")}
                   color="#25D366"
                   bg="rgba(37,211,102,0.1)"
                 />
+
+                {/* Email */}
                 <ContactCard
                   icon={Mail}
                   label="Email"
-                  value="support@maaflavours.com"
-                  href="mailto:support@maaflavours.com"
+                  value={email}
+                  href={`mailto:${email}`}
                   color="var(--color-crimson)"
                   bg="rgba(192,39,45,0.08)"
                 />
-                <ContactCard
-                  icon={Phone}
-                  label="Phone"
-                  value="+91 98765 43210"
-                  href="tel:+919876543210"
-                  color="var(--color-gold)"
-                  bg="rgba(200,150,12,0.1)"
-                />
+
+                {/* Phone */}
+                {phone && (
+                  <ContactCard
+                    icon={Phone}
+                    label="Phone"
+                    value={phone}
+                    href={`tel:${phone}`}
+                    color="var(--color-gold)"
+                    bg="rgba(200,150,12,0.1)"
+                  />
+                )}
+
+                {/* Address */}
                 <ContactCard
                   icon={MapPin}
                   label="Our Kitchen"
-                  value="Ongole, Andhra Pradesh, India — 523001"
+                  value={address}
                   color="var(--color-brown)"
                   bg="rgba(74,44,10,0.07)"
                 />
+
+                {/* Hours */}
                 <ContactCard
                   icon={Clock}
                   label="Business Hours"
@@ -165,7 +208,7 @@ export default function ContactPage() {
 
                 {/* WhatsApp CTA */}
                 <a
-                  href="https://wa.me/919876543210?text=Hello%2C%20I%20have%20a%20query%20about%20Maa%20Flavours%20pickles!"
+                  href={waLink("Hello, I have a query about Maa Flavours pickles!")}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-3 px-6 py-4 rounded-2xl font-dm-sans font-bold text-base text-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl"
@@ -183,9 +226,9 @@ export default function ContactPage() {
                   </p>
                   <div className="flex gap-3">
                     {[
-                      { Icon: Instagram, href: "https://instagram.com/maaflavours", label: "Instagram", color: "#E1306C", bg: "rgba(225,48,108,0.1)" },
-                      { Icon: Facebook,  href: "https://facebook.com/maaflavours",  label: "Facebook",  color: "#1877F2", bg: "rgba(200,150,12,0.1)" },
-                      { Icon: Youtube,   href: "https://youtube.com/@maaflavours",  label: "YouTube",   color: "var(--color-crimson)", bg: "rgba(192,39,45,0.08)" },
+                      { Icon: Instagram, href: instagram, label: "Instagram", color: "#E1306C", bg: "rgba(225,48,108,0.1)" },
+                      { Icon: Facebook,  href: facebook,  label: "Facebook",  color: "#1877F2", bg: "rgba(200,150,12,0.1)" },
+                      { Icon: Youtube,   href: youtube,   label: "YouTube",   color: "var(--color-crimson)", bg: "rgba(192,39,45,0.08)" },
                     ].map(({ Icon, href, label, color, bg }) => (
                       <a key={label} href={href} target="_blank" rel="noopener noreferrer"
                         className="w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-110"
