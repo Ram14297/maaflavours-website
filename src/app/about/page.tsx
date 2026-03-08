@@ -19,6 +19,7 @@ import {
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import NavbarWithCart from "@/components/layout/NavbarWithCart";
 import Footer from "@/components/layout/Footer";
+import { createAdminSupabaseClient } from "@/lib/supabase/server";
 
 // ─── Decorative ornament line ─────────────────────────────────────────────
 function OrnamentLine({ className = "" }: { className?: string }) {
@@ -271,7 +272,20 @@ function StatCard({
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────
-export default function AboutPage() {
+export default async function AboutPage() {
+  // Fetch WhatsApp number dynamically from settings
+  let waNumber = "919876543210"; // fallback
+  try {
+    const supabase = createAdminSupabaseClient();
+    const { data } = await supabase
+      .from("settings").select("value").eq("key", "social").single();
+    const raw: string = data?.value?.whatsapp_number || "";
+    const digits = raw.replace(/\D/g, "");
+    if (digits) waNumber = digits;
+  } catch { /* use fallback */ }
+
+  const waLink = `https://wa.me/${waNumber}?text=Hello%2C%20I%20saw%20your%20story%20on%20maaflavours.com%20and%20I%27d%20love%20to%20know%20more%20about%20your%20pickles!`;
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--color-warm-white)" }}>
       <AnnouncementBar />
@@ -1145,7 +1159,7 @@ export default function AboutPage() {
               </Link>
 
               <a
-                href="https://wa.me/919876543210?text=Hello%2C%20I%20saw%20your%20story%20on%20maaflavours.com%20and%20I%27d%20love%20to%20know%20more%20about%20your%20pickles!"
+                href={waLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2.5 px-8 py-4 rounded-xl font-dm-sans font-bold text-base transition-all duration-200 hover:-translate-y-0.5"

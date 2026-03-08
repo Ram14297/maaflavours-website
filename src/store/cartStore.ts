@@ -103,36 +103,55 @@ export const useCartStore = create<CartStore>()(
 
       addItem: (productSlug, variantIndex, quantity = 1) => {
         const product = PRODUCTS.find((p) => p.slug === productSlug);
-        if (!product) return;
+        if (!product) {
+          console.error(`[CartStore] Product not found: "${productSlug}"`);
+          return;
+        }
         const variant = product.variants[variantIndex];
-        if (!variant) return;
+        if (!variant) {
+          console.error(`[CartStore] Variant ${variantIndex} not found for "${productSlug}"`);
+          return;
+        }
 
         const id = `${productSlug}_${variantIndex}`;
-        const existing = get().items.find((i) => i.id === id);
 
-        if (existing) {
-          const newQty = Math.min(existing.quantity + quantity, existing.maxQuantity);
-          set((s) => ({
-            items: s.items.map((i) => i.id === id ? { ...i, quantity: newQty } : i),
-          }));
-        } else {
-          set((s) => ({
-            items: [...s.items, {
-              id,
-              productSlug,
-              productName: product.name,
-              productSubtitle: product.subtitle,
-              variantIndex,
-              variantLabel: variant.label,
-              unitPrice: variant.price,
-              quantity,
-              maxQuantity: Math.min((variant as { stock_quantity?: number }).stock_quantity || 10, 10),
-              emoji: PRODUCT_EMOJIS[productSlug] || "🫙",
-              imageUrl: "", // REPLACE with Supabase Storage URL
-            }],
-          }));
-        }
-        set({ isOpen: true });
+        // Single atomic set — combining items + isOpen in one call avoids
+        // a race between two separate set() calls with persist middleware
+        set((s) => {
+          const existing = s.items.find((i) => i.id === id);
+          if (existing) {
+            return {
+              isOpen: true,
+              items: s.items.map((i) =>
+                i.id === id
+                  ? { ...i, quantity: Math.min(i.quantity + quantity, i.maxQuantity) }
+                  : i
+              ),
+            };
+          }
+          return {
+            isOpen: true,
+            items: [
+              ...s.items,
+              {
+                id,
+                productSlug,
+                productName: product.name,
+                productSubtitle: product.subtitle,
+                variantIndex,
+                variantLabel: variant.label,
+                unitPrice: variant.price,
+                quantity,
+                maxQuantity: Math.min(
+                  (variant as { stock_quantity?: number }).stock_quantity || 10,
+                  10
+                ),
+                emoji: PRODUCT_EMOJIS[productSlug] || "🫙",
+                imageUrl: "",
+              },
+            ],
+          };
+        });
       },
 
       removeItem: (itemId) => set((s) => ({ items: s.items.filter((i) => i.id !== itemId) })),
