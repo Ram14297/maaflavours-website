@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "name": "maa-flavours",
+  "regions": ["bom1"],
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "outputDirectory": ".next",
+  "functions": {
+    "src/app/api/checkout/webhook/route.ts": {
+      "maxDuration": 30
+    },
+    "src/app/api/checkout/create-order/route.ts": {
+      "maxDuration": 30
+    },
+    "src/app/api/auth/send-otp/route.ts": {
+      "maxDuration": 15
+    },
+    "src/app/api/admin/analytics/route.ts": {
+      "maxDuration": 60
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/checkout/webhook",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    }
+  ]
+}

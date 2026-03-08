@@ -1,0 +1,18 @@
+// src/app/api/admin/logout/route.ts
+// Maa Flavours — Admin Logout API
+// POST /api/admin/logout — clears admin JWT cookie
+
+import { NextResponse } from "next/server";
+import { ADMIN_COOKIE_NAME } from "@/lib/admin-auth";
+
+export async function POST() {
+  const res = NextResponse.json({ success: true });
+  res.cookies.set(ADMIN_COOKIE_NAME, "", {
+    httpOnly: true,
+    secure:   process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path:     "/",
+    maxAge:   0,  // Expire immediately
+  });
+  return res;
+}

@@ -1,0 +1,929 @@
+-- ============================================================
+-- supabase/schema.sql
+-- Maa Flavours — Complete PostgreSQL Database Schema
+-- For Supabase (PostgreSQL 15+)
+--
+-- TABLES (18):
+--   01. admin_users
+--   02. categories
+--   03. products
+--   04. product_variants
+--   05. product_images
+--   06. customers
+--   07. customer_addresses
+--   08. coupons
+--   09. orders
+--   10. order_items
+--   11. order_status_history
+--   12. product_reviews
+--   13. otp_sessions
+--   14. newsletter_subscribers
+--   15. contact_messages
+--   16. blog_posts
+--   17. expenses
+--   18. settings
+--
+-- ALSO INCLUDES:
+--   - 3 convenience VIEWs
+--   - 9 FUNCTIONS (triggers + helpers)
+--   - 15 TRIGGERS
+--   - All monetary values in INTEGER paise (₹1 = 100 paise)
+--
+-- HOW TO APPLY:
+--   1. Supabase Dashboard → SQL Editor
+--   2. Paste & run this file
+--   3. Then run: supabase/seed.sql
+--   4. Then run: supabase/rls.sql
+-- ============================================================
+
+-- ─── Extensions ──────────────────────────────────────────────────────────
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";   -- fuzzy search on products/orders
+CREATE EXTENSION IF NOT EXISTS "unaccent";  -- accent-insensitive search
+
+-- ─── Custom ENUM Types ────────────────────────────────────────────────────
+
+DO $$ BEGIN
+  CREATE TYPE spice_level_enum AS ENUM ('mild', 'medium', 'spicy', 'extra-hot');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE order_status_enum AS ENUM (
+    'pending','confirmed','processing','packed',
+    'shipped','out_for_delivery','delivered','cancelled','refunded'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE payment_status_enum AS ENUM ('pending','paid','failed','refunded');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE payment_method_enum AS ENUM (
+    'razorpay_upi','razorpay_card','razorpay_netbanking','cod'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE coupon_type_enum AS ENUM ('flat','percent','free_shipping');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE address_type_enum AS ENUM ('home','work','other');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE admin_role_enum AS ENUM ('admin','super_admin');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE expense_category_enum AS ENUM (
+    'ingredients','packaging','delivery','marketing','utilities','other'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE TYPE blog_category_enum AS ENUM (
+    'recipe','culture','health','tips','behind-the-scenes'
+  );
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+-- ============================================================
+-- 01. admin_users
+-- Email/password login for maaflavours.com/admin
+-- NOT connected to Supabase Auth (validated server-side only)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS admin_users (
+  id              UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  email           TEXT        NOT NULL UNIQUE,
+  password_hash   TEXT        NOT NULL,             -- bcrypt hash; never store plaintext
+  role            admin_role_enum NOT NULL DEFAULT 'admin',
+  is_active       BOOLEAN     NOT NULL DEFAULT TRUE,
+  last_login_at   TIMESTAMPTZ,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE admin_users IS
+  'Admin accounts. Login via email + bcrypt password checked server-side. '
+  'Not linked to auth.users. Seed with ADMIN_EMAIL + bcrypt(ADMIN_PASSWORD).';
+
+-- ============================================================
+-- 02. categories
+-- Product categories (Spicy, Sour & Tangy, Seasonal Specials)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS categories (
+  id          UUID     PRIMARY KEY DEFAULT gen_random_uuid(),
+  name        TEXT     NOT NULL,
+  slug        TEXT     NOT NULL UNIQUE,
+  description TEXT,
+  image_url   TEXT,                        -- Supabase Storage URL — REPLACE with actual
+  sort_order  SMALLINT NOT NULL DEFAULT 0,
+  is_active   BOOLEAN  NOT NULL DEFAULT TRUE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE categories IS 'Product categories for the homepage category grid.';
+
+-- ============================================================
+-- 03. products
+-- 6 pickle SKUs. slug is the primary business identifier.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS products (
+  id                UUID     PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug              TEXT     NOT NULL UNIQUE,   -- e.g. "drumstick-pickle"
+  name              TEXT     NOT NULL,          -- e.g. "Drumstick Pickle"
+  subtitle          TEXT     NOT NULL,          -- e.g. "Medium Spicy"
+  tag               TEXT     NOT NULL,          -- e.g. "Authentic Andhra Taste"
+  spice_level       spice_level_enum NOT NULL DEFAULT 'medium',
+  short_description TEXT     NOT NULL,
+  description       TEXT     NOT NULL,          -- rich text / markdown
+  ingredients       TEXT     NOT NULL,          -- comma-separated list
+  shelf_life_days   SMALLINT NOT NULL DEFAULT 90,
+  is_vegetarian     BOOLEAN  NOT NULL DEFAULT TRUE,
+  is_active         BOOLEAN  NOT NULL DEFAULT TRUE,
+  is_featured       BOOLEAN  NOT NULL DEFAULT FALSE,
+  category_id       UUID     REFERENCES categories(id) ON DELETE SET NULL,
+  -- SEO
+  meta_title        TEXT,
+  meta_description  TEXT,
+  -- Denormalised from product_reviews (updated by trigger)
+  average_rating    NUMERIC(3,2) NOT NULL DEFAULT 0.00,
+  review_count      INTEGER      NOT NULL DEFAULT 0,
+  -- Timestamps
+  created_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE products IS
+  'Core product catalog. 6 SKUs. average_rating and review_count are '
+  'denormalised and auto-updated by trigger on product_reviews changes.';
+
+CREATE INDEX IF NOT EXISTS idx_products_active_featured ON products (is_active, is_featured);
+CREATE INDEX IF NOT EXISTS idx_products_slug            ON products (slug);
+CREATE INDEX IF NOT EXISTS idx_products_spice           ON products (spice_level);
+CREATE INDEX IF NOT EXISTS idx_products_fts
+  ON products USING GIN (
+    to_tsvector('english', name || ' ' || coalesce(short_description,'') || ' ' || tag)
+  );
+
+-- ============================================================
+-- 04. product_variants
+-- Each product has 2 variants: 250g and 500g.
+-- All prices stored in INTEGER paise (₹1 = 100 paise).
+-- ============================================================
+CREATE TABLE IF NOT EXISTS product_variants (
+  id                  UUID     PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id          UUID     NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  weight_grams        SMALLINT NOT NULL CHECK (weight_grams > 0),
+  label               TEXT     NOT NULL,          -- "250g" or "500g"
+  sku                 TEXT     NOT NULL UNIQUE,   -- "MF-DRUM-250"
+  price               INTEGER  NOT NULL CHECK (price > 0),       -- in paise
+  discounted_price    INTEGER  CHECK (discounted_price IS NULL OR discounted_price < price),
+  stock_quantity      INTEGER  NOT NULL DEFAULT 0 CHECK (stock_quantity >= 0),
+  low_stock_threshold INTEGER  NOT NULL DEFAULT 10,
+  is_active           BOOLEAN  NOT NULL DEFAULT TRUE,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE product_variants IS
+  'Product sizes. 250g / 500g per pickle. price in paise. '
+  'discounted_price NULL means no active discount.';
+COMMENT ON COLUMN product_variants.sku IS
+  'Format: MF-{PRODUCT_CODE}-{WEIGHT}. e.g. MF-DRUM-250, MF-AMLA-500';
+
+CREATE INDEX IF NOT EXISTS idx_variants_product    ON product_variants (product_id);
+CREATE INDEX IF NOT EXISTS idx_variants_active     ON product_variants (product_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_variants_low_stock
+  ON product_variants (stock_quantity, low_stock_threshold)
+  WHERE is_active = TRUE;
+
+-- ============================================================
+-- 05. product_images
+-- Supabase Storage bucket: "product-images"
+-- REPLACE placeholder URLs after uploading actual photos.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS product_images (
+  id          UUID     PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id  UUID     NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  url         TEXT     NOT NULL,   -- Supabase Storage public URL — REPLACE with actual
+  alt         TEXT     NOT NULL,
+  is_primary  BOOLEAN  NOT NULL DEFAULT FALSE,
+  sort_order  SMALLINT NOT NULL DEFAULT 0,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE product_images IS
+  'Product photos. url must be a Supabase Storage public URL. '
+  'REPLACE placeholder paths with actual images before going live.';
+
+CREATE INDEX IF NOT EXISTS idx_images_product    ON product_images (product_id, sort_order);
+-- Only one primary per product
+CREATE UNIQUE INDEX IF NOT EXISTS idx_images_primary
+  ON product_images (product_id) WHERE is_primary = TRUE;
+
+-- ============================================================
+-- 06. customers
+-- OTP-authenticated users. id = auth.users.id for seamless FK.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS customers (
+  id           UUID    PRIMARY KEY,              -- mirrors auth.users.id
+  mobile       TEXT    NOT NULL UNIQUE,          -- "+919876543210"
+  name         TEXT,
+  email        TEXT,
+  is_active    BOOLEAN NOT NULL DEFAULT TRUE,
+  -- Denormalised totals (updated by trigger)
+  total_orders INTEGER NOT NULL DEFAULT 0,
+  total_spent  INTEGER NOT NULL DEFAULT 0,       -- paise
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT chk_mobile_e164 CHECK (mobile ~ '^\+91[6-9][0-9]{9}$')
+);
+
+COMMENT ON TABLE customers IS
+  'Customer profiles. id = auth.users.id. '
+  'mobile is the login identifier in E.164 format (+91XXXXXXXXXX).';
+
+CREATE INDEX IF NOT EXISTS idx_customers_mobile     ON customers (mobile);
+CREATE INDEX IF NOT EXISTS idx_customers_email      ON customers (email) WHERE email IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_customers_created_at ON customers (created_at DESC);
+
+-- ============================================================
+-- 07. customer_addresses
+-- Multiple addresses per customer. One is_default = TRUE at a time
+-- (enforced by trigger enforce_single_default_address).
+-- ============================================================
+CREATE TABLE IF NOT EXISTS customer_addresses (
+  id              UUID  PRIMARY KEY DEFAULT gen_random_uuid(),
+  customer_id     UUID  NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+  name            TEXT  NOT NULL,    -- recipient name
+  mobile          TEXT  NOT NULL,    -- recipient mobile
+  address_line1   TEXT  NOT NULL,
+  address_line2   TEXT,
+  landmark        TEXT,
+  city            TEXT  NOT NULL,
+  state           TEXT  NOT NULL,
+  pincode         TEXT  NOT NULL CHECK (pincode ~ '^\d{6}$'),
+  address_type    address_type_enum NOT NULL DEFAULT 'home',
+  is_default      BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE customer_addresses IS
+  'Saved delivery addresses. Trigger ensures only one is_default=TRUE per customer.';
+
+CREATE INDEX IF NOT EXISTS idx_addresses_customer ON customer_addresses (customer_id);
+CREATE INDEX IF NOT EXISTS idx_addresses_default  ON customer_addresses (customer_id, is_default);
+
+-- ============================================================
+-- 08. coupons
+-- Discount codes: flat amount, percentage, or free shipping.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS coupons (
+  id                  UUID  PRIMARY KEY DEFAULT gen_random_uuid(),
+  code                TEXT  NOT NULL UNIQUE
+                        CHECK (code = UPPER(code)),              -- always UPPERCASE
+  description         TEXT,                                      -- internal admin note
+  type                coupon_type_enum NOT NULL,
+  value               INTEGER NOT NULL CHECK (value > 0),        -- paise (flat) or % int
+  min_order_amount    INTEGER,                                    -- min cart value, paise
+  max_discount_amount INTEGER,                                    -- cap for percent, paise
+  usage_limit         INTEGER,                                    -- NULL = unlimited
+  usage_count         INTEGER NOT NULL DEFAULT 0,
+  is_active           BOOLEAN NOT NULL DEFAULT TRUE,
+  valid_from          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at          TIMESTAMPTZ,                                -- NULL = no expiry
+
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT chk_percent_max_100 CHECK (type != 'percent' OR value <= 100),
+  CONSTRAINT chk_usage_count     CHECK (usage_limit IS NULL OR usage_count <= usage_limit)
+);
+
+COMMENT ON TABLE coupons IS
+  'Discount coupons. code is always UPPERCASE. '
+  'For flat: value is paise. For percent: value is 0-100. '
+  'Usage tracked via trigger on orders.payment_status → paid.';
+
+CREATE INDEX IF NOT EXISTS idx_coupons_code   ON coupons (code) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_coupons_active ON coupons (is_active, expires_at);
+
+-- ============================================================
+-- 09. orders
+-- Order header. Items in order_items.
+-- shipping_address is a JSONB snapshot — preserves address state
+-- at time of order, even if customer later changes it.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS orders (
+  id                  UUID  PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_number        TEXT  NOT NULL UNIQUE,                    -- "MF-2025-00001"
+  customer_id         UUID  NOT NULL REFERENCES customers(id),
+
+  -- Address snapshot (JSONB — not a FK, intentional)
+  shipping_address    JSONB NOT NULL,
+
+  -- Order state
+  status              order_status_enum    NOT NULL DEFAULT 'pending',
+  payment_status      payment_status_enum  NOT NULL DEFAULT 'pending',
+  payment_method      payment_method_enum  NOT NULL,
+
+  -- Amounts (all paise)
+  subtotal            INTEGER NOT NULL CHECK (subtotal > 0),
+  discount            INTEGER NOT NULL DEFAULT 0 CHECK (discount >= 0),
+  coupon_discount     INTEGER NOT NULL DEFAULT 0 CHECK (coupon_discount >= 0),
+  delivery_charge     INTEGER NOT NULL DEFAULT 0 CHECK (delivery_charge >= 0),
+  cod_charge          INTEGER NOT NULL DEFAULT 0 CHECK (cod_charge >= 0),
+  total               INTEGER NOT NULL CHECK (total > 0),
+
+  -- Coupon
+  coupon_code         TEXT REFERENCES coupons(code) ON DELETE SET NULL,
+
+  -- Razorpay
+  razorpay_order_id   TEXT UNIQUE,
+  razorpay_payment_id TEXT,
+
+  -- Shipping / tracking
+  tracking_id         TEXT,
+  courier_name        TEXT,
+  tracking_url        TEXT,
+  dispatched_at       TIMESTAMPTZ,
+  delivered_at        TIMESTAMPTZ,
+
+  -- GST (for invoice)
+  cgst_rate           NUMERIC(4,2) NOT NULL DEFAULT 0,
+  sgst_rate           NUMERIC(4,2) NOT NULL DEFAULT 0,
+  igst_rate           NUMERIC(4,2) NOT NULL DEFAULT 0,
+  cgst_amount         INTEGER NOT NULL DEFAULT 0,
+  sgst_amount         INTEGER NOT NULL DEFAULT 0,
+  igst_amount         INTEGER NOT NULL DEFAULT 0,
+
+  -- Notes
+  customer_notes      TEXT,
+  internal_notes      TEXT,
+
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE orders IS
+  'Order headers. order_number auto-generated by trigger (MF-YYYY-NNNNN). '
+  'shipping_address is JSONB snapshot — never a FK. '
+  'total = subtotal - discount - coupon_discount + delivery_charge + cod_charge.';
+
+CREATE INDEX IF NOT EXISTS idx_orders_customer     ON orders (customer_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status       ON orders (status);
+CREATE INDEX IF NOT EXISTS idx_orders_payment      ON orders (payment_status);
+CREATE INDEX IF NOT EXISTS idx_orders_created      ON orders (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_orders_number       ON orders (order_number);
+CREATE INDEX IF NOT EXISTS idx_orders_razorpay     ON orders (razorpay_order_id)
+  WHERE razorpay_order_id IS NOT NULL;
+
+-- ============================================================
+-- 10. order_items
+-- Line items. All product/price fields are SNAPSHOTS.
+-- They reflect the product state at time of order and never change.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS order_items (
+  id              UUID     PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id        UUID     NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  product_id      UUID     NOT NULL REFERENCES products(id),
+  variant_id      UUID     NOT NULL REFERENCES product_variants(id),
+  -- Snapshots at time of order
+  product_name    TEXT     NOT NULL,   -- "Drumstick Pickle"
+  variant_label   TEXT     NOT NULL,   -- "250g"
+  product_slug    TEXT     NOT NULL,   -- for order detail links
+  product_image   TEXT,                -- URL at time of order — REPLACE with actual
+  -- Quantities & pricing (paise)
+  quantity        SMALLINT NOT NULL DEFAULT 1 CHECK (quantity > 0),
+  unit_price      INTEGER  NOT NULL CHECK (unit_price > 0),
+  total_price     INTEGER  NOT NULL,
+
+  CONSTRAINT chk_total_price_correct CHECK (total_price = unit_price * quantity)
+);
+
+COMMENT ON TABLE order_items IS
+  'Order line items. All product fields are snapshots — they never '
+  'update even if the product is later edited or discontinued.';
+
+CREATE INDEX IF NOT EXISTS idx_items_order   ON order_items (order_id);
+CREATE INDEX IF NOT EXISTS idx_items_product ON order_items (product_id);
+CREATE INDEX IF NOT EXISTS idx_items_variant ON order_items (variant_id);
+
+-- ============================================================
+-- 11. order_status_history
+-- Immutable audit trail of every status change.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS order_status_history (
+  id          UUID   PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id    UUID   NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  old_status  order_status_enum,                    -- NULL for first status
+  new_status  order_status_enum NOT NULL,
+  changed_by  TEXT   NOT NULL DEFAULT 'system',     -- 'system' | 'admin' | customer mobile
+  note        TEXT,                                  -- e.g. "Tracking: DTDC123456789IN"
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE order_status_history IS
+  'Append-only audit trail. Never UPDATE or DELETE rows. '
+  'Populated automatically by trigger trg_log_order_status on orders.status change.';
+
+CREATE INDEX IF NOT EXISTS idx_status_history_order ON order_status_history (order_id, created_at DESC);
+
+-- ============================================================
+-- 12. product_reviews
+-- Customer reviews. is_approved=FALSE by default.
+-- Admin approves reviews from admin panel.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS product_reviews (
+  id                   UUID     PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id           UUID     NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  customer_id          UUID     NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+  order_id             UUID     REFERENCES orders(id) ON DELETE SET NULL,
+  -- Content
+  rating               SMALLINT NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  title                TEXT,
+  body                 TEXT     NOT NULL CHECK (LENGTH(TRIM(body)) > 0),
+  -- Denormalised customer info for display
+  customer_name        TEXT     NOT NULL,
+  customer_city        TEXT,
+  -- Moderation
+  is_verified_purchase BOOLEAN  NOT NULL DEFAULT FALSE,
+  is_approved          BOOLEAN  NOT NULL DEFAULT FALSE,   -- admin must approve
+  is_featured          BOOLEAN  NOT NULL DEFAULT FALSE,   -- show on homepage?
+  helpful_count        INTEGER  NOT NULL DEFAULT 0,
+
+  created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at           TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  -- One review per customer per product
+  UNIQUE (product_id, customer_id)
+);
+
+COMMENT ON TABLE product_reviews IS
+  'Customer reviews. Defaults to unapproved. Admin approves from admin panel. '
+  'products.average_rating and review_count auto-update via trigger.';
+
+CREATE INDEX IF NOT EXISTS idx_reviews_product  ON product_reviews (product_id, is_approved);
+CREATE INDEX IF NOT EXISTS idx_reviews_customer ON product_reviews (customer_id);
+CREATE INDEX IF NOT EXISTS idx_reviews_featured ON product_reviews (is_featured, is_approved);
+
+-- ============================================================
+-- 13. otp_sessions
+-- Temporary OTP state. Expires after 10 minutes.
+-- Rate limiting: max 3 rows per mobile per hour (enforced in API route).
+-- ============================================================
+CREATE TABLE IF NOT EXISTS otp_sessions (
+  id            UUID     PRIMARY KEY DEFAULT gen_random_uuid(),
+  mobile        TEXT     NOT NULL,
+  otp_hash      TEXT     NOT NULL,           -- bcrypt hash of the 6-digit OTP
+  attempt_count SMALLINT NOT NULL DEFAULT 0 CHECK (attempt_count <= 5),
+  is_verified   BOOLEAN  NOT NULL DEFAULT FALSE,
+  expires_at    TIMESTAMPTZ NOT NULL DEFAULT (NOW() + INTERVAL '10 minutes'),
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE otp_sessions IS
+  'Active OTP sessions. expire_at is 10 minutes from creation. '
+  'API route enforces max 3 new rows per mobile per hour before inserting.';
+
+CREATE INDEX IF NOT EXISTS idx_otp_mobile   ON otp_sessions (mobile, expires_at DESC);
+CREATE INDEX IF NOT EXISTS idx_otp_active   ON otp_sessions (mobile, is_verified, expires_at);
+
+-- ============================================================
+-- 14. newsletter_subscribers
+-- Email subscribers from homepage / blog newsletter forms.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+  id           UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
+  email        TEXT    NOT NULL UNIQUE,
+  name         TEXT,
+  coupon_sent  BOOLEAN NOT NULL DEFAULT FALSE,   -- WELCOME50 sent?
+  is_active    BOOLEAN NOT NULL DEFAULT TRUE,    -- FALSE = unsubscribed
+  source       TEXT    NOT NULL DEFAULT 'homepage',  -- 'homepage' | 'blog' | 'checkout'
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE newsletter_subscribers IS 'Email newsletter subscribers.';
+
+CREATE INDEX IF NOT EXISTS idx_newsletter_email  ON newsletter_subscribers (email);
+CREATE INDEX IF NOT EXISTS idx_newsletter_active ON newsletter_subscribers (is_active, created_at DESC);
+
+-- ============================================================
+-- 15. contact_messages
+-- Form submissions from /contact page.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id           UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
+  name         TEXT    NOT NULL,
+  mobile       TEXT    NOT NULL,
+  email        TEXT,
+  topic        TEXT    NOT NULL,
+  message      TEXT    NOT NULL,
+  is_read      BOOLEAN NOT NULL DEFAULT FALSE,
+  is_resolved  BOOLEAN NOT NULL DEFAULT FALSE,
+  admin_notes  TEXT,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE contact_messages IS 'Contact form submissions. Admin manages from admin panel.';
+
+CREATE INDEX IF NOT EXISTS idx_contact_unread  ON contact_messages (is_read, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_contact_created ON contact_messages (created_at DESC);
+
+-- ============================================================
+-- 16. blog_posts
+-- CMS table. Seeded from src/lib/constants/blog.ts (6 posts).
+-- Admin can edit/add from admin panel after launch.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS blog_posts (
+  id               UUID  PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug             TEXT  NOT NULL UNIQUE,
+  title            TEXT  NOT NULL,
+  subtitle         TEXT  NOT NULL,
+  excerpt          TEXT  NOT NULL,
+  body             JSONB NOT NULL DEFAULT '[]',   -- ContentBlock[] JSON array
+  category         blog_category_enum NOT NULL,
+  category_label   TEXT  NOT NULL,
+  emoji            TEXT  NOT NULL DEFAULT '🫙',
+  read_time        TEXT  NOT NULL DEFAULT '5 min read',
+  author_name      TEXT  NOT NULL DEFAULT 'Maa Flavours Kitchen',
+  author_role      TEXT  NOT NULL DEFAULT 'Ongole, Andhra Pradesh',
+  tags             TEXT[] NOT NULL DEFAULT '{}',
+  is_featured      BOOLEAN NOT NULL DEFAULT FALSE,
+  is_published     BOOLEAN NOT NULL DEFAULT TRUE,
+  published_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  related_slugs    TEXT[] NOT NULL DEFAULT '{}',
+  cover_image_url  TEXT,                          -- REPLACE with actual image
+  -- SEO
+  meta_title       TEXT,
+  meta_description TEXT,
+
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE blog_posts IS
+  'Blog/recipe posts. body is ContentBlock[] JSONB. '
+  'See src/lib/constants/blog.ts for the ContentBlock type definition. '
+  'Initially seeded from static constants.';
+
+CREATE INDEX IF NOT EXISTS idx_blog_slug      ON blog_posts (slug) WHERE is_published = TRUE;
+CREATE INDEX IF NOT EXISTS idx_blog_featured  ON blog_posts (is_featured, published_at DESC);
+CREATE INDEX IF NOT EXISTS idx_blog_category  ON blog_posts (category, is_published);
+CREATE INDEX IF NOT EXISTS idx_blog_tags      ON blog_posts USING GIN (tags);
+CREATE INDEX IF NOT EXISTS idx_blog_fts
+  ON blog_posts USING GIN (
+    to_tsvector('english', title || ' ' || excerpt)
+  );
+
+-- ============================================================
+-- 17. expenses
+-- Admin expense tracker. Monthly P&L calculations.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS expenses (
+  id           UUID  PRIMARY KEY DEFAULT gen_random_uuid(),
+  category     expense_category_enum NOT NULL,
+  description  TEXT  NOT NULL,
+  amount       INTEGER NOT NULL CHECK (amount > 0),  -- paise
+  expense_date DATE  NOT NULL DEFAULT CURRENT_DATE,
+  receipt_url  TEXT,                                  -- Supabase Storage URL
+  added_by     UUID  REFERENCES admin_users(id) ON DELETE SET NULL,
+  notes        TEXT,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE expenses IS 'Admin expense entries for monthly profit/loss report. amount in paise.';
+
+CREATE INDEX IF NOT EXISTS idx_expenses_date     ON expenses (expense_date DESC);
+CREATE INDEX IF NOT EXISTS idx_expenses_category ON expenses (category, expense_date DESC);
+
+-- ============================================================
+-- 18. settings
+-- Key/value config store. Seeded with defaults below.
+-- Admin can update values from admin Settings panel.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS settings (
+  key        TEXT  PRIMARY KEY,
+  value      JSONB NOT NULL,
+  description TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+COMMENT ON TABLE settings IS
+  'App-wide configuration. All monetary values in paise. '
+  'Managed from admin Settings panel.';
+
+INSERT INTO settings (key, value, description) VALUES
+  -- Shipping
+  ('shipping_free_threshold',   '49900',                                'Free shipping threshold in paise (₹499)'),
+  ('shipping_charge',           '6000',                                 'Standard shipping charge in paise (₹60)'),
+  ('cod_charge',                '3000',                                 'COD convenience charge in paise (₹30)'),
+  ('delivery_days_min',         '5',                                    'Minimum standard delivery days'),
+  ('delivery_days_max',         '7',                                    'Maximum standard delivery days'),
+  -- GST
+  ('gst_cgst_rate',             '9',                                    'CGST % for intra-state (AP) orders'),
+  ('gst_sgst_rate',             '9',                                    'SGST % for intra-state (AP) orders'),
+  ('gst_igst_rate',             '18',                                   'IGST % for inter-state orders'),
+  -- Business info (for invoices)
+  ('business_name',             '"Maa Flavours"',                       'Business name for GST invoices'),
+  ('business_address',          '"Ongole, Andhra Pradesh, India 523001"', 'Business address for invoices'),
+  ('business_mobile',           '"+919876543210"',                      'Business contact mobile'),
+  ('business_email',            '"support@maaflavours.com"',            'Business contact email'),
+  ('business_gstin',            '"Pending"',                            'GSTIN — update when received'),
+  ('business_fssai',            '"Application In Progress"',            'FSSAI license — update when received'),
+  -- Toggles
+  ('whatsapp_number',           '"919876543210"',                       'WhatsApp number without + (for wa.me links)'),
+  ('razorpay_enabled',          'true',                                 'Enable Razorpay online payments'),
+  ('cod_enabled',               'true',                                 'Enable Cash on Delivery'),
+  ('maintenance_mode',          'false',                                'Put site in maintenance mode'),
+  -- Low stock threshold (global default)
+  ('low_stock_default_threshold', '10',                                 'Default low stock alert threshold per variant')
+ON CONFLICT (key) DO NOTHING;
+
+-- ============================================================
+-- VIEWS
+-- ============================================================
+
+-- Product listing view with primary image + pricing summary
+CREATE OR REPLACE VIEW products_with_details AS
+SELECT
+  p.*,
+  pi.url                                               AS primary_image_url,
+  pi.alt                                               AS primary_image_alt,
+  MIN(pv.price)                                        AS min_price,
+  MAX(pv.price)                                        AS max_price,
+  MIN(COALESCE(pv.discounted_price, pv.price))         AS min_effective_price,
+  SUM(pv.stock_quantity)                               AS total_stock,
+  COUNT(DISTINCT pv.id)                                AS variant_count,
+  BOOL_OR(pv.stock_quantity <= pv.low_stock_threshold) AS has_low_stock,
+  BOOL_OR(pv.stock_quantity = 0)                       AS is_out_of_stock
+FROM products p
+LEFT JOIN product_images pi
+  ON pi.product_id = p.id AND pi.is_primary = TRUE
+LEFT JOIN product_variants pv
+  ON pv.product_id = p.id AND pv.is_active = TRUE
+WHERE p.is_active = TRUE
+GROUP BY p.id, pi.url, pi.alt;
+
+COMMENT ON VIEW products_with_details IS
+  'Products with primary image URL, effective price range, and stock summary. '
+  'Main view used by product listing and product detail API routes.';
+
+-- Orders summary view for admin
+CREATE OR REPLACE VIEW orders_summary AS
+SELECT
+  o.*,
+  c.name              AS customer_name,
+  c.mobile            AS customer_mobile,
+  c.email             AS customer_email,
+  COUNT(oi.id)        AS item_count,
+  SUM(oi.quantity)    AS total_quantity
+FROM orders o
+JOIN customers c      ON c.id = o.customer_id
+LEFT JOIN order_items oi ON oi.order_id = o.id
+GROUP BY o.id, c.name, c.mobile, c.email;
+
+COMMENT ON VIEW orders_summary IS 'Orders with customer details and item counts. Used by admin orders list.';
+
+-- Low stock alert view
+CREATE OR REPLACE VIEW low_stock_variants AS
+SELECT
+  pv.*,
+  p.name              AS product_name,
+  p.slug              AS product_slug
+FROM product_variants pv
+JOIN products p ON p.id = pv.product_id AND p.is_active = TRUE
+WHERE pv.is_active = TRUE
+  AND pv.stock_quantity <= pv.low_stock_threshold
+ORDER BY pv.stock_quantity ASC, p.name;
+
+COMMENT ON VIEW low_stock_variants IS
+  'Variants at or below their low_stock_threshold. Shown in admin dashboard alerts.';
+
+-- ============================================================
+-- FUNCTIONS
+-- ============================================================
+
+-- fn: auto-update updated_at on any table
+CREATE OR REPLACE FUNCTION fn_set_updated_at()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$;
+
+-- fn: generate MF-YYYY-NNNNN order number
+CREATE OR REPLACE FUNCTION fn_generate_order_number()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+  yr   TEXT    := TO_CHAR(NOW(), 'YYYY');
+  seq  INTEGER;
+BEGIN
+  IF NEW.order_number IS NULL OR NEW.order_number = '' THEN
+    SELECT COUNT(*) + 1 INTO seq
+    FROM orders
+    WHERE EXTRACT(YEAR FROM created_at) = EXTRACT(YEAR FROM NOW());
+    NEW.order_number := 'MF-' || yr || '-' || LPAD(seq::TEXT, 5, '0');
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+COMMENT ON FUNCTION fn_generate_order_number() IS
+  'Auto-generates MF-YYYY-NNNNN order number if not provided. Called by trigger.';
+
+-- fn: keep product.average_rating and review_count in sync
+CREATE OR REPLACE FUNCTION fn_sync_product_rating()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+  pid UUID := COALESCE(NEW.product_id, OLD.product_id);
+BEGIN
+  UPDATE products
+  SET
+    average_rating = COALESCE((
+      SELECT AVG(rating) FROM product_reviews
+      WHERE product_id = pid AND is_approved = TRUE
+    ), 0),
+    review_count = (
+      SELECT COUNT(*) FROM product_reviews
+      WHERE product_id = pid AND is_approved = TRUE
+    )
+  WHERE id = pid;
+  RETURN COALESCE(NEW, OLD);
+END;
+$$;
+
+-- fn: keep customers.total_orders and total_spent in sync
+CREATE OR REPLACE FUNCTION fn_sync_customer_totals()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE
+  cid UUID := COALESCE(NEW.customer_id, OLD.customer_id);
+BEGIN
+  UPDATE customers
+  SET
+    total_orders = (
+      SELECT COUNT(*) FROM orders
+      WHERE customer_id = cid
+        AND status NOT IN ('cancelled','refunded')
+        AND payment_status = 'paid'
+    ),
+    total_spent = COALESCE((
+      SELECT SUM(total) FROM orders
+      WHERE customer_id = cid
+        AND status NOT IN ('cancelled','refunded')
+        AND payment_status = 'paid'
+    ), 0)
+  WHERE id = cid;
+  RETURN COALESCE(NEW, OLD);
+END;
+$$;
+
+-- fn: ensure only one default address per customer
+CREATE OR REPLACE FUNCTION fn_single_default_address()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  IF NEW.is_default = TRUE THEN
+    UPDATE customer_addresses
+    SET is_default = FALSE
+    WHERE customer_id = NEW.customer_id AND id != NEW.id;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+-- fn: deduct/restore stock on order status changes
+CREATE OR REPLACE FUNCTION fn_manage_inventory()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  -- Deduct stock when order becomes 'confirmed'
+  IF NEW.status = 'confirmed'
+    AND OLD.status IN ('pending') THEN
+    UPDATE product_variants pv
+    SET stock_quantity = pv.stock_quantity - oi.quantity
+    FROM order_items oi
+    WHERE oi.order_id = NEW.id AND oi.variant_id = pv.id;
+  END IF;
+
+  -- Restore stock when order is cancelled or refunded
+  IF NEW.status IN ('cancelled','refunded')
+    AND OLD.status NOT IN ('cancelled','refunded') THEN
+    UPDATE product_variants pv
+    SET stock_quantity = pv.stock_quantity + oi.quantity
+    FROM order_items oi
+    WHERE oi.order_id = NEW.id AND oi.variant_id = pv.id;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+-- fn: log every status change to order_status_history
+CREATE OR REPLACE FUNCTION fn_log_order_status()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  IF OLD.status IS DISTINCT FROM NEW.status THEN
+    INSERT INTO order_status_history (order_id, old_status, new_status, changed_by)
+    VALUES (
+      NEW.id,
+      OLD.status,
+      NEW.status,
+      COALESCE(current_setting('app.changed_by', TRUE), 'system')
+    );
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+-- fn: increment coupon usage_count when an order is paid
+CREATE OR REPLACE FUNCTION fn_increment_coupon_usage()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  IF NEW.payment_status = 'paid'
+    AND (OLD.payment_status IS DISTINCT FROM 'paid')
+    AND NEW.coupon_code IS NOT NULL
+  THEN
+    UPDATE coupons
+    SET usage_count = usage_count + 1
+    WHERE code = NEW.coupon_code;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+
+-- ============================================================
+-- TRIGGERS
+-- ============================================================
+
+-- Order number generation
+DROP TRIGGER IF EXISTS trg_order_number ON orders;
+CREATE TRIGGER trg_order_number
+  BEFORE INSERT ON orders FOR EACH ROW
+EXECUTE FUNCTION fn_generate_order_number();
+
+-- Product rating sync (review insert/update/delete)
+DROP TRIGGER IF EXISTS trg_rating_insert ON product_reviews;
+CREATE TRIGGER trg_rating_insert
+  AFTER INSERT ON product_reviews FOR EACH ROW
+EXECUTE FUNCTION fn_sync_product_rating();
+
+DROP TRIGGER IF EXISTS trg_rating_update ON product_reviews;
+CREATE TRIGGER trg_rating_update
+  AFTER UPDATE OF rating, is_approved ON product_reviews FOR EACH ROW
+EXECUTE FUNCTION fn_sync_product_rating();
+
+DROP TRIGGER IF EXISTS trg_rating_delete ON product_reviews;
+CREATE TRIGGER trg_rating_delete
+  AFTER DELETE ON product_reviews FOR EACH ROW
+EXECUTE FUNCTION fn_sync_product_rating();
+
+-- Customer totals sync
+DROP TRIGGER IF EXISTS trg_customer_totals ON orders;
+CREATE TRIGGER trg_customer_totals
+  AFTER INSERT OR UPDATE OF status, payment_status ON orders FOR EACH ROW
+EXECUTE FUNCTION fn_sync_customer_totals();
+
+-- Single default address
+DROP TRIGGER IF EXISTS trg_single_default ON customer_addresses;
+CREATE TRIGGER trg_single_default
+  BEFORE INSERT OR UPDATE OF is_default ON customer_addresses FOR EACH ROW
+  WHEN (NEW.is_default = TRUE)
+EXECUTE FUNCTION fn_single_default_address();
+
+-- Inventory management
+DROP TRIGGER IF EXISTS trg_inventory ON orders;
+CREATE TRIGGER trg_inventory
+  AFTER UPDATE OF status ON orders FOR EACH ROW
+EXECUTE FUNCTION fn_manage_inventory();
+
+-- Order status history log
+DROP TRIGGER IF EXISTS trg_order_status_log ON orders;
+CREATE TRIGGER trg_order_status_log
+  AFTER UPDATE OF status ON orders FOR EACH ROW
+EXECUTE FUNCTION fn_log_order_status();
+
+-- Coupon usage increment
+DROP TRIGGER IF EXISTS trg_coupon_usage ON orders;
+CREATE TRIGGER trg_coupon_usage
+  AFTER UPDATE OF payment_status ON orders FOR EACH ROW
+EXECUTE FUNCTION fn_increment_coupon_usage();
+
+-- updated_at triggers
+DROP TRIGGER IF EXISTS trg_upd_products      ON products;           CREATE TRIGGER trg_upd_products      BEFORE UPDATE ON products           FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_upd_variants      ON product_variants;   CREATE TRIGGER trg_upd_variants      BEFORE UPDATE ON product_variants   FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_upd_customers     ON customers;          CREATE TRIGGER trg_upd_customers     BEFORE UPDATE ON customers          FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_upd_addresses     ON customer_addresses; CREATE TRIGGER trg_upd_addresses     BEFORE UPDATE ON customer_addresses FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_upd_orders        ON orders;             CREATE TRIGGER trg_upd_orders        BEFORE UPDATE ON orders             FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_upd_coupons       ON coupons;            CREATE TRIGGER trg_upd_coupons       BEFORE UPDATE ON coupons            FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_upd_admin         ON admin_users;        CREATE TRIGGER trg_upd_admin         BEFORE UPDATE ON admin_users        FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_upd_reviews       ON product_reviews;    CREATE TRIGGER trg_upd_reviews       BEFORE UPDATE ON product_reviews    FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+DROP TRIGGER IF EXISTS trg_upd_blog          ON blog_posts;         CREATE TRIGGER trg_upd_blog          BEFORE UPDATE ON blog_posts         FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
+
+-- ============================================================
+-- END schema.sql
+-- Next: run supabase/seed.sql then supabase/rls.sql
+-- ============================================================
