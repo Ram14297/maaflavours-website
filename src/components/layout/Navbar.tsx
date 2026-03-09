@@ -3,46 +3,66 @@
 // Maa Flavours — Main navigation
 // Transparent over hero → solid warm white on scroll
 // Logo left | Nav center | Cart + Account right
-// Cart badge | Account opens OTP modal if not logged in
+// Account: fetches /api/auth/me on mount → shows user initial + dropdown if logged in
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingBag, User, Menu, X, ChevronDown } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ShoppingBag, User, Menu, X, ChevronDown, LogOut, Package, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ─── Static nav links ──────────────────────────────────────────────────────
 const NAV_LINKS = [
-  { label: "Home", href: "/" },
+  { label: "Home",     href: "/" },
   { label: "Products", href: "/products" },
-  { label: "Our Story", href: "/about" },
-  { label: "Blog", href: "/blog" },
-  { label: "Contact", href: "/contact" },
+  { label: "Blog",     href: "/blog" },
+  { label: "Contact",  href: "/contact" },
 ];
+
+interface AuthUser {
+  id: string;
+  name: string;
+  mobile: string;
+}
 
 interface NavbarProps {
   cartCount?: number;
-  isLoggedIn?: boolean;
+  isLoggedIn?: boolean;      // optional override (used by homepage OTP modal)
   onCartClick?: () => void;
-  onAccountClick?: () => void;
+  onAccountClick?: () => void; // optional override (used by homepage OTP modal)
 }
 
 export default function Navbar({
   cartCount = 0,
-  isLoggedIn = false,
+  isLoggedIn: isLoggedInProp,
   onCartClick,
   onAccountClick,
 }: NavbarProps) {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeLink, setActiveLink] = useState("/");
-  const navRef = useRef<HTMLElement>(null);
+  const router = useRouter();
+  const [scrolled, setScrolled]         = useState(false);
+  const [mobileOpen, setMobileOpen]     = useState(false);
+  const [activeLink, setActiveLink]     = useState("/");
+  const [authUser, setAuthUser]         = useState<AuthUser | null>(null);
+  const [authLoaded, setAuthLoaded]     = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const navRef     = useRef<HTMLElement>(null);
+  const accountRef = useRef<HTMLDivElement>(null);
+
+  // ─── Fetch auth state on mount ────────────────────────────────────────
+  useEffect(() => {
+    fetch("/api/auth/me", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.user) setAuthUser(data.user);
+      })
+      .catch(() => {})
+      .finally(() => setAuthLoaded(true));
+  }, []);
 
   // ─── Scroll detection ─────────────────────────────────────────────────
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 60);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -63,11 +83,48 @@ export default function Navbar({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // ─── Close account dropdown on outside click ─────────────────────────
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setAccountMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   // ─── Lock body scroll when mobile menu open ───────────────────────────
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [mobileOpen]);
+
+  // ─── Effective logged-in state ────────────────────────────────────────
+  // Props override takes priority (homepage OTP modal flow)
+  const isLoggedIn = isLoggedInProp ?? (authUser !== null);
+  const firstName = authUser?.name?.split(" ")[0] || "";
+  const initial = firstName.charAt(0).toUpperCase() || authUser?.mobile?.slice(-2) || "U";
+
+  // ─── Logout ───────────────────────────────────────────────────────────
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+    } catch { /* ignore */ }
+    setAuthUser(null);
+    setAccountMenuOpen(false);
+    router.push("/");
+  };
+
+  // ─── Account button click ─────────────────────────────────────────────
+  const handleAccountClick = () => {
+    if (onAccountClick) { onAccountClick(); return; }
+    if (isLoggedIn) {
+      setAccountMenuOpen((prev) => !prev);
+    } else {
+      router.push("/login");
+    }
+  };
 
   return (
     <>
@@ -75,9 +132,7 @@ export default function Navbar({
         ref={navRef}
         className={cn(
           "sticky top-0 left-0 right-0 z-nav transition-all duration-400",
-          scrolled
-            ? "bg-warm-white/98 backdrop-blur-sm"
-            : "bg-transparent"
+          scrolled ? "bg-warm-white/98 backdrop-blur-sm" : "bg-transparent"
         )}
         style={{
           boxShadow: scrolled ? "0 2px 24px rgba(74, 44, 10, 0.08)" : "none",
@@ -118,10 +173,9 @@ export default function Navbar({
                     activeLink === link.href && "active"
                   )}
                   style={{
-                    color:
-                      activeLink === link.href
-                        ? "var(--color-crimson)"
-                        : "var(--color-brown)",
+                    color: activeLink === link.href
+                      ? "var(--color-crimson)"
+                      : "var(--color-brown)",
                   }}
                 >
                   {link.label}
@@ -131,6 +185,7 @@ export default function Navbar({
 
             {/* ─── Actions (Cart + Account) ──────────────────────────────── */}
             <div className="flex items-center gap-1">
+
               {/* Cart Button */}
               <button
                 onClick={onCartClick}
@@ -146,12 +201,7 @@ export default function Navbar({
                 {cartCount > 0 && (
                   <span
                     className="cart-badge"
-                    style={{
-                      top: "4px",
-                      right: "4px",
-                      minWidth: "18px",
-                      height: "18px",
-                    }}
+                    style={{ top: "4px", right: "4px", minWidth: "18px", height: "18px" }}
                   >
                     {cartCount > 99 ? "99+" : cartCount}
                   </span>
@@ -159,25 +209,107 @@ export default function Navbar({
               </button>
 
               {/* Account Button */}
-              <button
-                onClick={onAccountClick}
-                className="relative p-2.5 rounded-lg transition-all duration-200 hover:bg-cream group"
-                aria-label={isLoggedIn ? "My Account" : "Login"}
-                style={{ color: "var(--color-brown)" }}
-              >
-                <User
-                  size={22}
-                  strokeWidth={1.75}
-                  className="transition-transform duration-200 group-hover:scale-105"
-                />
-                {/* Online indicator when logged in */}
-                {isLoggedIn && (
-                  <span
-                    className="absolute bottom-2 right-2 w-2 h-2 rounded-full border border-white"
-                    style={{ backgroundColor: "var(--color-veg)" }}
-                  />
-                )}
-              </button>
+              {authLoaded && (
+                <div className="relative" ref={accountRef}>
+                  <button
+                    onClick={handleAccountClick}
+                    className="relative flex items-center gap-1.5 p-2 rounded-lg transition-all duration-200 hover:bg-cream group"
+                    aria-label={isLoggedIn ? `Account — ${firstName}` : "Login"}
+                    aria-expanded={accountMenuOpen}
+                    style={{ color: "var(--color-brown)" }}
+                  >
+                    {isLoggedIn && authUser ? (
+                      <>
+                        {/* User initial circle */}
+                        <span
+                          className="w-8 h-8 rounded-full flex items-center justify-center font-dm-sans font-bold text-sm text-white flex-shrink-0"
+                          style={{
+                            background: "linear-gradient(135deg, var(--color-crimson), #9E1F24)",
+                            boxShadow: "0 2px 8px rgba(192,39,45,0.3)",
+                          }}
+                        >
+                          {initial}
+                        </span>
+                        {firstName && (
+                          <span
+                            className="hidden lg:block font-dm-sans text-sm font-semibold max-w-[80px] truncate"
+                            style={{ color: "var(--color-brown)" }}
+                          >
+                            {firstName}
+                          </span>
+                        )}
+                        <ChevronDown
+                          size={14}
+                          className={cn("hidden lg:block transition-transform duration-200", accountMenuOpen && "rotate-180")}
+                          style={{ color: "var(--color-grey)" }}
+                        />
+                      </>
+                    ) : (
+                      <User
+                        size={22}
+                        strokeWidth={1.75}
+                        className="transition-transform duration-200 group-hover:scale-105"
+                      />
+                    )}
+                  </button>
+
+                  {/* Account Dropdown */}
+                  {accountMenuOpen && isLoggedIn && (
+                    <div
+                      className="absolute right-0 top-full mt-2 w-48 rounded-2xl overflow-hidden z-50"
+                      style={{
+                        background: "white",
+                        border: "1px solid rgba(200,150,12,0.15)",
+                        boxShadow: "0 8px 32px rgba(74,44,10,0.12)",
+                      }}
+                    >
+                      {/* User info header */}
+                      <div
+                        className="px-4 py-3 border-b"
+                        style={{ borderColor: "rgba(200,150,12,0.1)" }}
+                      >
+                        <p className="font-dm-sans font-bold text-sm truncate" style={{ color: "var(--color-brown)" }}>
+                          {authUser?.name || "My Account"}
+                        </p>
+                        <p className="font-dm-sans text-xs truncate" style={{ color: "var(--color-grey)" }}>
+                          {authUser?.mobile}
+                        </p>
+                      </div>
+
+                      {/* Menu items */}
+                      <div className="py-1">
+                        <Link
+                          href="/account"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 font-dm-sans text-sm transition-colors hover:bg-cream"
+                          style={{ color: "var(--color-brown)" }}
+                        >
+                          <UserCircle size={16} style={{ color: "var(--color-gold)" }} />
+                          My Account
+                        </Link>
+                        <Link
+                          href="/account/orders"
+                          onClick={() => setAccountMenuOpen(false)}
+                          className="flex items-center gap-3 px-4 py-2.5 font-dm-sans text-sm transition-colors hover:bg-cream"
+                          style={{ color: "var(--color-brown)" }}
+                        >
+                          <Package size={16} style={{ color: "var(--color-gold)" }} />
+                          My Orders
+                        </Link>
+                        <div className="border-t my-1" style={{ borderColor: "rgba(200,150,12,0.1)" }} />
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 font-dm-sans text-sm transition-colors hover:bg-crimson/5"
+                          style={{ color: "var(--color-crimson)" }}
+                        >
+                          <LogOut size={16} />
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Mobile Menu Toggle */}
               <button
@@ -262,6 +394,29 @@ export default function Navbar({
           </button>
         </div>
 
+        {/* User info in drawer (if logged in) */}
+        {isLoggedIn && authUser && (
+          <div
+            className="mx-3 mt-3 px-4 py-3 rounded-xl flex items-center gap-3"
+            style={{ background: "rgba(192,39,45,0.06)", border: "1px solid rgba(192,39,45,0.12)" }}
+          >
+            <span
+              className="w-9 h-9 rounded-full flex items-center justify-center font-dm-sans font-bold text-base text-white flex-shrink-0"
+              style={{ background: "linear-gradient(135deg, var(--color-crimson), #9E1F24)" }}
+            >
+              {initial}
+            </span>
+            <div className="min-w-0">
+              <p className="font-dm-sans font-bold text-sm truncate" style={{ color: "var(--color-brown)" }}>
+                {authUser.name || "My Account"}
+              </p>
+              <p className="font-dm-sans text-xs truncate" style={{ color: "var(--color-grey)" }}>
+                {authUser.mobile}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Nav links */}
         <nav className="px-3 py-4 flex flex-col gap-1">
           {NAV_LINKS.map((link) => (
@@ -295,13 +450,35 @@ export default function Navbar({
             <ShoppingBag size={18} />
             Shop All Pickles
           </Link>
-          <button
-            onClick={() => { setMobileOpen(false); onAccountClick?.(); }}
-            className="btn-ghost w-full justify-center py-3"
-          >
-            <User size={18} />
-            {isLoggedIn ? "My Account" : "Login"}
-          </button>
+
+          {isLoggedIn && authUser ? (
+            <>
+              <Link
+                href="/account"
+                onClick={() => setMobileOpen(false)}
+                className="btn-ghost w-full justify-center py-3"
+              >
+                <UserCircle size={18} />
+                My Account
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-dm-sans font-semibold text-sm transition-colors hover:bg-crimson/5"
+                style={{ color: "var(--color-crimson)" }}
+              >
+                <LogOut size={18} />
+                Logout
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => { setMobileOpen(false); onAccountClick ? onAccountClick() : router.push("/login"); }}
+              className="btn-ghost w-full justify-center py-3"
+            >
+              <User size={18} />
+              Login
+            </button>
+          )}
         </div>
 
         {/* Footer note */}

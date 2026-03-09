@@ -9,17 +9,7 @@ import Link from "next/link";
 import { Instagram, Facebook, Phone, Mail, MapPin, MessageCircle } from "lucide-react";
 import { SITE } from "@/lib/constants/products";
 
-const SHOP_LINKS = [
-  { label: "All Pickles", href: "/products" },
-  { label: "Drumstick Pickle", href: "/products/drumstick-pickle" },
-  { label: "Gongura Pickle", href: "/products/pulihora-gongura" },
-  { label: "Lemon Pickle", href: "/products/lemon-pickle" },
-  { label: "Amla Pickle", href: "/products/amla-pickle" },
-  { label: "Gift Sets", href: "/products#gift-sets" },
-];
-
 const POLICY_LINKS = [
-  { label: "About Us", href: "/about" },
   { label: "FAQ", href: "/faq" },
   { label: "Shipping Policy", href: "/shipping-policy" },
   { label: "Return & Refund", href: "/return-policy" },
@@ -95,11 +85,11 @@ export default function Footer() {
         />
 
         <div className="section-container pt-14 pb-10">
-          {/* 4-column grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8">
+          {/* 3-column grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-8">
 
             {/* ─── Col 1: Brand ─────────────────────────────────────────── */}
-            <div className="sm:col-span-2 lg:col-span-1">
+            <div>
               <Link href="/" className="inline-flex items-center gap-2.5 group mb-4">
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
@@ -167,30 +157,7 @@ export default function Footer() {
               </div>
             </div>
 
-            {/* ─── Col 2: Shop ──────────────────────────────────────────── */}
-            <div>
-              <h4
-                className="font-playfair font-semibold text-base mb-4"
-                style={{ color: "var(--color-gold-light)" }}
-              >
-                Our Pickles
-              </h4>
-              <ul className="flex flex-col gap-2.5">
-                {SHOP_LINKS.map((link) => (
-                  <li key={link.href}>
-                    <Link
-                      href={link.href}
-                      className="font-dm-sans text-sm transition-colors duration-200 hover:text-gold-light"
-                      style={{ color: "rgba(245, 239, 224, 0.65)" }}
-                    >
-                      {link.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* ─── Col 3: Policies ──────────────────────────────────────── */}
+            {/* ─── Col 2: Policies ──────────────────────────────────────── */}
             <div>
               <h4
                 className="font-playfair font-semibold text-base mb-4"
@@ -213,7 +180,7 @@ export default function Footer() {
               </ul>
             </div>
 
-            {/* ─── Col 4: Contact ────────────────────────────────────────── */}
+            {/* ─── Col 3: Contact ────────────────────────────────────────── */}
             <div>
               <h4
                 className="font-playfair font-semibold text-base mb-4"

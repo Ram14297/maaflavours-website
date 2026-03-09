@@ -10,9 +10,8 @@
 // 6. CategorySection
 // 7. BrandStory
 // 8. HowItWorks
-// 9. Reviews
-// 10. RecipeInspiration
-// 11. Newsletter
+// 9. RecipeInspiration
+// 10. Newsletter
 // 12. Footer (in layout)
 
 import { useEffect, useRef, useState } from "react";
@@ -25,7 +24,6 @@ import FeaturedProducts from "@/components/home/FeaturedProducts";
 import CategorySection from "@/components/home/CategorySection";
 import BrandStory from "@/components/home/BrandStory";
 import HowItWorks from "@/components/home/HowItWorks";
-import Reviews from "@/components/home/Reviews";
 import RecipeInspiration from "@/components/home/RecipeInspiration";
 import Newsletter from "@/components/home/Newsletter";
 import Footer from "@/components/layout/Footer";
@@ -129,12 +127,7 @@ export default function HomePage() {
           <HowItWorks />
         </div>
 
-        {/* ─── 9. Reviews ──────────────────────────────────────────────── */}
-        <div className="reveal">
-          <Reviews />
-        </div>
-
-        {/* ─── 10. Recipe Inspiration ──────────────────────────────────── */}
+        {/* ─── 9. Recipe Inspiration ──────────────────────────────────── */}
         <div className="reveal">
           <RecipeInspiration />
         </div>
