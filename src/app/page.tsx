@@ -8,10 +8,9 @@
 // 4. TrustBadges
 // 5. FeaturedProducts
 // 6. CategorySection
-// 7. BrandStory
-// 8. HowItWorks
-// 9. RecipeInspiration
-// 10. Newsletter
+// 7. HowItWorks
+// 8. RecipeInspiration
+// 9. Newsletter
 // 12. Footer (in layout)
 
 import { useEffect, useRef, useState } from "react";
@@ -22,7 +21,6 @@ import HeroSection from "@/components/home/HeroSection";
 import TrustBadges from "@/components/home/TrustBadges";
 import FeaturedProducts from "@/components/home/FeaturedProducts";
 import CategorySection from "@/components/home/CategorySection";
-import BrandStory from "@/components/home/BrandStory";
 import HowItWorks from "@/components/home/HowItWorks";
 import RecipeInspiration from "@/components/home/RecipeInspiration";
 import Newsletter from "@/components/home/Newsletter";
@@ -117,12 +115,7 @@ export default function HomePage() {
           <CategorySection />
         </div>
 
-        {/* ─── 7. Brand Story ──────────────────────────────────────────── */}
-        <div className="reveal">
-          <BrandStory />
-        </div>
-
-        {/* ─── 8. How It Works ─────────────────────────────────────────── */}
+        {/* ─── 7. How It Works ─────────────────────────────────────────── */}
         <div className="reveal">
           <HowItWorks />
         </div>
