@@ -9,6 +9,7 @@ import Link from "next/link";
 import { ShoppingBag, Star, Heart, Eye } from "lucide-react";
 import { formatPrice, getSpiceLevelConfig } from "@/lib/utils";
 import { PRODUCTS } from "@/lib/constants/products";
+import { useCartStore } from "@/store/cartStore";
 import toast from "react-hot-toast";
 
 type ProductSeed = (typeof PRODUCTS)[0];
@@ -31,15 +32,18 @@ export default function ProductCard({
 
   const selectedVariant = product.variants[selectedVariantIndex];
   const spiceConfig = getSpiceLevelConfig(product.spice_level);
+  const addItem = useCartStore((s) => s.addItem);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
-    e.preventDefault(); // don't navigate to product page
+    e.stopPropagation(); // prevent click from bubbling to parent <Link>
+    e.preventDefault();
     setAdding(true);
     try {
-      // TODO: Connect to cart store
-      await new Promise((r) => setTimeout(r, 500));
+      addItem(product.slug, selectedVariantIndex, 1);
       onAddToCart?.(product, selectedVariantIndex);
-      toast.success(`${product.name} (${selectedVariant.label}) added!`);
+      toast.success(`${product.name} (${selectedVariant.label}) added to cart!`);
+    } catch {
+      toast.error("Could not add to cart. Please try again.");
     } finally {
       setAdding(false);
     }

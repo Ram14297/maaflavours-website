@@ -4,7 +4,7 @@
 
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MessageCircle, Mail, MapPin, Clock, Phone, Instagram, Facebook, Youtube } from "lucide-react";
+import { MessageCircle, Mail, MapPin, Clock, Phone, Instagram, Facebook } from "lucide-react";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import NavbarWithCart from "@/components/layout/NavbarWithCart";
 import Footer from "@/components/layout/Footer";
@@ -86,11 +86,10 @@ export default async function ContactPage() {
   const phone     = business.phone     || "";
   const email     = business.email     || "support@maaflavours.com";
   const address   = business.address   || "Ongole, Andhra Pradesh, India — 523001";
-  const waNumber  = (social.whatsapp_number || "").replace(/\D/g, "") || "919876543210";
+  const waNumber  = (social.whatsapp_number || "").replace(/\D/g, "") || "919701452929";
   const waLink    = (msg: string) => `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
   const instagram = social.instagram || "https://instagram.com/maaflavours";
   const facebook  = social.facebook  || "https://facebook.com/maaflavours";
-  const youtube   = social.youtube   || "https://youtube.com/@maaflavours";
 
   const phoneDisplay = phone || "+91 XXXXX XXXXX";
 
@@ -228,7 +227,6 @@ export default async function ContactPage() {
                     {[
                       { Icon: Instagram, href: instagram, label: "Instagram", color: "#E1306C", bg: "rgba(225,48,108,0.1)" },
                       { Icon: Facebook,  href: facebook,  label: "Facebook",  color: "#1877F2", bg: "rgba(200,150,12,0.1)" },
-                      { Icon: Youtube,   href: youtube,   label: "YouTube",   color: "var(--color-crimson)", bg: "rgba(192,39,45,0.08)" },
                     ].map(({ Icon, href, label, color, bg }) => (
                       <a key={label} href={href} target="_blank" rel="noopener noreferrer"
                         className="w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-110"

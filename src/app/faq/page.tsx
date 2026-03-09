@@ -35,7 +35,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Can I modify or cancel my order after placing it?",
-        a: "Orders can be modified or cancelled within 2 hours of placing — contact us immediately via WhatsApp (+91 98765 43210). Once the pickle is packed and dispatched, cancellations are not possible.",
+        a: "Orders can be modified or cancelled within 2 hours of placing — contact us immediately via WhatsApp (+91 97014 52929). Once the pickle is packed and dispatched, cancellations are not possible.",
       },
     ],
   },
@@ -105,7 +105,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "My jar arrived damaged — what do I do?",
-        a: "Please photograph the damaged jar and packaging, and send it to us via WhatsApp (+91 98765 43210) or email (support@maaflavours.com) within 48 hours of delivery. We'll arrange a replacement or full refund immediately.",
+        a: "Please photograph the damaged jar and packaging, and send it to us via WhatsApp (+91 97014 52929) or email (support@maaflavours.com) within 48 hours of delivery. We'll arrange a replacement or full refund immediately.",
       },
       {
         q: "I received the wrong product — what now?",
@@ -153,7 +153,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Do you offer bulk or wholesale orders?",
-        a: "Yes — we offer bulk pricing for orders of 20+ jars. We also supply to restaurants and cloud kitchens in Andhra Pradesh and Telangana. Contact us via WhatsApp (+91 98765 43210) to discuss pricing and availability.",
+        a: "Yes — we offer bulk pricing for orders of 20+ jars. We also supply to restaurants and cloud kitchens in Andhra Pradesh and Telangana. Contact us via WhatsApp (+91 97014 52929) to discuss pricing and availability.",
       },
       {
         q: "Can I gift Maa Flavours pickles?",
@@ -282,7 +282,7 @@ export default function FAQPage() {
                 We're here to help. WhatsApp us for the fastest response, or send us an email.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer"
+                <a href="https://wa.me/919701452929" target="_blank" rel="noopener noreferrer"
                   className="flex items-center gap-2 px-6 py-3 rounded-xl font-dm-sans font-bold text-sm text-white transition-opacity hover:opacity-90"
                   style={{ background: "#25D366" }}>
                   💬 WhatsApp Us

@@ -170,10 +170,10 @@ export default function ShippingPolicyPage() {
         <p>If your order hasn't arrived within the estimated delivery window, please first check the tracking ID on the courier's website. Tracking updates can sometimes take 24 hours to appear after dispatch.</p>
         <p>If the tracking shows no movement for more than 3 working days, or if your order hasn't arrived within 12 working days, please contact us immediately:</p>
         <div className="flex flex-col sm:flex-row gap-3 mt-4">
-          <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer"
+          <a href="https://wa.me/919701452929" target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-2 px-5 py-3 rounded-xl font-dm-sans font-bold text-sm text-white transition-opacity hover:opacity-90"
             style={{ background: "#25D366" }}>
-            💬 WhatsApp: +91 98765 43210
+            💬 WhatsApp: +91 97014 52929
           </a>
           <a href="mailto:support@maaflavours.com"
             className="flex items-center gap-2 px-5 py-3 rounded-xl font-dm-sans font-bold text-sm transition-opacity hover:opacity-80"

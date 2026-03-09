@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Instagram, Facebook, Youtube, Phone, Mail, MapPin, MessageCircle } from "lucide-react";
+import { Instagram, Facebook, Phone, Mail, MapPin, MessageCircle } from "lucide-react";
 import { SITE } from "@/lib/constants/products";
 
 const SHOP_LINKS = [
@@ -31,10 +31,9 @@ interface FooterSettings {
   phone: string;
   email: string;
   address: string;
-  whatsapp: string;     // digits only, e.g. "919876543210"
+  whatsapp: string;     // digits only, e.g. "919701452929"
   instagram: string;
   facebook: string;
-  youtube: string;
 }
 
 function buildWhatsappNumber(raw: string): string {
@@ -52,7 +51,6 @@ export default function Footer() {
     whatsapp:  SITE.whatsapp,
     instagram: SITE.instagram,
     facebook:  SITE.facebook,
-    youtube:   SITE.youtube,
   });
 
   useEffect(() => {
@@ -68,7 +66,6 @@ export default function Footer() {
           whatsapp:  buildWhatsappNumber(soc.whatsapp_number) || prev.whatsapp,
           instagram: soc.instagram || prev.instagram,
           facebook:  soc.facebook  || prev.facebook,
-          youtube:   soc.youtube   || prev.youtube,
         }));
       })
       .catch(() => {/* silently use fallbacks */});
@@ -136,7 +133,6 @@ export default function Footer() {
                 {[
                   { href: s.instagram, Icon: Instagram, label: "Instagram" },
                   { href: s.facebook,  Icon: Facebook,  label: "Facebook" },
-                  { href: s.youtube,   Icon: Youtube,   label: "YouTube" },
                 ].map(({ href, Icon, label }) => (
                   <a
                     key={label}

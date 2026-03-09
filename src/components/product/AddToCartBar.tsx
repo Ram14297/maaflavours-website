@@ -158,7 +158,7 @@ export default function AddToCartBar({
 
           {/* WhatsApp order */}
           <a
-            href={`https://wa.me/919876543210?text=Hi! I want to order ${productName} (${variantLabel}) from Maa Flavours.`}
+            href={`https://wa.me/919701452929?text=Hi! I want to order ${productName} (${variantLabel}) from Maa Flavours.`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-dm-sans text-sm font-semibold transition-all duration-200 hover:opacity-90"

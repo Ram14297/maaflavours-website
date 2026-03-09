@@ -742,7 +742,7 @@ function ConfirmationPageContent() {
 
           <div className="flex flex-wrap justify-center gap-3">
             <a
-              href="https://wa.me/919876543210"
+              href="https://wa.me/919701452929"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 font-dm-sans text-sm font-semibold transition-opacity hover:opacity-75"

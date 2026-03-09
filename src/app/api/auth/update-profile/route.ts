@@ -30,16 +30,19 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createServerClient();
 
-    // Update the customer record with the name and email
+    // Upsert the customer record — handles both new signups and existing users
     const { error } = await supabase
       .from("customers")
-      .update({
-        name: name,
-        email: email || null,
-        is_new_user: false,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("mobile", mobile);
+      .upsert(
+        {
+          mobile,
+          name: name,
+          email: email || null,
+          is_new_user: false,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "mobile" }
+      );
 
     if (error) {
       throw new Error("Failed to update profile");

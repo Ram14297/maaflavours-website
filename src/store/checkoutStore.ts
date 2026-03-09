@@ -19,7 +19,7 @@ export interface DeliveryAddress {
   is_default: boolean;
 }
 
-export type PaymentMethod = "upi" | "card" | "netbanking" | "cod" | "wallet";
+export type PaymentMethod = "phonepe_qr" | "upi" | "card" | "netbanking" | "cod" | "wallet";
 
 export interface PincodeData {
   city: string;
@@ -70,7 +70,7 @@ export const useCheckoutStore = create<CheckoutStore>((set, get) => ({
   step: "address",
   address: EMPTY_ADDRESS,
   pincodeData: { city: "", state: "", isValid: false, loading: false, error: "" },
-  paymentMethod: "upi",
+  paymentMethod: "phonepe_qr",
   razorpayOrderId: "",
   isPlacingOrder: false,
   orderError: "",
@@ -147,7 +147,7 @@ export const useCheckoutStore = create<CheckoutStore>((set, get) => ({
       step: "address",
       address: EMPTY_ADDRESS,
       pincodeData: { city: "", state: "", isValid: false, loading: false, error: "" },
-      paymentMethod: "upi",
+      paymentMethod: "phonepe_qr",
       razorpayOrderId: "",
       isPlacingOrder: false,
       orderError: "",

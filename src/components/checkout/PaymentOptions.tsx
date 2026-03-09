@@ -1,12 +1,12 @@
 "use client";
 // src/components/checkout/PaymentOptions.tsx
 // Maa Flavours — Payment Method Selection
-// Shows: UPI (default), Credit/Debit Card, Net Banking, Cash on Delivery
-// Launches Razorpay modal for digital payments
-// COD has a ₹30 convenience charge added
+// PhonePe QR (primary) | UPI | Card | Net Banking | COD
+// PhonePe QR: scan → pay → enter transaction ID → place order
 
 import { useState } from "react";
-import { Smartphone, CreditCard, Landmark, Banknote, ChevronLeft, Lock } from "lucide-react";
+import Image from "next/image";
+import { Smartphone, CreditCard, Landmark, Banknote, ChevronLeft, Lock, CheckCircle2 } from "lucide-react";
 import { useCheckoutStore, PaymentMethod } from "@/store/checkoutStore";
 import { useCartStore } from "@/store/cartStore";
 import { formatPrice } from "@/lib/utils";
@@ -21,12 +21,21 @@ const PAYMENT_METHODS: {
   subtitle: string;
   icon: React.ReactNode;
   tag?: string;
+  tagColor?: string;
   codCharge?: boolean;
 }[] = [
   {
+    id: "phonepe_qr",
+    label: "PhonePe / UPI QR Code",
+    subtitle: "Scan QR → pay → enter transaction ID. Fastest & preferred.",
+    icon: <span className="text-xl font-bold" style={{ color: "#5F259F" }}>₹</span>,
+    tag: "Recommended",
+    tagColor: "#5F259F",
+  },
+  {
     id: "upi",
-    label: "UPI",
-    subtitle: "Pay via GPay, PhonePe, Paytm, BHIM UPI",
+    label: "UPI (GPay, Paytm, BHIM)",
+    subtitle: "Pay via any UPI app using Razorpay gateway",
     icon: <Smartphone size={20} />,
     tag: "Instant",
   },
@@ -86,9 +95,50 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
 
   const { items, coupon, total, clearCart } = useCartStore();
   const [codConfirmed, setCodConfirmed] = useState(false);
+  const [upiTxnId, setUpiTxnId] = useState("");
 
   const cartTotal = total();
   const codTotal = paymentMethod === "cod" ? cartTotal + COD_CHARGE : cartTotal;
+
+  // ─── PhonePe QR order placement ──────────────────────────────────────
+  const handlePhonePeQR = async () => {
+    if (!upiTxnId.trim()) {
+      setOrderError("Please enter the UPI transaction ID from your PhonePe payment.");
+      return;
+    }
+    setPlacingOrder(true);
+    setOrderError("");
+
+    try {
+      const res = await fetch("/api/checkout/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: items.map((i) => ({
+            productSlug: i.productSlug,
+            variantIndex: i.variantIndex,
+            quantity: i.quantity,
+            unitPrice: i.unitPrice,
+          })),
+          couponCode: coupon?.code,
+          deliveryAddress: address,
+          paymentMethod: "phonepe_qr",
+          upiTransactionId: upiTxnId.trim(),
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to place order. Please try again.");
+      const { orderId } = await res.json();
+
+      clearCart();
+      onOrderSuccess(orderId, upiTxnId.trim());
+    } catch (err: any) {
+      setOrderError(err.message || "Order placement failed");
+      toast.error(err.message || "Failed to place order. Try again.");
+    } finally {
+      setPlacingOrder(false);
+    }
+  };
 
   // ─── Create Razorpay order → open checkout modal ────────────────────
   const handleRazorpayPayment = async () => {
@@ -96,7 +146,6 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
     setOrderError("");
 
     try {
-      // 1. Create order on backend
       const orderRes = await fetch("/api/checkout/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -120,11 +169,9 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
       const { razorpayOrderId, amount, currency, key } = await orderRes.json();
       setRazorpayOrderId(razorpayOrderId);
 
-      // 2. Load Razorpay script
       const loaded = await loadRazorpay();
       if (!loaded) throw new Error("Could not load payment gateway. Check your connection.");
 
-      // 3. Open Razorpay modal
       const options = {
         key,
         amount,
@@ -132,8 +179,7 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
         order_id: razorpayOrderId,
         name: "Maa Flavours",
         description: `${items.length} pickle jar${items.length > 1 ? "s" : ""}`,
-        // REPLACE with actual logo URL
-        image: "/images/brand/logo-square.png",
+        image: "/maa-flavours-logo.png",
         prefill: {
           name: address.full_name,
           contact: `+91${address.mobile}`,
@@ -153,7 +199,6 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
           razorpay_payment_id: string;
           razorpay_signature: string;
         }) => {
-          // 4. Verify payment on backend
           try {
             const verifyRes = await fetch("/api/checkout/verify-payment", {
               method: "POST",
@@ -233,7 +278,9 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
   };
 
   const handlePlaceOrder = () => {
-    if (paymentMethod === "cod") {
+    if (paymentMethod === "phonepe_qr") {
+      handlePhonePeQR();
+    } else if (paymentMethod === "cod") {
       handleCOD();
     } else {
       handleRazorpayPayment();
@@ -323,22 +370,30 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
               key={method.id}
               className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all duration-200"
               style={{
-                background: isSelected ? "rgba(192,39,45,0.05)" : "var(--color-cream)",
-                border: `2px solid ${isSelected ? "var(--color-crimson)" : "rgba(200,150,12,0.15)"}`,
-                boxShadow: isSelected ? "0 0 0 3px rgba(192,39,45,0.07)" : "none",
+                background: isSelected
+                  ? method.id === "phonepe_qr" ? "rgba(95,37,159,0.05)" : "rgba(192,39,45,0.05)"
+                  : "var(--color-cream)",
+                border: `2px solid ${isSelected
+                  ? method.id === "phonepe_qr" ? "#5F259F" : "var(--color-crimson)"
+                  : "rgba(200,150,12,0.15)"}`,
+                boxShadow: isSelected
+                  ? method.id === "phonepe_qr" ? "0 0 0 3px rgba(95,37,159,0.07)" : "0 0 0 3px rgba(192,39,45,0.07)"
+                  : "none",
               }}
             >
               {/* Radio */}
               <div
                 className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
                 style={{
-                  border: `2px solid ${isSelected ? "var(--color-crimson)" : "rgba(200,150,12,0.3)"}`,
+                  border: `2px solid ${isSelected
+                    ? method.id === "phonepe_qr" ? "#5F259F" : "var(--color-crimson)"
+                    : "rgba(200,150,12,0.3)"}`,
                 }}
               >
                 {isSelected && (
                   <span
                     className="w-2.5 h-2.5 rounded-full block"
-                    style={{ background: "var(--color-crimson)" }}
+                    style={{ background: method.id === "phonepe_qr" ? "#5F259F" : "var(--color-crimson)" }}
                   />
                 )}
               </div>
@@ -357,9 +412,11 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
                 className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{
                   background: isSelected
-                    ? "rgba(192,39,45,0.1)"
+                    ? method.id === "phonepe_qr" ? "rgba(95,37,159,0.1)" : "rgba(192,39,45,0.1)"
                     : "rgba(200,150,12,0.08)",
-                  color: isSelected ? "var(--color-crimson)" : "var(--color-gold)",
+                  color: isSelected
+                    ? method.id === "phonepe_qr" ? "#5F259F" : "var(--color-crimson)"
+                    : "var(--color-gold)",
                 }}
               >
                 {method.icon}
@@ -380,10 +437,12 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
                       style={{
                         background: method.codCharge
                           ? "rgba(192,39,45,0.1)"
+                          : method.tagColor
+                          ? `${method.tagColor}18`
                           : "rgba(200,150,12,0.12)",
                         color: method.codCharge
                           ? "var(--color-crimson)"
-                          : "var(--color-gold)",
+                          : method.tagColor || "var(--color-gold)",
                       }}
                     >
                       {method.tag}
@@ -401,6 +460,116 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
           );
         })}
       </div>
+
+      {/* ── PhonePe QR section ──────────────────────────────────────────── */}
+      {paymentMethod === "phonepe_qr" && (
+        <div className="px-6 pb-4">
+          <div
+            className="rounded-2xl overflow-hidden"
+            style={{
+              border: "2px solid #5F259F",
+              background: "linear-gradient(135deg, rgba(95,37,159,0.04) 0%, rgba(95,37,159,0.02) 100%)",
+            }}
+          >
+            {/* Purple top bar */}
+            <div className="h-1" style={{ background: "linear-gradient(90deg, #5F259F, #8B2FC9, #5F259F)" }} />
+
+            <div className="p-5">
+              <p
+                className="font-dm-sans font-bold text-sm text-center mb-4"
+                style={{ color: "#5F259F" }}
+              >
+                Scan & Pay with PhonePe / Any UPI App
+              </p>
+
+              {/* QR Code */}
+              <div className="flex justify-center mb-4">
+                <div
+                  className="p-3 rounded-2xl"
+                  style={{
+                    background: "white",
+                    border: "2px solid rgba(95,37,159,0.2)",
+                    boxShadow: "0 4px 16px rgba(95,37,159,0.12)",
+                  }}
+                >
+                  <Image
+                    src="/phonepe-qr.png"
+                    alt="PhonePe QR Code — Maa Flavours"
+                    width={200}
+                    height={200}
+                    className="rounded-lg"
+                    priority
+                  />
+                </div>
+              </div>
+
+              {/* Payee info */}
+              <div
+                className="flex items-center gap-3 p-3 rounded-xl mb-4"
+                style={{
+                  background: "rgba(95,37,159,0.06)",
+                  border: "1px solid rgba(95,37,159,0.15)",
+                }}
+              >
+                <CheckCircle2 size={18} style={{ color: "#5F259F", flexShrink: 0 }} />
+                <div>
+                  <p className="font-dm-sans font-bold text-sm" style={{ color: "#5F259F" }}>
+                    MANCHIKALAPATI PADMA KUMARI
+                  </p>
+                  <p className="font-dm-sans text-xs" style={{ color: "var(--color-grey)" }}>
+                    Maa Flavours · UPI verified payee
+                  </p>
+                </div>
+              </div>
+
+              {/* Amount to pay */}
+              <div
+                className="flex items-center justify-between px-4 py-3 rounded-xl mb-4"
+                style={{
+                  background: "white",
+                  border: "1px solid rgba(95,37,159,0.15)",
+                }}
+              >
+                <span className="font-dm-sans text-sm" style={{ color: "var(--color-grey)" }}>
+                  Amount to pay
+                </span>
+                <span className="font-dm-sans font-bold text-lg" style={{ color: "#5F259F" }}>
+                  {formatPrice(cartTotal)}
+                </span>
+              </div>
+
+              {/* Transaction ID input */}
+              <div>
+                <label
+                  htmlFor="upi-txn-id"
+                  className="font-dm-sans text-xs font-semibold block mb-1.5"
+                  style={{ color: "var(--color-brown)" }}
+                >
+                  Enter UPI Transaction ID *
+                </label>
+                <input
+                  id="upi-txn-id"
+                  type="text"
+                  value={upiTxnId}
+                  onChange={(e) => { setUpiTxnId(e.target.value); setOrderError(""); }}
+                  placeholder="e.g. 407612345678"
+                  className="w-full px-4 py-3 rounded-xl font-dm-sans text-sm outline-none transition-all"
+                  style={{
+                    border: "2px solid rgba(95,37,159,0.3)",
+                    background: "white",
+                    color: "var(--color-brown)",
+                  }}
+                  onFocus={(e) => (e.target.style.borderColor = "#5F259F")}
+                  onBlur={(e) => (e.target.style.borderColor = "rgba(95,37,159,0.3)")}
+                />
+                <p className="font-dm-sans text-xs mt-1.5" style={{ color: "var(--color-grey)" }}>
+                  Find this in your PhonePe app under Payment History after completing payment.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* COD confirmation note */}
       {paymentMethod === "cod" && (
@@ -477,20 +646,36 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
           onClick={handlePlaceOrder}
           disabled={
             isPlacingOrder ||
-            (paymentMethod === "cod" && !codConfirmed)
+            (paymentMethod === "cod" && !codConfirmed) ||
+            (paymentMethod === "phonepe_qr" && !upiTxnId.trim())
           }
-          className="btn-primary w-full py-4 text-base justify-center gap-3 disabled:opacity-60"
+          className="w-full py-4 text-base rounded-xl font-dm-sans font-bold flex items-center justify-center gap-3 transition-all duration-200 disabled:opacity-60"
+          style={
+            paymentMethod === "phonepe_qr"
+              ? {
+                  background: "linear-gradient(135deg, #5F259F, #8B2FC9)",
+                  color: "white",
+                  boxShadow: "0 4px 16px rgba(95,37,159,0.35)",
+                }
+              : {
+                  background: "linear-gradient(135deg, var(--color-crimson), #9E1F24)",
+                  color: "white",
+                  boxShadow: "0 4px 16px rgba(192,39,45,0.3)",
+                }
+          }
         >
           {isPlacingOrder ? (
             <>
               <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              {paymentMethod === "cod" ? "Placing Order…" : "Opening Payment…"}
+              {paymentMethod === "cod" ? "Placing Order…" : paymentMethod === "phonepe_qr" ? "Confirming Order…" : "Opening Payment…"}
             </>
           ) : (
             <>
               <Lock size={17} />
               {paymentMethod === "cod"
                 ? `Place Order — ${formatPrice(codTotal)}`
+                : paymentMethod === "phonepe_qr"
+                ? `Confirm PhonePe Order — ${formatPrice(cartTotal)}`
                 : `Pay Securely — ${formatPrice(cartTotal)}`}
             </>
           )}
@@ -498,15 +683,17 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
 
         {/* Security badges */}
         <div className="flex items-center justify-center gap-4 mt-4">
-          {["🔒 SSL Secured", "🏦 Razorpay", "💳 PCI DSS"].map((badge) => (
-            <span
-              key={badge}
-              className="font-dm-sans text-xs"
-              style={{ color: "var(--color-grey)" }}
-            >
-              {badge}
-            </span>
-          ))}
+          {paymentMethod === "phonepe_qr"
+            ? ["🔒 SSL Secured", "💜 PhonePe", "🏦 UPI Verified"].map((badge) => (
+                <span key={badge} className="font-dm-sans text-xs" style={{ color: "var(--color-grey)" }}>
+                  {badge}
+                </span>
+              ))
+            : ["🔒 SSL Secured", "🏦 Razorpay", "💳 PCI DSS"].map((badge) => (
+                <span key={badge} className="font-dm-sans text-xs" style={{ color: "var(--color-grey)" }}>
+                  {badge}
+                </span>
+              ))}
         </div>
       </div>
     </div>

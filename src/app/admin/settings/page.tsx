@@ -411,9 +411,9 @@ export default function SettingsPage() {
                   onChange={e => patch("social","youtube",e.target.value)}/>
                 <div>
                   <Input label="WhatsApp Number (widget)" value={s.social?.whatsapp_number||""}
-                    placeholder="919876543210"
+                    placeholder="919701452929"
                     onChange={e => patch("social","whatsapp_number",e.target.value)}/>
-                  <p style={{ color:A.grey, fontSize:10, marginTop:3 }}>Country code + number, no +, no spaces (e.g. 919876543210)</p>
+                  <p style={{ color:A.grey, fontSize:10, marginTop:3 }}>Country code + number, no +, no spaces (e.g. 919701452929)</p>
                 </div>
               </div>
 

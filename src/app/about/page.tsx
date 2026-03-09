@@ -274,7 +274,7 @@ function StatCard({
 // ─── Main Page ────────────────────────────────────────────────────────────
 export default async function AboutPage() {
   // Fetch WhatsApp number dynamically from settings
-  let waNumber = "919876543210"; // fallback
+  let waNumber = "919701452929"; // fallback
   try {
     const supabase = createAdminSupabaseClient();
     const { data } = await supabase

@@ -319,7 +319,7 @@ export function getSpiceLevelConfig(level: SpiceLevel): {
 
 /**
  * Format Indian mobile number for display
- * @example formatMobile("+919876543210") => "+91 98765 43210"
+ * @example formatMobile("+919701452929") => "+91 97014 52929"
  */
 export function formatMobile(mobile: string): string {
   const digits = mobile.replace(/\D/g, "");
@@ -332,7 +332,7 @@ export function formatMobile(mobile: string): string {
 
 /**
  * Mask mobile number for display
- * @example maskMobile("+919876543210") => "+91 98765 ●●●●●"
+ * @example maskMobile("+919701452929") => "+91 98765 ●●●●●"
  */
 export function maskMobile(mobile: string): string {
   const digits = mobile.replace(/\D/g, "");

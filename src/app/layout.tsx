@@ -210,7 +210,7 @@ export default function RootLayout({
               description:
                 "Authentic Andhra homemade pickles from Ongole, Andhra Pradesh. Handcrafted with traditional recipes and no preservatives.",
               url: "https://maaflavours.com",
-              telephone: "+919876543210", // REPLACE with actual number
+              telephone: "+919701452929", // REPLACE with actual number
               address: {
                 "@type": "PostalAddress",
                 addressLocality: "Ongole",

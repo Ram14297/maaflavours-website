@@ -101,7 +101,7 @@ export default function CartEmpty({ onClose }: CartEmptyProps) {
 
       {/* WhatsApp assist */}
       <a
-        href="https://wa.me/919876543210?text=Hi! I need help choosing pickles."
+        href="https://wa.me/919701452929?text=Hi! I need help choosing pickles."
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center gap-2 font-dm-sans text-sm font-medium transition-opacity hover:opacity-70"

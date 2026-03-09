@@ -175,7 +175,7 @@ export default function TermsPage() {
           <p className="font-dm-sans font-bold text-sm" style={{ color: "var(--color-brown)" }}>Maa Flavours</p>
           <p className="font-dm-sans text-sm mt-1 leading-relaxed" style={{ color: "var(--color-grey)" }}>
             📧 <a href="mailto:support@maaflavours.com" className="underline" style={{ color: "var(--color-crimson)" }}>support@maaflavours.com</a><br />
-            💬 WhatsApp: <a href="https://wa.me/919876543210" className="underline" style={{ color: "var(--color-crimson)" }}>+91 98765 43210</a><br />
+            💬 WhatsApp: <a href="https://wa.me/919701452929" className="underline" style={{ color: "var(--color-crimson)" }}>+91 97014 52929</a><br />
             📍 Ongole, Andhra Pradesh, India — 523001
           </p>
         </div>

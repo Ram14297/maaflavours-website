@@ -246,7 +246,7 @@ function ProductsContent() {
                 >
                   Questions? Chat with us on{" "}
                   <a
-                    href="https://wa.me/919876543210"
+                    href="https://wa.me/919701452929"
                     className="font-semibold hover:underline"
                     style={{ color: "#25D366" }}
                   >

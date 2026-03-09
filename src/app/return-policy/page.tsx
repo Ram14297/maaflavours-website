@@ -121,7 +121,7 @@ export default function ReturnPolicyPage() {
         <p>Raising a request is simple — just follow these 3 steps:</p>
         <div className="flex flex-col gap-4 mt-3">
           {[
-            { step: "01", title: "Contact us within 48 hours", desc: "Reach out via WhatsApp (+91 98765 43210) or email (support@maaflavours.com) within 48 hours of your delivery." },
+            { step: "01", title: "Contact us within 48 hours", desc: "Reach out via WhatsApp (+91 97014 52929) or email (support@maaflavours.com) within 48 hours of your delivery." },
             { step: "02", title: "Send photos of the issue", desc: "Share clear photos of the damaged product and outer packaging. This helps us process your claim quickly and also helps us improve our packing." },
             { step: "03", title: "We resolve within 24 hours", desc: "Once we've reviewed your claim, we'll confirm a replacement dispatch or initiate a refund — within 24 hours of receiving your photos." },
           ].map((item) => (
@@ -186,7 +186,7 @@ export default function ReturnPolicyPage() {
             <p className="font-dm-sans font-bold text-sm" style={{ color: "var(--color-brown)" }}>Need to raise a claim?</p>
             <p className="font-dm-sans text-sm mt-1" style={{ color: "var(--color-grey)" }}>
               Contact us immediately via{" "}
-              <a href="https://wa.me/919876543210" className="underline" style={{ color: "var(--color-crimson)" }}>WhatsApp (+91 98765 43210)</a>
+              <a href="https://wa.me/919701452929" className="underline" style={{ color: "var(--color-crimson)" }}>WhatsApp (+91 97014 52929)</a>
               {" "}or{" "}
               <a href="mailto:support@maaflavours.com" className="underline" style={{ color: "var(--color-crimson)" }}>support@maaflavours.com</a>.
               We resolve all issues within 24 hours, no questions asked.

@@ -77,7 +77,7 @@ const MOCK_ORDER: OrderDetail = {
   total_paise: 67000,
   delivery_address: {
     full_name: "Priya Reddy",
-    mobile: "9876543210",
+    mobile: "9701452929",
     address_line1: "Flat 4B, Green Valley Apartments",
     address_line2: "Beside HDFC Bank",
     landmark: "Near Durgam Cheruvu",
@@ -388,7 +388,7 @@ export default function OrderDetailPage() {
           </p>
         </div>
         <div className="flex gap-3 flex-wrap justify-center sm:justify-end">
-          <a href="https://wa.me/919876543210"
+          <a href="https://wa.me/919701452929"
             target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-dm-sans text-sm font-semibold text-white transition-opacity hover:opacity-80"
             style={{ background: "#25D366" }}>

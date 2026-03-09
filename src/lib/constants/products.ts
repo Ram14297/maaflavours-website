@@ -166,9 +166,9 @@ export const SITE = {
   name: "Maa Flavours",
   tagline: "Authentic Andhra Taste — The Way Maa Made It",
   origin: "Ongole, Andhra Pradesh",
-  phone: "+91 98765 43210",           // REPLACE with actual number
+  phone: "+91 97014 52929",
   email: "hello@maaflavours.com",    // REPLACE with actual email
-  whatsapp: "919876543210",          // REPLACE with actual number
+  whatsapp: "919701452929",
   instagram: "https://instagram.com/maaflavours",
   facebook: "https://facebook.com/maaflavours",
   youtube: "https://youtube.com/@maaflavours",
