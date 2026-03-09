@@ -120,10 +120,11 @@ export async function POST(request: NextRequest) {
           mobile: fullMobile,
           name: "",  // Will be filled in Step 3 (new user name form)
           email: null,
-          is_new_user: true,
           created_at: new Date().toISOString(),
         });
-      } catch { /* non-fatal */ }
+      } catch (upsertErr) {
+        console.error("[verify-otp] Customer upsert failed (non-fatal):", upsertErr);
+      }
     }
 
     // ─── 4. Update OTP session status ────────────────────────────────────
