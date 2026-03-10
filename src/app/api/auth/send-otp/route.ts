@@ -75,18 +75,13 @@ export async function POST(request: NextRequest) {
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
 
-    // Dev mode: if Twilio creds missing, simulate success
-    if (!accountSid || !authToken || !serviceSid) {
-      console.warn(
-        "[send-otp] Twilio credentials not configured. Simulating OTP send in dev mode."
+    // Fallback: if Twilio creds missing, return error instead of leaking dev hint
+    if (!accountSid || !serviceSid) {
+      console.warn("[send-otp] Twilio credentials not configured.");
+      return NextResponse.json(
+        { error: "OTP service is temporarily unavailable. Please try again later." },
+        { status: 503 }
       );
-      console.warn(`[send-otp] DEV OTP for ${fullMobile}: 123456`);
-      return NextResponse.json({
-        success: true,
-        maskedMobile: maskMobile(mobile),
-        devMode: true,
-        devNote: "Twilio not configured. Use OTP: 123456 in dev mode.",
-      });
     }
 
     const client = twilio(accountSid, authToken);

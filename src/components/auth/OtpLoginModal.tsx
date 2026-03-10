@@ -68,7 +68,6 @@ export default function OtpLoginModal({
   const [profileError, setProfileError] = useState("");
   const [loggedInUser, setLoggedInUser] = useState<{ name: string; mobile: string } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [devMode, setDevMode] = useState(false);
   const [resendKey, setResendKey] = useState(0); // increment to reset ResendTimer
 
   const mobileRef = useRef<HTMLInputElement>(null);
@@ -110,7 +109,6 @@ export default function OtpLoginModal({
     setProfileError("");
     setLoggedInUser(null);
     setLoading(false);
-    setDevMode(false);
   }, []);
 
   const handleClose = useCallback(() => {
@@ -143,10 +141,6 @@ export default function OtpLoginModal({
       }
 
       setMaskedNumber(data.maskedMobile || maskMobile(digits));
-      if (data.devMode) {
-        setDevMode(true);
-        toast("🔧 Dev mode — use OTP: 123456", { duration: 4000 });
-      }
       setStep("otp");
     } catch {
       setMobileError("Network error. Check your connection and try again.");
@@ -509,12 +503,6 @@ export default function OtpLoginModal({
                   <p role="alert" className="font-dm-sans text-sm text-center flex items-center justify-center gap-1.5"
                     style={{ color: "var(--color-crimson)" }}>
                     <span>⚠️</span>{otpError}
-                  </p>
-                )}
-
-                {devMode && (
-                  <p className="font-dm-sans text-xs text-center font-bold" style={{ color: "var(--color-gold)" }}>
-                    🔧 Dev mode — enter OTP: 123456
                   </p>
                 )}
 
