@@ -116,12 +116,6 @@ export default function HeroSection() {
                 Shop Now
                 <ArrowRight size={18} />
               </Link>
-              <Link
-                href="/about"
-                className="btn-ghost inline-flex items-center gap-2.5 py-3.5 px-7 text-base"
-              >
-                Our Story
-              </Link>
             </div>
 
             {/* Trust micro-badges */}

@@ -5,7 +5,7 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { PRODUCTS } from "@/lib/constants/products";
+import { PRODUCTS, ProductSeed } from "@/lib/constants/products";
 import {
   DEFAULT_FILTERS,
   ProductFilters,
@@ -15,7 +15,7 @@ import {
   PriceRangeValue,
 } from "@/lib/constants/filters";
 
-export function useProductFilters() {
+export function useProductFilters(externalProducts?: ProductSeed[]) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -121,7 +121,7 @@ export function useProductFilters() {
 
   // ─── Filtered + Sorted product list ─────────────────────────────────
   const filteredProducts = useMemo(() => {
-    let list = [...PRODUCTS];
+    let list = [...(externalProducts ?? PRODUCTS)];
 
     // Search filter
     if (filters.search) {
@@ -182,7 +182,7 @@ export function useProductFilters() {
     // "featured", "newest", "bestseller" — use default order
 
     return list;
-  }, [filters, sortBy]);
+  }, [filters, sortBy, externalProducts]);
 
   return {
     filters,

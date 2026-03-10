@@ -266,7 +266,7 @@ export default function ProductCard({
           <span className="block w-3 h-3 rounded-full" style={{ background: "#2E7D32" }} />
         </div>
 
-        {/* Wishlist button — appears on hover */}
+        {/* Wishlist button — appears on hover; pointer-events disabled when hidden */}
         <button
           onClick={handleWishlist}
           className="absolute bottom-2.5 right-2.5 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 z-20"
@@ -276,6 +276,7 @@ export default function ProductCard({
             opacity: imageHovered ? 1 : 0,
             transform: imageHovered ? "scale(1)" : "scale(0.8)",
             color: wishlisted ? "var(--color-crimson)" : "var(--color-grey)",
+            pointerEvents: imageHovered ? "auto" : "none",
           }}
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
