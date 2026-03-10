@@ -195,7 +195,7 @@ function ProductsContent() {
         onAccountClick={() => setLoginOpen(true)}
       />
 
-      <main className="flex-1 section-container">
+      <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 xl:px-10">
         {/* Page header */}
         <PageHeader />
 
