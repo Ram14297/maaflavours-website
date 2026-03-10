@@ -43,7 +43,6 @@ function LoginPageContent() {
   const [email, setEmail] = useState("");
   const [profileError, setProfileError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [devMode, setDevMode] = useState(false);
   const [resendKey, setResendKey] = useState(0);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
 
@@ -82,10 +81,6 @@ function LoginPageContent() {
         return;
       }
       setMaskedNumber(data.maskedMobile || maskMobile(digits));
-      if (data.devMode) {
-        setDevMode(true);
-        toast("🔧 Dev mode — use OTP: 123456");
-      }
       setStep("otp");
     } catch {
       setMobileError("Network error. Please try again.");
@@ -435,12 +430,6 @@ function LoginPageContent() {
                     ⚠️ {otpError}
                   </p>
                 )}
-                {devMode && (
-                  <p className="font-dm-sans text-xs text-center font-bold" style={{ color: "var(--color-gold)" }}>
-                    🔧 Dev mode — enter OTP: 123456
-                  </p>
-                )}
-
                 <button onClick={() => handleVerifyOtp()} disabled={loading || otp.some((d) => !d)}
                   className="btn-primary w-full py-4 text-base gap-3 disabled:opacity-60">
                   {loading
