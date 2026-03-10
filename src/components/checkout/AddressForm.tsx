@@ -95,7 +95,8 @@ export default function AddressForm() {
     resolver: zodResolver(AddressSchema),
     defaultValues: {
       full_name: address.full_name,
-      mobile: address.mobile,
+      // Strip +91 or country code prefix if pre-filled from session
+      mobile: address.mobile.replace(/^\+91/, "").replace(/^\+/, "").replace(/\D/g, "").slice(0, 10),
       address_line1: address.address_line1,
       address_line2: address.address_line2,
       landmark: address.landmark,

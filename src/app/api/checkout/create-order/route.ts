@@ -53,11 +53,14 @@ const AddressSchema = z.object({
 });
 
 const RequestSchema = z.object({
-  items:           z.array(CartItemSchema).min(1).max(20),
-  couponCode:      z.string().optional(),
-  deliveryAddress: AddressSchema,
-  paymentMethod:   z.enum(["razorpay_upi", "razorpay_card", "razorpay_netbanking", "cod"]),
-  customerNotes:   z.string().max(500).optional(),
+  items:            z.array(CartItemSchema).min(1).max(20),
+  couponCode:       z.string().optional(),
+  deliveryAddress:  AddressSchema,
+  // Accept both frontend short names and legacy razorpay_ prefixed names
+  paymentMethod:    z.enum(["phonepe_qr", "upi", "card", "netbanking", "cod",
+                            "razorpay_upi", "razorpay_card", "razorpay_netbanking"]),
+  customerNotes:    z.string().max(500).optional(),
+  upiTransactionId: z.string().optional(),  // for PhonePe QR manual confirmation
 });
 
 // ─── Business rules (paise) ──────────────────────────────────────────────────
@@ -73,12 +76,31 @@ const IGST_RATE  = 12;  // percent — for inter-state
 // ─── Map payment method display name to DB enum ──────────────────────────────
 function mapPaymentMethodLabel(pm: string): string {
   const map: Record<string, string> = {
+    phonepe_qr:          "PhonePe / UPI QR",
+    upi:                 "UPI",
+    card:                "Card",
+    netbanking:          "Net Banking",
+    cod:                 "Cash on Delivery",
     razorpay_upi:        "UPI",
     razorpay_card:       "Card",
     razorpay_netbanking: "Net Banking",
-    cod:                 "Cash on Delivery",
   };
   return map[pm] || pm;
+}
+
+// Map frontend payment method to DB enum (payment_method_enum in schema)
+function mapToDbPaymentMethod(pm: string): string {
+  const map: Record<string, string> = {
+    phonepe_qr:  "cod",           // PhonePe QR treated like COD (manual confirm) until schema updated
+    upi:         "razorpay_upi",
+    card:        "razorpay_card",
+    netbanking:  "razorpay_netbanking",
+    cod:         "cod",
+    razorpay_upi:        "razorpay_upi",
+    razorpay_card:       "razorpay_card",
+    razorpay_netbanking: "razorpay_netbanking",
+  };
+  return map[pm] || "cod";
 }
 
 export async function POST(request: NextRequest) {
@@ -261,7 +283,7 @@ export async function POST(request: NextRequest) {
           shipping_address: deliveryAddress,        // JSONB snapshot
           status:           "pending",
           payment_status:   "pending",
-          payment_method:   paymentMethod,          // razorpay_upi | razorpay_card | razorpay_netbanking | cod
+          payment_method:   mapToDbPaymentMethod(paymentMethod),  // map to DB enum
           subtotal,
           discount:         0,                      // Product-level discounts (future)
           coupon_discount:  couponDiscount,
@@ -307,9 +329,9 @@ export async function POST(request: NextRequest) {
       supabaseOrderId = `DEV-${Date.now()}`;
     }
 
-    // ─── 6. COD order — return immediately ───────────────────────────────
-    if (paymentMethod === "cod") {
-      // Mark COD order as confirmed immediately
+    // ─── 6. COD / PhonePe QR — confirm immediately, no Razorpay needed ──────
+    if (paymentMethod === "cod" || paymentMethod === "phonepe_qr") {
+      // Mark order as confirmed immediately
       if (supabaseOrderId && !supabaseOrderId.startsWith("DEV-")) {
         try {
           const adminSupa = createAdminSupabaseClient();
@@ -319,13 +341,13 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         orderId:       supabaseOrderId,
-        paymentMethod: "cod",
+        paymentMethod,
         total,
         subtotal,
         couponDiscount,
         deliveryCharge,
         codCharge,
-        orderNumber:   supabaseOrderId,  // Will be replaced by trigger-generated number
+        orderNumber:   supabaseOrderId,
       });
     }
 

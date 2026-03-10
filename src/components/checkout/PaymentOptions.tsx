@@ -5,7 +5,6 @@
 // PhonePe QR: scan → pay → enter transaction ID → place order
 
 import { useState } from "react";
-import Image from "next/image";
 import { Smartphone, CreditCard, Landmark, Banknote, ChevronLeft, Lock, CheckCircle2 } from "lucide-react";
 import { useCheckoutStore, PaymentMethod } from "@/store/checkoutStore";
 import { useCartStore } from "@/store/cartStore";
@@ -482,24 +481,32 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
                 Scan & Pay with PhonePe / Any UPI App
               </p>
 
-              {/* QR Code */}
+              {/* UPI ID / QR placeholder */}
               <div className="flex justify-center mb-4">
                 <div
-                  className="p-3 rounded-2xl"
+                  className="w-full rounded-2xl flex flex-col items-center justify-center gap-2 py-5 px-4"
                   style={{
                     background: "white",
-                    border: "2px solid rgba(95,37,159,0.2)",
-                    boxShadow: "0 4px 16px rgba(95,37,159,0.12)",
+                    border: "2px dashed rgba(95,37,159,0.3)",
                   }}
                 >
-                  <Image
-                    src="/phonepe-qr.png"
-                    alt="PhonePe QR Code — Maa Flavours"
-                    width={200}
-                    height={200}
-                    className="rounded-lg"
-                    priority
-                  />
+                  <span className="text-3xl">📱</span>
+                  <p className="font-dm-sans font-bold text-sm text-center" style={{ color: "#5F259F" }}>
+                    Pay to UPI ID
+                  </p>
+                  <div
+                    className="px-4 py-2 rounded-xl font-dm-sans font-bold text-base tracking-wide select-all"
+                    style={{
+                      background: "rgba(95,37,159,0.08)",
+                      border: "1px solid rgba(95,37,159,0.2)",
+                      color: "#5F259F",
+                    }}
+                  >
+                    maaflavours@ybl
+                  </div>
+                  <p className="font-dm-sans text-xs text-center mt-1" style={{ color: "var(--color-grey)" }}>
+                    Open any UPI app → Pay to above ID → enter Transaction ID below
+                  </p>
                 </div>
               </div>
 
