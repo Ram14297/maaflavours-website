@@ -493,7 +493,7 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
                   }}
                 >
                   <Image
-                    src="/phonepe-qr.png"
+                    src="/QR_code.png"
                     alt="PhonePe QR Code — Maa Flavours"
                     width={200}
                     height={200}
