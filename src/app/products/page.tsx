@@ -17,6 +17,7 @@ import ActiveFilterTags from "@/components/product/ActiveFilterTags";
 import SearchBar from "@/components/product/SearchBar";
 import { useProductFilters } from "@/hooks/useProductFilters";
 import { PRODUCTS } from "@/lib/constants/products";
+import { useCartStore } from "@/store/cartStore";
 import { ShoppingBag } from "lucide-react";
 
 type ViewMode = "grid" | "list";
@@ -134,9 +135,9 @@ function ProductsContent() {
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
+  const { openCart, itemCount } = useCartStore();
+  const cartCount = itemCount();
 
   // ─── Scroll reveal observer ────────────────────────────────────────────
   useEffect(() => {
@@ -158,7 +159,7 @@ function ProductsContent() {
       <AnnouncementBar />
       <Navbar
         cartCount={cartCount}
-        onCartClick={() => setCartOpen(true)}
+        onCartClick={openCart}
         onAccountClick={() => setLoginOpen(true)}
       />
 
@@ -225,10 +226,7 @@ function ProductsContent() {
             <ProductGrid
               products={filteredProducts}
               viewMode={viewMode}
-              onAddToCart={(_product, _variantIndex) => {
-                // TODO: Connect to cart store (Step 4)
-                setCartCount((c) => c + 1);
-              }}
+              onAddToCart={(_product, _variantIndex) => {}}
             />
 
             {/* Bottom spacer with brand note */}
