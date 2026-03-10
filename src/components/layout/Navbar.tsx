@@ -120,11 +120,12 @@ export default function Navbar({
   };
 
   // ─── Account button click ─────────────────────────────────────────────
+  // Logged-in users always get the dropdown — never the login modal
   const handleAccountClick = () => {
-    if (onAccountClick) { onAccountClick(); return; }
     if (isLoggedIn) {
       setAccountMenuOpen((prev) => !prev);
     } else {
+      if (onAccountClick) { onAccountClick(); return; }
       router.push("/login");
     }
   };

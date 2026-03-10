@@ -23,11 +23,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ user: null });
     }
 
-    // New users who haven't completed profile setup yet
-    if (session.isNewUser) {
-      return NextResponse.json({ user: null });
-    }
-
     if (!session.userId && !session.mobile) {
       return NextResponse.json({ user: null });
     }
