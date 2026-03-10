@@ -353,32 +353,32 @@ export default function ProductCard({
         </div>
 
         {/* Price + Add to Cart */}
-        <div className="flex items-center justify-between mt-auto gap-2">
-          <div>
-            <span
-              className="font-dm-sans font-bold text-lg leading-none block"
-              style={{ color: "var(--color-crimson)" }}
-            >
-              {formatPrice(selectedVariant.price)}
-            </span>
-            <span
-              className="font-dm-sans text-[0.65rem]"
-              style={{ color: "var(--color-grey)" }}
-            >
-              Free shipping ≥ ₹499
-            </span>
+        <div className="flex flex-col gap-2 mt-auto">
+          <div className="flex items-end justify-between">
+            <div>
+              <span
+                className="font-dm-sans font-bold text-lg leading-none block"
+                style={{ color: "var(--color-crimson)" }}
+              >
+                {formatPrice(selectedVariant.price)}
+              </span>
+              <span
+                className="font-dm-sans text-[0.65rem]"
+                style={{ color: "var(--color-grey)" }}
+              >
+                Free ship ≥ ₹499
+              </span>
+            </div>
           </div>
 
           <button
             onClick={handleAddToCart}
             disabled={adding}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-dm-sans text-xs font-semibold transition-all duration-200 disabled:opacity-60 flex-shrink-0"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-dm-sans text-xs font-semibold transition-all duration-200 disabled:opacity-60"
             style={{
               background: adding ? "var(--color-gold)" : "var(--color-brown)",
               color: "white",
               boxShadow: "0 2px 6px rgba(74,44,10,0.2)",
-              minWidth: "105px",
-              justifyContent: "center",
             }}
           >
             {adding ? (

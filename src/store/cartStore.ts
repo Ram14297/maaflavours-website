@@ -82,7 +82,7 @@ export const useCartStore = create<CartStore>()(
         const coupon = get().coupon;
         if (!coupon) return 0;
         const sub = get().subtotal();
-        if (coupon.type === "flat") return Math.min(coupon.value * 100, sub);
+        if (coupon.type === "flat") return Math.min(coupon.value, sub);
         if (coupon.type === "percent") return Math.floor((sub * coupon.value) / 100);
         if (coupon.type === "free_shipping") return get().deliveryCharge();
         return 0;

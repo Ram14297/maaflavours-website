@@ -72,11 +72,14 @@ export default function Navbar({
     setActiveLink(window.location.pathname);
   }, []);
 
-  // ─── Close mobile menu on outside click ──────────────────────────────
+  // ─── Close account dropdown on outside click (navbar header scope only) ─
+  // Note: mobile menu is closed via the overlay click — NOT here.
+  // The drawer renders outside navRef, so a mousedown check on navRef would
+  // fire before the <Link> click and swallow the navigation event.
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
-        setMobileOpen(false);
+        setAccountMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handler);

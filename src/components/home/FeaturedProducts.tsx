@@ -173,7 +173,7 @@ function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Price + Add to Cart */}
-        <div className="flex items-center justify-between mt-auto gap-3">
+        <div className="flex flex-col gap-2 mt-auto">
           <div className="flex flex-col leading-tight">
             <span
               className="font-dm-sans font-bold text-lg leading-none"
@@ -194,13 +194,11 @@ function ProductCard({ product }: ProductCardProps) {
           <button
             onClick={handleAddToCart}
             disabled={adding}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-dm-sans text-sm font-semibold transition-all duration-200 disabled:opacity-70"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-dm-sans text-sm font-semibold transition-all duration-200 disabled:opacity-70"
             style={{
               background: adding ? "var(--color-gold)" : "var(--color-brown)",
               color: "white",
               boxShadow: "0 2px 8px rgba(74,44,10,0.2)",
-              minWidth: "120px",
-              justifyContent: "center",
             }}
           >
             {adding ? (
@@ -252,7 +250,7 @@ export default function FeaturedProducts() {
         </div>
 
         {/* ─── Product Grid ─────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-6">
           {PRODUCTS.map((product) => (
             <ProductCard key={product.slug} product={product} />
           ))}
