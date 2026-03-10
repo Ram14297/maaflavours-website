@@ -45,6 +45,14 @@ export default function HomePage() {
   const [cartCount, setCartCount] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
+  // ─── Check existing session on mount ────────────────────────────────────
+  useEffect(() => {
+    fetch("/api/auth/me", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => { if (data.user) setIsLoggedIn(true); })
+      .catch(() => {});
+  }, []);
+
   // ─── Scroll Reveal ──────────────────────────────────────────────────────
   useEffect(() => {
     const observer = new IntersectionObserver(
