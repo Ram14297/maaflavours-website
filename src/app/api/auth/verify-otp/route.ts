@@ -6,7 +6,6 @@
 // Returns: { success, isNewUser, user } | { error }
 
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import twilio from "twilio";
 import { z } from "zod";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
@@ -19,9 +18,6 @@ const RequestSchema = z.object({
 const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 days in seconds
 
 export async function POST(request: NextRequest) {
-  // ── Call cookies() at the TOP before any async work ──────────────────────
-  const cookieStore = cookies();
-
   console.log("[verify-otp] Request received");
 
   try {
@@ -178,18 +174,7 @@ export async function POST(request: NextRequest) {
 
     console.log("[verify-otp] Setting mf_session cookie for userId:", customerId);
 
-    // Use cookieStore (from next/headers, called at top) — most reliable in Next.js 14
-    cookieStore.set("mf_session", sessionPayload, {
-      httpOnly: true,
-      secure:   process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge:   SESSION_MAX_AGE,
-      path:     "/",
-    });
-
-    console.log("[verify-otp] Cookie set. Returning success response. isNewUser:", isNewUser);
-
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       isNewUser,
       user: {
@@ -199,6 +184,19 @@ export async function POST(request: NextRequest) {
         email:  existingCustomer?.email || null,
       },
     });
+
+    // Set cookie directly on the response object — reliable in Next.js 14 Route Handlers
+    response.cookies.set("mf_session", sessionPayload, {
+      httpOnly: true,
+      secure:   process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge:   SESSION_MAX_AGE,
+      path:     "/",
+    });
+
+    console.log("[verify-otp] Cookie set on response. isNewUser:", isNewUser);
+
+    return response;
   } catch (err: any) {
     console.error("[verify-otp] Unhandled error:", err);
     return NextResponse.json(

@@ -55,7 +55,13 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 // ─── Tab: Overview ────────────────────────────────────────────────────────
-function OverviewTab({ user }: { user: NonNullable<ReturnType<typeof useAuth>["user"]> }) {
+function OverviewTab({
+  user,
+  onTabChange,
+}: {
+  user: NonNullable<ReturnType<typeof useAuth>["user"]>;
+  onTabChange: (tab: Tab) => void;
+}) {
   const firstName = user.name?.split(" ")[0] || "there";
   const initial   = (user.name || "U").charAt(0).toUpperCase();
 
@@ -100,28 +106,41 @@ function OverviewTab({ user }: { user: NonNullable<ReturnType<typeof useAuth>["u
 
       {/* Quick links */}
       {[
-        { icon: Package,   label: "My Orders",         desc: "Track & manage orders",         href: null, tab: "orders" as Tab },
-        { icon: User,      label: "Edit Profile",       desc: "Update name & email",           href: null, tab: "profile" as Tab },
-        { icon: MapPin,    label: "Saved Addresses",    desc: "Manage delivery locations",     href: null, tab: "addresses" as Tab },
-        { icon: ShoppingBag, label: "Browse Pickles",  desc: "Shop all 6 Andhra varieties",   href: "/products", tab: null },
-      ].map(({ icon: Icon, label, desc, href, tab }) => (
-        href ? (
-          <Link key={label} href={href}
-            className="flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-            style={{ background: "white", border: "1px solid rgba(200,150,12,0.12)" }}
-          >
+        { icon: Package,   label: "My Orders",        desc: "Track & manage orders",       href: null,       tab: "orders"    as Tab },
+        { icon: User,      label: "Edit Profile",      desc: "Update name & email",         href: null,       tab: "profile"   as Tab },
+        { icon: MapPin,    label: "Saved Addresses",   desc: "Manage delivery locations",   href: null,       tab: "addresses" as Tab },
+        { icon: ShoppingBag, label: "Browse Pickles", desc: "Shop all 6 Andhra varieties", href: "/products", tab: null },
+      ].map(({ icon: Icon, label, desc, href, tab }) => {
+        const itemStyle = { background: "white", border: "1px solid rgba(200,150,12,0.12)" };
+        const inner = (
+          <>
             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
               style={{ background: "rgba(200,150,12,0.08)" }}>
               <Icon size={18} style={{ color: "var(--color-gold)" }} />
             </div>
-            <div className="flex-1">
+            <div className="flex-1 text-left">
               <p className="font-dm-sans font-bold text-sm" style={{ color: "var(--color-brown)" }}>{label}</p>
               <p className="font-dm-sans text-xs" style={{ color: "var(--color-grey)" }}>{desc}</p>
             </div>
             <ArrowRight size={16} style={{ color: "var(--color-gold)", opacity: 0.6 }} />
+          </>
+        );
+        return href ? (
+          <Link key={label} href={href}
+            className="flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+            style={itemStyle}
+          >
+            {inner}
           </Link>
-        ) : null
-      ))}
+        ) : (
+          <button key={label} onClick={() => onTabChange(tab!)}
+            className="flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md w-full"
+            style={itemStyle}
+          >
+            {inner}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -428,7 +447,7 @@ export default function AccountPage() {
       </div>
 
       {/* ── Tab content ────────────────────────────────────────────── */}
-      {activeTab === "overview"   && <OverviewTab  user={user} />}
+      {activeTab === "overview"   && <OverviewTab  user={user} onTabChange={setActiveTab} />}
       {activeTab === "orders"     && <OrdersTab />}
       {activeTab === "profile"    && <ProfileTab   user={user} />}
       {activeTab === "addresses"  && <AddressesTab />}
