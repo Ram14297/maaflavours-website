@@ -152,7 +152,7 @@ export default function CartPage() {
                         className="font-dm-sans font-semibold text-sm"
                         style={{ color: "var(--color-crimson)" }}
                       >
-                        from {pick.price}
+                        {pick.price}
                       </span>
                       <span
                         className="text-xs opacity-0 group-hover:opacity-100 transition-opacity"

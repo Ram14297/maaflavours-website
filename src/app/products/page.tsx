@@ -7,7 +7,7 @@
 import { useState, useEffect } from "react";
 import { Suspense } from "react";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
-import Navbar from "@/components/layout/Navbar";
+import NavbarWithCart from "@/components/layout/NavbarWithCart";
 import Footer from "@/components/layout/Footer";
 import FilterSidebar from "@/components/product/FilterSidebar";
 import MobileFilterDrawer from "@/components/product/MobileFilterDrawer";
@@ -167,9 +167,6 @@ function ProductsContent() {
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
-  const [cartOpen, setCartOpen] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
 
   // ─── Scroll reveal observer ────────────────────────────────────────────
   useEffect(() => {
@@ -189,11 +186,7 @@ function ProductsContent() {
       style={{ background: "var(--color-warm-white)" }}
     >
       <AnnouncementBar />
-      <Navbar
-        cartCount={cartCount}
-        onCartClick={() => setCartOpen(true)}
-        onAccountClick={() => setLoginOpen(true)}
-      />
+      <NavbarWithCart />
 
       <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 xl:px-10">
         {/* Page header */}
@@ -258,10 +251,7 @@ function ProductsContent() {
             <ProductGrid
               products={filteredProducts}
               viewMode={viewMode}
-              onAddToCart={(_product, _variantIndex) => {
-                // TODO: Connect to cart store (Step 4)
-                setCartCount((c) => c + 1);
-              }}
+              onAddToCart={(_product, _variantIndex) => {}}
             />
 
             {/* Bottom spacer with brand note */}
