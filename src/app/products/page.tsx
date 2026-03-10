@@ -7,7 +7,7 @@
 import { useState, useEffect } from "react";
 import { Suspense } from "react";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
-import Navbar from "@/components/layout/Navbar";
+import NavbarWithCart from "@/components/layout/NavbarWithCart";
 import Footer from "@/components/layout/Footer";
 import FilterSidebar from "@/components/product/FilterSidebar";
 import MobileFilterDrawer from "@/components/product/MobileFilterDrawer";
@@ -17,7 +17,6 @@ import ActiveFilterTags from "@/components/product/ActiveFilterTags";
 import SearchBar from "@/components/product/SearchBar";
 import { useProductFilters } from "@/hooks/useProductFilters";
 import { PRODUCTS } from "@/lib/constants/products";
-import { useCartStore } from "@/store/cartStore";
 import { ShoppingBag } from "lucide-react";
 
 type ViewMode = "grid" | "list";
@@ -135,9 +134,6 @@ function ProductsContent() {
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
-  const { openCart, itemCount } = useCartStore();
-  const cartCount = itemCount();
 
   // ─── Scroll reveal observer ────────────────────────────────────────────
   useEffect(() => {
@@ -157,11 +153,7 @@ function ProductsContent() {
       style={{ background: "var(--color-warm-white)" }}
     >
       <AnnouncementBar />
-      <Navbar
-        cartCount={cartCount}
-        onCartClick={openCart}
-        onAccountClick={() => setLoginOpen(true)}
-      />
+      <NavbarWithCart />
 
       <main className="flex-1 section-container">
         {/* Page header */}
