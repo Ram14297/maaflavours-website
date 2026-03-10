@@ -1,20 +1,35 @@
 // src/app/api/account/addresses/route.ts
 // Maa Flavours — Saved Addresses API
-import { NextResponse } from "next/server";
-import { createServerClient } from "@/lib/supabase/server";
+// Reads mf_session cookie for auth (custom auth, not Supabase session)
 
-export async function GET() {
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminSupabaseClient } from "@/lib/supabase/server";
+
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    const sessionCookie = request.cookies.get("mf_session")?.value;
+    if (!sessionCookie) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
+    let session: any;
+    try {
+      session = JSON.parse(sessionCookie);
+    } catch {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    if (!session.userId || session.isNewUser) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    const supabase = createAdminSupabaseClient();
     const { data } = await supabase
       .from("customer_addresses")
       .select("*")
-      .eq("customer_id", user.id)
+      .eq("customer_id", session.userId)
       .order("is_default", { ascending: false });
 
     return NextResponse.json({ addresses: data || [] });
-  } catch { return NextResponse.json({ addresses: [] }); }
+  } catch {
+    return NextResponse.json({ addresses: [] });
+  }
 }

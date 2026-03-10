@@ -72,11 +72,14 @@ export default function Navbar({
     setActiveLink(window.location.pathname);
   }, []);
 
-  // ─── Close mobile menu on outside click ──────────────────────────────
+  // ─── Close account dropdown on outside click (navbar header scope only) ─
+  // Note: mobile menu is closed via the overlay click — NOT here.
+  // The drawer renders outside navRef, so a mousedown check on navRef would
+  // fire before the <Link> click and swallow the navigation event.
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
-        setMobileOpen(false);
+        setAccountMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -117,11 +120,12 @@ export default function Navbar({
   };
 
   // ─── Account button click ─────────────────────────────────────────────
+  // Logged-in users always get the dropdown — never the login modal
   const handleAccountClick = () => {
-    if (onAccountClick) { onAccountClick(); return; }
     if (isLoggedIn) {
       setAccountMenuOpen((prev) => !prev);
     } else {
+      if (onAccountClick) { onAccountClick(); return; }
       router.push("/login");
     }
   };

@@ -353,12 +353,13 @@ const config: Config = {
         },
         // Brand section container
         ".section-container": {
-          maxWidth: "1280px",
+          maxWidth: "1440px",
           margin: "0 auto",
-          padding: "0 1.25rem",
-          "@screen sm": { padding: "0 1.5rem" },
-          "@screen lg": { padding: "0 2rem" },
-          "@screen xl": { padding: "0 2.5rem" },
+          padding: "0 1rem",
+          "@screen sm": { padding: "0 1.25rem" },
+          "@screen lg": { padding: "0 1.5rem" },
+          "@screen xl": { padding: "0 2rem" },
+          "@screen 2xl": { padding: "0 2.5rem" },
         },
         // Section vertical spacing
         ".section-padding": {

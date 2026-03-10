@@ -266,7 +266,7 @@ export default function ProductCard({
           <span className="block w-3 h-3 rounded-full" style={{ background: "#2E7D32" }} />
         </div>
 
-        {/* Wishlist button — appears on hover */}
+        {/* Wishlist button — appears on hover; pointer-events disabled when hidden */}
         <button
           onClick={handleWishlist}
           className="absolute bottom-2.5 right-2.5 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 z-20"
@@ -276,6 +276,7 @@ export default function ProductCard({
             opacity: imageHovered ? 1 : 0,
             transform: imageHovered ? "scale(1)" : "scale(0.8)",
             color: wishlisted ? "var(--color-crimson)" : "var(--color-grey)",
+            pointerEvents: imageHovered ? "auto" : "none",
           }}
           aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
         >
@@ -353,32 +354,32 @@ export default function ProductCard({
         </div>
 
         {/* Price + Add to Cart */}
-        <div className="flex items-center justify-between mt-auto gap-2">
-          <div>
-            <span
-              className="font-dm-sans font-bold text-lg leading-none block"
-              style={{ color: "var(--color-crimson)" }}
-            >
-              {formatPrice(selectedVariant.price)}
-            </span>
-            <span
-              className="font-dm-sans text-[0.65rem]"
-              style={{ color: "var(--color-grey)" }}
-            >
-              Free shipping ≥ ₹499
-            </span>
+        <div className="flex flex-col gap-2 mt-auto">
+          <div className="flex items-end justify-between">
+            <div>
+              <span
+                className="font-dm-sans font-bold text-lg leading-none block"
+                style={{ color: "var(--color-crimson)" }}
+              >
+                {formatPrice(selectedVariant.price)}
+              </span>
+              <span
+                className="font-dm-sans text-[0.65rem]"
+                style={{ color: "var(--color-grey)" }}
+              >
+                Free ship ≥ ₹499
+              </span>
+            </div>
           </div>
 
           <button
             onClick={handleAddToCart}
             disabled={adding}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-dm-sans text-xs font-semibold transition-all duration-200 disabled:opacity-60 flex-shrink-0"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-dm-sans text-xs font-semibold transition-all duration-200 disabled:opacity-60"
             style={{
               background: adding ? "var(--color-gold)" : "var(--color-brown)",
               color: "white",
               boxShadow: "0 2px 6px rgba(74,44,10,0.2)",
-              minWidth: "105px",
-              justifyContent: "center",
             }}
           >
             {adding ? (

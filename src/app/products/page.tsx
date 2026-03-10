@@ -16,7 +16,7 @@ import ProductGrid from "@/components/product/ProductGrid";
 import ActiveFilterTags from "@/components/product/ActiveFilterTags";
 import SearchBar from "@/components/product/SearchBar";
 import { useProductFilters } from "@/hooks/useProductFilters";
-import { PRODUCTS } from "@/lib/constants/products";
+import { PRODUCTS, ProductSeed } from "@/lib/constants/products";
 import { ShoppingBag } from "lucide-react";
 
 type ViewMode = "grid" | "list";
@@ -119,6 +119,39 @@ function PageHeader() {
 
 // ─── Inner content (needs useSearchParams — wrapped in Suspense) ────────────
 function ProductsContent() {
+  // ─── Live products from Supabase via API ────────────────────────────────
+  const [liveProducts, setLiveProducts] = useState<ProductSeed[]>(PRODUCTS);
+
+  useEffect(() => {
+    fetch("/api/products?limit=50")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!Array.isArray(data.products) || data.products.length === 0) return;
+        const mapped: ProductSeed[] = data.products
+          .map((p: any) => {
+            if (!p?.slug || !Array.isArray(p.variants) || p.variants.length === 0) return null;
+            // Merge live API data with static metadata (description, ingredients, etc.)
+            const base = PRODUCTS.find((sp) => sp.slug === p.slug);
+            if (!base) return null;
+            return {
+              ...base,
+              name:       p.name       || base.name,
+              subtitle:   p.subtitle   || base.subtitle,
+              spice_level: p.spice_level || base.spice_level,
+              is_featured: p.is_featured ?? base.is_featured,
+              variants: p.variants.map((v: any) => ({
+                weight_grams: v.weight_grams,
+                label:        v.label,
+                price:        v.price,   // ← live price from Supabase
+              })),
+            } as ProductSeed;
+          })
+          .filter(Boolean) as ProductSeed[];
+        if (mapped.length > 0) setLiveProducts(mapped);
+      })
+      .catch(() => {/* silent — keep static fallback */});
+  }, []);
+
   const {
     filters,
     sortBy,
@@ -130,7 +163,7 @@ function ProductsContent() {
     setSearch,
     updateSort,
     clearAllFilters,
-  } = useProductFilters();
+  } = useProductFilters(liveProducts);
 
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
@@ -155,7 +188,7 @@ function ProductsContent() {
       <AnnouncementBar />
       <NavbarWithCart />
 
-      <main className="flex-1 section-container">
+      <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 xl:px-10">
         {/* Page header */}
         <PageHeader />
 
@@ -196,7 +229,7 @@ function ProductsContent() {
             {/* Sort bar */}
             <SortBar
               resultCount={filteredProducts.length}
-              totalCount={PRODUCTS.length}
+              totalCount={liveProducts.length}
               sortBy={sortBy}
               onSortChange={updateSort}
               viewMode={viewMode}

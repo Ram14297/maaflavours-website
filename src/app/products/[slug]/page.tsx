@@ -5,7 +5,7 @@
 // Product info tabs | Reviews | Related products
 // Fully responsive — mobile sticky bottom bar + desktop inline CTAs
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Star, ChevronRight, MessageCircle } from "lucide-react";
@@ -138,6 +138,18 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const [loginOpen, setLoginOpen] = useState(false);
 
   const addItem = useCartStore((s) => s.addItem);
+
+  // ─── Reveal animation observer ─────────────────────────────────────────
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) e.target.classList.add("revealed");
+      }),
+      { threshold: 0.06, rootMargin: "0px 0px -20px 0px" }
+    );
+    document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
 
   const selectedVariant = product.variants[selectedVariantIndex] as typeof product.variants[0] & { discounted_price?: number; stock_quantity?: number };
   const totalPrice = selectedVariant.price * quantity;
