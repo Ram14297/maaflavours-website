@@ -8,22 +8,18 @@
 // IMPORTANT: Even if DB fails, return 200 and store name in cookie — never block login
 
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { z } from "zod";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 
 const RequestSchema = z.object({
-  mobile: z.string().regex(/^\+91[6-9]\d{9}$/),
+  email: z.string().email(),
   name: z.string().min(2).max(80).trim(),
-  email: z.string().email().optional().or(z.literal("")),
+  mobile: z.string().regex(/^\+91[6-9]\d{9}$/).optional().or(z.literal("")),
 });
 
 const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
 
 export async function POST(request: NextRequest) {
-  // ── Call cookies() at the TOP before any async work ──────────────────────
-  const cookieStore = cookies();
-
   console.log("[update-profile] Request received");
 
   const body = await request.json().catch(() => ({}));
@@ -37,7 +33,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { mobile, name, email } = parsed.data;
+  const { email, name, mobile } = parsed.data;
 
   // ── Get userId from session cookie (set by verify-otp) ────────────────
   let userId: string | null = null;
@@ -56,15 +52,15 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createAdminSupabaseClient();
 
-    // Step 1: Try UPDATE the existing row
+    // Step 1: Try UPDATE the existing row by userId
     const { data: updated, error: updateError } = await supabase
       .from("customers")
       .update({
         name,
-        email: email || null,
+        mobile: mobile || null,
         updated_at: new Date().toISOString(),
       })
-      .eq("mobile", mobile)
+      .eq("id", userId!)
       .select("id");
 
     if (updateError) {
@@ -76,15 +72,15 @@ export async function POST(request: NextRequest) {
 
     // Step 2: If no existing row, INSERT using userId from session cookie
     if (rowsUpdated === 0 && userId) {
-      console.log("[update-profile] No existing row — inserting:", { mobile, userId });
+      console.log("[update-profile] No existing row — inserting:", { email, userId });
 
       const { error: insertError } = await supabase
         .from("customers")
         .insert({
           id: userId,
-          mobile,
+          email,
           name,
-          email: email || null,
+          mobile: mobile || null,
         });
 
       if (insertError) {
@@ -94,8 +90,8 @@ export async function POST(request: NextRequest) {
           // Duplicate key — row exists now, retry update
           await supabase
             .from("customers")
-            .update({ name, email: email || null, updated_at: new Date().toISOString() })
-            .eq("mobile", mobile);
+            .update({ name, mobile: mobile || null, updated_at: new Date().toISOString() })
+            .eq("id", userId);
           console.log("[update-profile] Resolved duplicate key via retry update");
         }
       } else {
@@ -117,14 +113,16 @@ export async function POST(request: NextRequest) {
   const updatedSession = {
     ...(existingSession || {}),
     userId:    userId || existingSession?.userId || "",
-    mobile:    existingSession?.mobile || mobile,
+    email:     existingSession?.email || email,
     name,
     isNewUser: false,
     exp:       Math.floor(Date.now() / 1000) + SESSION_MAX_AGE,
   };
 
-  // Use cookieStore (from next/headers, called at top) — most reliable in Next.js 14
-  cookieStore.set("mf_session", JSON.stringify(updatedSession), {
+  const response = NextResponse.json({ success: true, name });
+
+  // Set cookie directly on the response object — reliable in Next.js 14 Route Handlers
+  response.cookies.set("mf_session", JSON.stringify(updatedSession), {
     httpOnly: true,
     secure:   process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -132,7 +130,7 @@ export async function POST(request: NextRequest) {
     path:     "/",
   });
 
-  console.log("[update-profile] Cookie updated. Returning success.");
+  console.log("[update-profile] Cookie set on response. Returning success.");
 
-  return NextResponse.json({ success: true, name });
+  return response;
 }

@@ -116,12 +116,6 @@ export default function HeroSection() {
                 Shop Now
                 <ArrowRight size={18} />
               </Link>
-              <Link
-                href="/about"
-                className="btn-ghost inline-flex items-center gap-2.5 py-3.5 px-7 text-base"
-              >
-                Our Story
-              </Link>
             </div>
 
             {/* Trust micro-badges */}
@@ -204,6 +198,7 @@ export default function HeroSection() {
                   boxShadow: "0 4px 16px rgba(74, 44, 10, 0.12)",
                   border: "1px solid rgba(200, 150, 12, 0.2)",
                   animation: "float 3s ease-in-out infinite",
+                  zIndex: 10,
                 }}
               >
                 <span

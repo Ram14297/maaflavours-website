@@ -23,12 +23,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ user: null });
     }
 
-    // New users who haven't completed profile setup yet
-    if (session.isNewUser) {
-      return NextResponse.json({ user: null });
-    }
-
-    if (!session.userId && !session.mobile) {
+    if (!session.userId && !session.mobile && !session.email) {
       return NextResponse.json({ user: null });
     }
 
@@ -54,7 +49,27 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fallback: look up by mobile (handles legacy temp IDs)
+    // Fallback: look up by email (email-OTP accounts)
+    if (session.email) {
+      const { data: customer } = await supabase
+        .from("customers")
+        .select("id, name, email, mobile")
+        .eq("email", session.email)
+        .maybeSingle();
+
+      if (customer) {
+        return NextResponse.json({
+          user: {
+            id: customer.id,
+            mobile: customer.mobile,
+            name: customer.name || session.name || "",
+            email: customer.email || null,
+          },
+        });
+      }
+    }
+
+    // Fallback: look up by mobile (legacy SMS-OTP accounts)
     if (session.mobile) {
       const { data: customer } = await supabase
         .from("customers")
@@ -74,15 +89,14 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // No DB record found — return cookie data as fallback so UI still works
-    // (User may have a valid session but customer row wasn't created yet)
-    if (session.name && session.mobile) {
+    // No DB record found — return cookie data so UI still works
+    if (session.name && (session.email || session.mobile)) {
       return NextResponse.json({
         user: {
           id: session.userId || "",
-          mobile: session.mobile,
+          mobile: session.mobile || null,
           name: session.name,
-          email: null,
+          email: session.email || null,
         },
       });
     }

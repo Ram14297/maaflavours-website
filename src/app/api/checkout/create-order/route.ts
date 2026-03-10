@@ -56,7 +56,7 @@ const RequestSchema = z.object({
   items:           z.array(CartItemSchema).min(1).max(20),
   couponCode:      z.string().optional(),
   deliveryAddress: AddressSchema,
-  paymentMethod:   z.enum(["razorpay_upi", "razorpay_card", "razorpay_netbanking", "cod"]),
+  paymentMethod:   z.enum(["razorpay_upi", "razorpay_card", "razorpay_netbanking", "cod", "phonepe"]),
   customerNotes:   z.string().max(500).optional(),
 });
 
@@ -77,6 +77,7 @@ function mapPaymentMethodLabel(pm: string): string {
     razorpay_card:       "Card",
     razorpay_netbanking: "Net Banking",
     cod:                 "Cash on Delivery",
+    phonepe:             "PhonePe",
   };
   return map[pm] || pm;
 }
@@ -326,6 +327,19 @@ export async function POST(request: NextRequest) {
         deliveryCharge,
         codCharge,
         orderNumber:   supabaseOrderId,  // Will be replaced by trigger-generated number
+      });
+    }
+
+    // ─── 7a. PhonePe order — return orderId for client to call phonepe-initiate ─
+    if (paymentMethod === "phonepe") {
+      return NextResponse.json({
+        orderId:       supabaseOrderId,
+        paymentMethod: "phonepe",
+        total,
+        subtotal,
+        couponDiscount,
+        deliveryCharge,
+        // Client should POST to /api/checkout/phonepe-initiate with { orderId, amount: total }
       });
     }
 

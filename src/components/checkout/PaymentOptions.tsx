@@ -25,11 +25,18 @@ const PAYMENT_METHODS: {
   codCharge?: boolean;
 }[] = [
   {
-    id: "phonepe_qr",
-    label: "PhonePe / UPI QR Code",
-    subtitle: "Scan QR → pay → enter transaction ID. Fastest & preferred.",
+    id: "phonepe",
+    label: "Pay via PhonePe",
+    subtitle: "Redirects to PhonePe — pay with any UPI app, card, or wallet.",
     icon: <span className="text-xl font-bold" style={{ color: "#5F259F" }}>₹</span>,
     tag: "Recommended",
+    tagColor: "#5F259F",
+  },
+  {
+    id: "phonepe_qr",
+    label: "PhonePe / UPI QR Code",
+    subtitle: "Scan QR → pay → enter transaction ID manually.",
+    icon: <span className="text-xl font-bold" style={{ color: "#5F259F" }}>₹</span>,
     tagColor: "#5F259F",
   },
   {
@@ -99,6 +106,62 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
 
   const cartTotal = total();
   const codTotal = paymentMethod === "cod" ? cartTotal + COD_CHARGE : cartTotal;
+
+  // ─── PhonePe Gateway (redirect) ──────────────────────────────────────
+  const handlePhonePeGateway = async () => {
+    setPlacingOrder(true);
+    setOrderError("");
+
+    try {
+      // 1. Create order in DB (returns orderId + total, no Razorpay)
+      const orderRes = await fetch("/api/checkout/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: items.map((i) => ({
+            productSlug: i.productSlug,
+            variantIndex: i.variantIndex,
+            quantity: i.quantity,
+            unitPrice: i.unitPrice,
+          })),
+          couponCode: coupon?.code,
+          deliveryAddress: address,
+          paymentMethod: "phonepe",
+        }),
+      });
+
+      if (!orderRes.ok) throw new Error("Failed to create order. Please try again.");
+      const { orderId, total: orderTotal } = await orderRes.json();
+
+      // 2. Initiate PhonePe payment — get redirect URL
+      const initiateRes = await fetch("/api/checkout/phonepe-initiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          amount:         orderTotal,
+          customerMobile: address.mobile,
+          customerName:   address.full_name,
+        }),
+      });
+
+      if (!initiateRes.ok) {
+        const errData = await initiateRes.json();
+        throw new Error(errData.error || "Could not reach PhonePe. Please try another method.");
+      }
+
+      const { redirectUrl } = await initiateRes.json();
+
+      // 3. Redirect to PhonePe payment page
+      window.location.href = redirectUrl;
+
+    } catch (err: any) {
+      setOrderError(err.message || "Something went wrong.");
+      setPlacingOrder(false);
+      toast.error(err.message || "PhonePe initiation failed. Try another method.");
+    }
+    // Note: setPlacingOrder(false) NOT called on success — page redirects away
+  };
 
   // ─── PhonePe QR order placement ──────────────────────────────────────
   const handlePhonePeQR = async () => {
@@ -278,7 +341,9 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
   };
 
   const handlePlaceOrder = () => {
-    if (paymentMethod === "phonepe_qr") {
+    if (paymentMethod === "phonepe") {
+      handlePhonePeGateway();
+    } else if (paymentMethod === "phonepe_qr") {
       handlePhonePeQR();
     } else if (paymentMethod === "cod") {
       handleCOD();
@@ -371,13 +436,13 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
               className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all duration-200"
               style={{
                 background: isSelected
-                  ? method.id === "phonepe_qr" ? "rgba(95,37,159,0.05)" : "rgba(192,39,45,0.05)"
+                  ? (method.id === "phonepe" || method.id === "phonepe_qr") ? "rgba(95,37,159,0.05)" : "rgba(192,39,45,0.05)"
                   : "var(--color-cream)",
                 border: `2px solid ${isSelected
-                  ? method.id === "phonepe_qr" ? "#5F259F" : "var(--color-crimson)"
+                  ? (method.id === "phonepe" || method.id === "phonepe_qr") ? "#5F259F" : "var(--color-crimson)"
                   : "rgba(200,150,12,0.15)"}`,
                 boxShadow: isSelected
-                  ? method.id === "phonepe_qr" ? "0 0 0 3px rgba(95,37,159,0.07)" : "0 0 0 3px rgba(192,39,45,0.07)"
+                  ? (method.id === "phonepe" || method.id === "phonepe_qr") ? "0 0 0 3px rgba(95,37,159,0.07)" : "0 0 0 3px rgba(192,39,45,0.07)"
                   : "none",
               }}
             >
@@ -386,14 +451,14 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
                 className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
                 style={{
                   border: `2px solid ${isSelected
-                    ? method.id === "phonepe_qr" ? "#5F259F" : "var(--color-crimson)"
+                    ? (method.id === "phonepe" || method.id === "phonepe_qr") ? "#5F259F" : "var(--color-crimson)"
                     : "rgba(200,150,12,0.3)"}`,
                 }}
               >
                 {isSelected && (
                   <span
                     className="w-2.5 h-2.5 rounded-full block"
-                    style={{ background: method.id === "phonepe_qr" ? "#5F259F" : "var(--color-crimson)" }}
+                    style={{ background: (method.id === "phonepe" || method.id === "phonepe_qr") ? "#5F259F" : "var(--color-crimson)" }}
                   />
                 )}
               </div>
@@ -412,10 +477,10 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
                 className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{
                   background: isSelected
-                    ? method.id === "phonepe_qr" ? "rgba(95,37,159,0.1)" : "rgba(192,39,45,0.1)"
+                    ? (method.id === "phonepe" || method.id === "phonepe_qr") ? "rgba(95,37,159,0.1)" : "rgba(192,39,45,0.1)"
                     : "rgba(200,150,12,0.08)",
                   color: isSelected
-                    ? method.id === "phonepe_qr" ? "#5F259F" : "var(--color-crimson)"
+                    ? (method.id === "phonepe" || method.id === "phonepe_qr") ? "#5F259F" : "var(--color-crimson)"
                     : "var(--color-gold)",
                 }}
               >
@@ -648,10 +713,11 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
             isPlacingOrder ||
             (paymentMethod === "cod" && !codConfirmed) ||
             (paymentMethod === "phonepe_qr" && !upiTxnId.trim())
+            // "phonepe" gateway: always enabled
           }
           className="w-full py-4 text-base rounded-xl font-dm-sans font-bold flex items-center justify-center gap-3 transition-all duration-200 disabled:opacity-60"
           style={
-            paymentMethod === "phonepe_qr"
+            paymentMethod === "phonepe" || paymentMethod === "phonepe_qr"
               ? {
                   background: "linear-gradient(135deg, #5F259F, #8B2FC9)",
                   color: "white",
@@ -667,13 +733,21 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
           {isPlacingOrder ? (
             <>
               <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              {paymentMethod === "cod" ? "Placing Order…" : paymentMethod === "phonepe_qr" ? "Confirming Order…" : "Opening Payment…"}
+              {paymentMethod === "cod"
+                ? "Placing Order…"
+                : paymentMethod === "phonepe"
+                ? "Redirecting to PhonePe…"
+                : paymentMethod === "phonepe_qr"
+                ? "Confirming Order…"
+                : "Opening Payment…"}
             </>
           ) : (
             <>
               <Lock size={17} />
               {paymentMethod === "cod"
                 ? `Place Order — ${formatPrice(codTotal)}`
+                : paymentMethod === "phonepe"
+                ? `Pay with PhonePe — ${formatPrice(cartTotal)}`
                 : paymentMethod === "phonepe_qr"
                 ? `Confirm PhonePe Order — ${formatPrice(cartTotal)}`
                 : `Pay Securely — ${formatPrice(cartTotal)}`}
@@ -683,7 +757,7 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
 
         {/* Security badges */}
         <div className="flex items-center justify-center gap-4 mt-4">
-          {paymentMethod === "phonepe_qr"
+          {paymentMethod === "phonepe" || paymentMethod === "phonepe_qr"
             ? ["🔒 SSL Secured", "💜 PhonePe", "🏦 UPI Verified"].map((badge) => (
                 <span key={badge} className="font-dm-sans text-xs" style={{ color: "var(--color-grey)" }}>
                   {badge}
