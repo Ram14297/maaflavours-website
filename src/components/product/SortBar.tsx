@@ -179,7 +179,7 @@ export default function SortBar({
 
         {/* View mode toggle — grid / list */}
         <div
-          className="hidden sm:flex items-center rounded-xl overflow-hidden"
+          className="flex items-center rounded-xl overflow-hidden"
           style={{ border: "1.5px solid rgba(200,150,12,0.2)" }}
         >
           <button
