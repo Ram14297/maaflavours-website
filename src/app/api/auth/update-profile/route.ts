@@ -8,7 +8,6 @@
 // IMPORTANT: Even if DB fails, return 200 and store name in cookie — never block login
 
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { z } from "zod";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 
@@ -21,9 +20,6 @@ const RequestSchema = z.object({
 const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
 
 export async function POST(request: NextRequest) {
-  // ── Call cookies() at the TOP before any async work ──────────────────────
-  const cookieStore = cookies();
-
   console.log("[update-profile] Request received");
 
   const body = await request.json().catch(() => ({}));
@@ -123,8 +119,10 @@ export async function POST(request: NextRequest) {
     exp:       Math.floor(Date.now() / 1000) + SESSION_MAX_AGE,
   };
 
-  // Use cookieStore (from next/headers, called at top) — most reliable in Next.js 14
-  cookieStore.set("mf_session", JSON.stringify(updatedSession), {
+  const response = NextResponse.json({ success: true, name });
+
+  // Set cookie directly on the response object — reliable in Next.js 14 Route Handlers
+  response.cookies.set("mf_session", JSON.stringify(updatedSession), {
     httpOnly: true,
     secure:   process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -132,7 +130,7 @@ export async function POST(request: NextRequest) {
     path:     "/",
   });
 
-  console.log("[update-profile] Cookie updated. Returning success.");
+  console.log("[update-profile] Cookie set on response. Returning success.");
 
-  return NextResponse.json({ success: true, name });
+  return response;
 }

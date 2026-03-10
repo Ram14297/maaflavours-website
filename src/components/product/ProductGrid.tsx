@@ -119,7 +119,7 @@ export default function ProductGrid({
       <div
         className={
           viewMode === "grid"
-            ? "grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5"
+            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6"
             : "flex flex-col gap-4"
         }
         aria-busy="true"
@@ -147,7 +147,7 @@ export default function ProductGrid({
       className={
         viewMode === "list"
           ? "flex flex-col gap-4"
-          : "grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5"
+          : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 lg:gap-6"
       }
       aria-label="Product listing"
     >

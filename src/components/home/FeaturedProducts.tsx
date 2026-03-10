@@ -1,19 +1,22 @@
 "use client";
 // src/components/home/FeaturedProducts.tsx
 // Maa Flavours — Featured Products Section
-// 2 cols mobile → 4 cols desktop
-// Each card: image placeholder, name, spice badge, weight selector, price, Add to Cart
-// Gold corner accents, hover glow
+// 1 col mobile → 2 cols sm → 3 cols lg → 4 cols xl
+// Each card links to /products/[slug] for navigation
+// Prices fetched live from Supabase via /api/products (fallback: static constants)
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { ShoppingBag, Star } from "lucide-react";
 import { PRODUCTS } from "@/lib/constants/products";
 import { formatPrice, getSpiceLevelConfig } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { useCartStore } from "@/store/cartStore";
 
+type ProductEntry = (typeof PRODUCTS)[0];
+
 interface ProductCardProps {
-  product: (typeof PRODUCTS)[0];
+  product: ProductEntry;
 }
 
 function ProductCard({ product }: ProductCardProps) {
@@ -24,7 +27,9 @@ function ProductCard({ product }: ProductCardProps) {
   const spiceConfig = getSpiceLevelConfig(product.spice_level);
   const addItem = useCartStore((s) => s.addItem);
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.preventDefault();   // prevent Link navigation
+    e.stopPropagation();
     setAdding(true);
     try {
       await addItem(product.slug, selectedVariantIndex, 1);
@@ -37,9 +42,11 @@ function ProductCard({ product }: ProductCardProps) {
   };
 
   return (
-    <div
+    <Link
+      href={`/products/${product.slug}`}
       className="product-card group relative flex flex-col bg-white"
       style={{ borderRadius: "14px" }}
+      aria-label={`View ${product.name}`}
     >
       {/* ─── Gold corner ornaments ─────────────────────────────────────── */}
       <span className="corner-tl" />
@@ -148,7 +155,11 @@ function ProductCard({ product }: ProductCardProps) {
           {product.variants.map((variant, idx) => (
             <button
               key={variant.label}
-              onClick={() => setSelectedVariantIndex(idx)}
+              onClick={(e) => {
+                e.preventDefault();   // prevent Link navigation
+                e.stopPropagation();
+                setSelectedVariantIndex(idx);
+              }}
               className="flex-1 py-1.5 px-2 rounded-lg font-dm-sans text-xs font-semibold transition-all duration-200"
               style={{
                 background:
@@ -173,7 +184,7 @@ function ProductCard({ product }: ProductCardProps) {
         </div>
 
         {/* Price + Add to Cart */}
-        <div className="flex items-center justify-between mt-auto gap-3">
+        <div className="flex flex-col gap-2 mt-auto">
           <div className="flex flex-col leading-tight">
             <span
               className="font-dm-sans font-bold text-lg leading-none"
@@ -194,13 +205,11 @@ function ProductCard({ product }: ProductCardProps) {
           <button
             onClick={handleAddToCart}
             disabled={adding}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-dm-sans text-sm font-semibold transition-all duration-200 disabled:opacity-70"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-dm-sans text-sm font-semibold transition-all duration-200 disabled:opacity-70"
             style={{
               background: adding ? "var(--color-gold)" : "var(--color-brown)",
               color: "white",
               boxShadow: "0 2px 8px rgba(74,44,10,0.2)",
-              minWidth: "120px",
-              justifyContent: "center",
             }}
           >
             {adding ? (
@@ -219,11 +228,56 @@ function ProductCard({ product }: ProductCardProps) {
           </button>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
+// ─── Map API product to ProductEntry shape ─────────────────────────────────
+function mapApiProduct(p: any): ProductEntry | null {
+  if (!p?.slug || !Array.isArray(p.variants) || p.variants.length === 0) return null;
+  // Merge static metadata (description, ingredients, etc.) with live prices from API
+  const base = PRODUCTS.find((sp) => sp.slug === p.slug);
+  return {
+    ...(base ?? {}),
+    slug:              p.slug,
+    name:              p.name,
+    subtitle:          p.subtitle || base?.subtitle || "",
+    tag:               p.tag || base?.tag || "",
+    spice_level:       p.spice_level || base?.spice_level || "medium",
+    short_description: p.short_description || base?.short_description || "",
+    description:       p.description || base?.description || "",
+    ingredients:       p.ingredients || base?.ingredients || "",
+    shelf_life_days:   p.shelf_life_days || base?.shelf_life_days || 90,
+    is_vegetarian:     p.is_vegetarian ?? true,
+    is_featured:       p.is_featured ?? false,
+    image_placeholder: p.slug,
+    // Live variant prices from Supabase
+    variants: p.variants.map((v: any) => ({
+      weight_grams: v.weight_grams,
+      label:        v.label,
+      price:        v.price,
+    })),
+  } as ProductEntry;
+}
+
 export default function FeaturedProducts() {
+  // Start with static products, replace with live Supabase prices on mount
+  const [products, setProducts] = useState<ProductEntry[]>(PRODUCTS);
+
+  useEffect(() => {
+    fetch("/api/products?featured=true&limit=6")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data.products) && data.products.length > 0) {
+          const mapped = data.products
+            .map(mapApiProduct)
+            .filter(Boolean) as ProductEntry[];
+          if (mapped.length > 0) setProducts(mapped);
+        }
+      })
+      .catch(() => {/* silent — keep static fallback */});
+  }, []);
+
   return (
     <section
       className="section-padding bg-cream-texture"
@@ -252,8 +306,8 @@ export default function FeaturedProducts() {
         </div>
 
         {/* ─── Product Grid ─────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-          {PRODUCTS.map((product) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-6">
+          {products.map((product) => (
             <ProductCard key={product.slug} product={product} />
           ))}
         </div>

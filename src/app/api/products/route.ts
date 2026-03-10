@@ -61,8 +61,29 @@ export async function GET(req: NextRequest) {
       const { data, count, error } = await query.range(from, from + limit - 1);
       if (error) throw error;
 
+      // Fetch live variant prices for returned products
+      const productIds = (data || []).map((p: any) => p.id);
+      let variantsMap: Record<string, any[]> = {};
+      if (productIds.length > 0) {
+        const { data: variantsData } = await supabase
+          .from("product_variants")
+          .select("id, product_id, label, weight_grams, price, discounted_price, stock_quantity")
+          .in("product_id", productIds)
+          .eq("is_active", true)
+          .order("weight_grams");
+        for (const v of variantsData || []) {
+          if (!variantsMap[v.product_id]) variantsMap[v.product_id] = [];
+          variantsMap[v.product_id].push(v);
+        }
+      }
+
+      const productsWithVariants = (data || []).map((p: any) => ({
+        ...p,
+        variants: variantsMap[p.id] || [],
+      }));
+
       return NextResponse.json({
-        products: data || [],
+        products: productsWithVariants,
         total:    count || 0,
         page,
         limit,
