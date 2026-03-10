@@ -78,11 +78,32 @@ export async function middleware(request: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession();
 
   // ── 3. Protected Customer Routes ──────────────────────────────────────
+  // NOTE: We use custom mf_session cookie for auth — NOT Supabase session.
+  // Supabase session will always be null for our OTP-based auth flow.
   const PROTECTED = ["/account", "/checkout"];
-  if (PROTECTED.some(r => pathname.startsWith(r)) && !session) {
-    const url = new URL("/login", request.url);
-    url.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(url);
+  if (PROTECTED.some(r => pathname.startsWith(r))) {
+    let isAuthenticated = false;
+    const mfSessionVal = request.cookies.get("mf_session")?.value;
+    if (mfSessionVal) {
+      try {
+        const sess = JSON.parse(mfSessionVal);
+        const now = Math.floor(Date.now() / 1000);
+        // Valid session: has userId, name set (not new user), not expired
+        if (
+          sess.userId &&
+          !sess.isNewUser &&
+          sess.name &&
+          (!sess.exp || sess.exp > now)
+        ) {
+          isAuthenticated = true;
+        }
+      } catch { /* invalid cookie — not authenticated */ }
+    }
+    if (!isAuthenticated) {
+      const url = new URL("/login", request.url);
+      url.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;

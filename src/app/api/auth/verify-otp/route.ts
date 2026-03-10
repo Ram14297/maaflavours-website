@@ -6,6 +6,7 @@
 // Returns: { success, isNewUser, user } | { error }
 
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import twilio from "twilio";
 import { z } from "zod";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
@@ -18,11 +19,19 @@ const RequestSchema = z.object({
 const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 days in seconds
 
 export async function POST(request: NextRequest) {
+  // ── Call cookies() at the TOP before any async work ──────────────────────
+  const cookieStore = cookies();
+
+  console.log("[verify-otp] Request received");
+
   try {
     const body = await request.json();
+    console.log("[verify-otp] Body parsed, mobile:", body?.mobile);
+
     const parsed = RequestSchema.safeParse(body);
 
     if (!parsed.success) {
+      console.log("[verify-otp] Validation failed:", parsed.error.issues);
       return NextResponse.json(
         { error: "Invalid OTP or mobile number." },
         { status: 400 }
@@ -42,10 +51,13 @@ export async function POST(request: NextRequest) {
     if (isDevMode) {
       console.warn("[verify-otp] Dev mode — Twilio not configured, accepting any 6-digit OTP");
     } else {
+      console.log("[verify-otp] Verifying OTP with Twilio for:", fullMobile);
       const client = twilio(accountSid, authToken);
       const verification = await client.verify.v2
         .services(serviceSid)
         .verificationChecks.create({ to: fullMobile, code: otp });
+
+      console.log("[verify-otp] Twilio verification status:", verification.status);
 
       if (verification.status !== "approved") {
         return NextResponse.json(
@@ -61,29 +73,32 @@ export async function POST(request: NextRequest) {
     }
 
     // ─── 2. Get or create customer row in Supabase ────────────────────────
-    // Always use admin client to bypass RLS
+    console.log("[verify-otp] Looking up customer in DB for:", fullMobile);
     const supabase = createAdminSupabaseClient();
 
-    // Check if customer already exists
-    const { data: existingCustomer } = await supabase
+    const { data: existingCustomer, error: lookupErr } = await supabase
       .from("customers")
       .select("id, name, email, mobile")
       .eq("mobile", fullMobile)
       .maybeSingle();
 
+    if (lookupErr) {
+      console.error("[verify-otp] Customer lookup error:", lookupErr.message);
+    } else {
+      console.log("[verify-otp] Customer lookup result:", existingCustomer ? `found id=${existingCustomer.id}` : "not found");
+    }
+
     const isNewUser = !existingCustomer || !existingCustomer.name;
     let customerId: string;
 
     if (existingCustomer) {
-      // Existing customer — use their real UUID
       customerId = existingCustomer.id;
-      console.log("[verify-otp] Existing customer found:", customerId);
+      console.log("[verify-otp] Using existing customer:", customerId);
     } else {
-      // New customer — try Supabase admin to create auth user (gets real UUID)
       let authUserId: string | null = null;
 
       try {
-        // Try admin API for a real Supabase-linked UUID
+        console.log("[verify-otp] Trying Supabase admin API to create auth user");
         const { data: listData } = await supabase.auth.admin.listUsers({
           page: 1, perPage: 1000,
         });
@@ -93,40 +108,42 @@ export async function POST(request: NextRequest) {
 
         if (existingAuthUser) {
           authUserId = existingAuthUser.id;
+          console.log("[verify-otp] Found existing auth user:", authUserId);
         } else {
           const { data: newUser, error: createErr } = await supabase.auth.admin.createUser({
             phone: fullMobile,
             phone_confirm: true,
             user_metadata: { mobile: fullMobile },
           });
-          if (!createErr && newUser?.user) {
+          if (createErr) {
+            console.warn("[verify-otp] createUser error:", createErr.message);
+          } else if (newUser?.user) {
             authUserId = newUser.user.id;
+            console.log("[verify-otp] Created new auth user:", authUserId);
           }
         }
       } catch (adminErr) {
         console.warn("[verify-otp] Supabase admin API unavailable:", adminErr);
       }
 
-      // If admin API failed, generate a proper UUID (not a temp string)
       if (!authUserId) {
         authUserId = crypto.randomUUID();
-        console.log("[verify-otp] Using generated UUID (admin API unavailable):", authUserId);
+        console.log("[verify-otp] Using generated UUID:", authUserId);
       }
 
       customerId = authUserId;
 
-      // Insert the new customer row
+      console.log("[verify-otp] Inserting new customer row:", { customerId, fullMobile });
       const { error: insertErr } = await supabase.from("customers").insert({
         id: customerId,
         mobile: fullMobile,
-        name: "",   // Will be filled by update-profile step
+        name: "",
         email: null,
         created_at: new Date().toISOString(),
       });
 
       if (insertErr) {
-        // Row might have been created between our check and insert — try to get it
-        console.error("[verify-otp] Insert failed:", insertErr.message);
+        console.error("[verify-otp] Insert failed:", insertErr.message, insertErr.code);
         const { data: retryCustomer } = await supabase
           .from("customers")
           .select("id")
@@ -134,7 +151,10 @@ export async function POST(request: NextRequest) {
           .maybeSingle();
         if (retryCustomer) {
           customerId = retryCustomer.id;
+          console.log("[verify-otp] Recovered customer id on retry:", customerId);
         }
+      } else {
+        console.log("[verify-otp] Customer inserted successfully");
       }
     }
 
@@ -147,16 +167,29 @@ export async function POST(request: NextRequest) {
         .eq("status", "sent");
     } catch { /* non-fatal */ }
 
-    // ─── 4. Build session cookie ──────────────────────────────────────────
+    // ─── 4. Set session cookie via next/headers ───────────────────────────
     const sessionPayload = JSON.stringify({
-      userId:    customerId,           // Always a real UUID now
+      userId:    customerId,
       mobile:    fullMobile,
       name:      existingCustomer?.name || "",
       isNewUser,
       exp:       Math.floor(Date.now() / 1000) + SESSION_MAX_AGE,
     });
 
-    const response = NextResponse.json({
+    console.log("[verify-otp] Setting mf_session cookie for userId:", customerId);
+
+    // Use cookieStore (from next/headers, called at top) — most reliable in Next.js 14
+    cookieStore.set("mf_session", sessionPayload, {
+      httpOnly: true,
+      secure:   process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge:   SESSION_MAX_AGE,
+      path:     "/",
+    });
+
+    console.log("[verify-otp] Cookie set. Returning success response. isNewUser:", isNewUser);
+
+    return NextResponse.json({
       success: true,
       isNewUser,
       user: {
@@ -166,18 +199,8 @@ export async function POST(request: NextRequest) {
         email:  existingCustomer?.email || null,
       },
     });
-
-    response.cookies.set("mf_session", sessionPayload, {
-      httpOnly: true,
-      secure:   process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge:   SESSION_MAX_AGE,  // 30 days
-      path:     "/",
-    });
-
-    return response;
   } catch (err: any) {
-    console.error("[verify-otp] Error:", err);
+    console.error("[verify-otp] Unhandled error:", err);
     return NextResponse.json(
       { error: err.message || "Verification failed. Please try again." },
       { status: 500 }
