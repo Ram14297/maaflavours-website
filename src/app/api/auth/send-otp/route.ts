@@ -89,9 +89,6 @@ export async function POST(request: NextRequest) {
     await client.verify.v2.services(serviceSid).verifications.create({
       to: fullMobile,
       channel: "sms",
-      customMessage:
-        `Your Maa Flavours verification code is {{code}}. ` +
-        `Valid for 10 minutes. Do not share with anyone.`,
     });
 
     return NextResponse.json({
@@ -115,6 +112,12 @@ export async function POST(request: NextRequest) {
           rateLimited: true,
         },
         { status: 429 }
+      );
+    }
+    if (err?.code === 60033) {
+      return NextResponse.json(
+        { error: "This number is not verified for OTP delivery. Please contact support." },
+        { status: 400 }
       );
     }
 
