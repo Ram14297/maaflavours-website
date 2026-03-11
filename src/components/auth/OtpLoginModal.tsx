@@ -66,7 +66,7 @@ export default function OtpLoginModal({
   const [step, setStep] = useState<AuthStep>("email");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [otp, setOtp] = useState(Array(6).fill(""));
+  const [otp, setOtp] = useState(Array(8).fill(""));
   const [otpError, setOtpError] = useState("");
   const [maskedEmail, setMaskedEmail] = useState("");
   const [name, setName] = useState("");
@@ -107,7 +107,7 @@ export default function OtpLoginModal({
     setStep("email");
     setEmail("");
     setEmailError("");
-    setOtp(Array(6).fill(""));
+    setOtp(Array(8).fill(""));
     setOtpError("");
     setMaskedEmail("");
     setName("");
@@ -157,8 +157,8 @@ export default function OtpLoginModal({
   // ─── STEP 2: Verify OTP ─────────────────────────────────────────────
   const handleVerifyOtp = useCallback(async (code?: string) => {
     const otpCode = code ?? otp.join("");
-    if (otpCode.length < 6) {
-      setOtpError("Please enter all 6 digits.");
+    if (otpCode.length < 8) {
+      setOtpError("Please enter all 8 digits of your OTP.");
       return;
     }
 
@@ -175,7 +175,7 @@ export default function OtpLoginModal({
 
       if (!res.ok || !data.success) {
         setOtpError(data.error || "Incorrect OTP. Please try again.");
-        setOtp(Array(6).fill(""));
+        setOtp(Array(8).fill(""));
         return;
       }
 
@@ -203,7 +203,7 @@ export default function OtpLoginModal({
     });
     const data = await res.json();
     if (data.success) {
-      setOtp(Array(6).fill(""));
+      setOtp(Array(8).fill(""));
       setOtpError("");
       setResendKey((k) => k + 1);
       toast.success("OTP sent again!");
@@ -276,7 +276,7 @@ export default function OtpLoginModal({
   const STEP_TEXT: Record<AuthStep, { heading: string; sub: string }> = {
     email: {
       heading: title || "Sign In to Maa Flavours",
-      sub: subtitle || "We'll send a 6-digit OTP to your email",
+      sub: subtitle || "We'll send an OTP code to your email",
     },
     otp: {
       heading: "Check Your Email",
@@ -470,7 +470,7 @@ export default function OtpLoginModal({
                 </button>
 
                 <p className="font-dm-sans text-xs text-center" style={{ color: "var(--color-grey)" }}>
-                  🔒 We'll send a 6-digit OTP to verify your email. Free, no spam.
+                  🔒 We'll send an OTP code to verify your email. Free, no spam.
                 </p>
               </>
             )}
@@ -485,6 +485,7 @@ export default function OtpLoginModal({
                   disabled={loading}
                   hasError={!!otpError}
                   autoFocus
+                  length={8}
                 />
 
                 {otpError && (
@@ -496,7 +497,7 @@ export default function OtpLoginModal({
 
                 <button
                   onClick={() => handleVerifyOtp()}
-                  disabled={loading || otp.some((d) => !d)}
+                  disabled={loading || otp.length < 8 || otp.some((d) => !d)}
                   className="btn-primary w-full py-4 text-base gap-3 disabled:opacity-60"
                 >
                   {loading
