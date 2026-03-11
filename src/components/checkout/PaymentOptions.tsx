@@ -6,6 +6,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Smartphone, CreditCard, Landmark, Banknote, ChevronLeft, Lock, CheckCircle2 } from "lucide-react";
 import { useCheckoutStore, PaymentMethod } from "@/store/checkoutStore";
 import { useCartStore } from "@/store/cartStore";
@@ -25,11 +26,18 @@ const PAYMENT_METHODS: {
   codCharge?: boolean;
 }[] = [
   {
-    id: "phonepe_qr",
-    label: "PhonePe / UPI QR Code",
-    subtitle: "Scan QR → pay → enter transaction ID. Fastest & preferred.",
+    id: "phonepe",
+    label: "Pay via UPI",
+    subtitle: "Enter your UPI ID — collect request sent to PhonePe, GPay, CRED, or any UPI app.",
     icon: <span className="text-xl font-bold" style={{ color: "#5F259F" }}>₹</span>,
     tag: "Recommended",
+    tagColor: "#5F259F",
+  },
+  {
+    id: "phonepe_qr",
+    label: "PhonePe / UPI QR Code",
+    subtitle: "Scan QR → pay → enter transaction ID manually.",
+    icon: <span className="text-xl font-bold" style={{ color: "#5F259F" }}>₹</span>,
     tagColor: "#5F259F",
   },
   {
@@ -81,6 +89,7 @@ interface PaymentOptionsProps {
 }
 
 export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) {
+  const router = useRouter();
   const {
     paymentMethod,
     setPaymentMethod,
@@ -96,9 +105,70 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
   const { items, coupon, total, clearCart } = useCartStore();
   const [codConfirmed, setCodConfirmed] = useState(false);
   const [upiTxnId, setUpiTxnId] = useState("");
+  const [upiCollectId, setUpiCollectId] = useState("");
 
   const cartTotal = total();
   const codTotal = paymentMethod === "cod" ? cartTotal + COD_CHARGE : cartTotal;
+
+  // ─── PhonePe UPI Collect ──────────────────────────────────────────────
+  // Customer enters UPI ID → collect request sent to their app → auto-confirmed
+  const handlePhonePeGateway = async () => {
+    if (!upiCollectId.trim() || !upiCollectId.includes("@")) {
+      setOrderError("Please enter a valid UPI ID (e.g. ram@okaxis).");
+      return;
+    }
+    setPlacingOrder(true);
+    setOrderError("");
+
+    try {
+      // 1. Create order in DB (returns orderId + total, skips Razorpay)
+      const orderRes = await fetch("/api/checkout/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: items.map((i) => ({
+            productSlug: i.productSlug,
+            variantIndex: i.variantIndex,
+            quantity: i.quantity,
+            unitPrice: i.unitPrice,
+          })),
+          couponCode: coupon?.code,
+          deliveryAddress: address,
+          paymentMethod: "phonepe",
+        }),
+      });
+
+      if (!orderRes.ok) throw new Error("Failed to create order. Please try again.");
+      const { orderId, total: orderTotal } = await orderRes.json();
+
+      // 2. Send UPI collect request to customer's app
+      const initiateRes = await fetch("/api/checkout/phonepe-initiate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          amount:         orderTotal,
+          upiId:          upiCollectId.trim(),
+          customerMobile: address.mobile,
+          customerName:   address.full_name,
+        }),
+      });
+
+      if (!initiateRes.ok) {
+        const errData = await initiateRes.json();
+        throw new Error(errData.error || "Could not send collect request. Check your UPI ID and try again.");
+      }
+
+      // 3. Navigate to status page — polls for payment confirmation
+      router.push(`/checkout/phonepe-status?orderId=${orderId}`);
+
+    } catch (err: any) {
+      setOrderError(err.message || "Something went wrong.");
+      setPlacingOrder(false);
+      toast.error(err.message || "UPI collect failed. Try another method.");
+    }
+    // Note: setPlacingOrder(false) NOT called on success — navigating away
+  };
 
   // ─── PhonePe QR order placement ──────────────────────────────────────
   const handlePhonePeQR = async () => {
@@ -278,7 +348,9 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
   };
 
   const handlePlaceOrder = () => {
-    if (paymentMethod === "phonepe_qr") {
+    if (paymentMethod === "phonepe") {
+      handlePhonePeGateway();
+    } else if (paymentMethod === "phonepe_qr") {
       handlePhonePeQR();
     } else if (paymentMethod === "cod") {
       handleCOD();
@@ -371,13 +443,13 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
               className="flex items-center gap-4 p-4 rounded-2xl cursor-pointer transition-all duration-200"
               style={{
                 background: isSelected
-                  ? method.id === "phonepe_qr" ? "rgba(95,37,159,0.05)" : "rgba(192,39,45,0.05)"
+                  ? (method.id === "phonepe" || method.id === "phonepe_qr") ? "rgba(95,37,159,0.05)" : "rgba(192,39,45,0.05)"
                   : "var(--color-cream)",
                 border: `2px solid ${isSelected
-                  ? method.id === "phonepe_qr" ? "#5F259F" : "var(--color-crimson)"
+                  ? (method.id === "phonepe" || method.id === "phonepe_qr") ? "#5F259F" : "var(--color-crimson)"
                   : "rgba(200,150,12,0.15)"}`,
                 boxShadow: isSelected
-                  ? method.id === "phonepe_qr" ? "0 0 0 3px rgba(95,37,159,0.07)" : "0 0 0 3px rgba(192,39,45,0.07)"
+                  ? (method.id === "phonepe" || method.id === "phonepe_qr") ? "0 0 0 3px rgba(95,37,159,0.07)" : "0 0 0 3px rgba(192,39,45,0.07)"
                   : "none",
               }}
             >
@@ -386,14 +458,14 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
                 className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
                 style={{
                   border: `2px solid ${isSelected
-                    ? method.id === "phonepe_qr" ? "#5F259F" : "var(--color-crimson)"
+                    ? (method.id === "phonepe" || method.id === "phonepe_qr") ? "#5F259F" : "var(--color-crimson)"
                     : "rgba(200,150,12,0.3)"}`,
                 }}
               >
                 {isSelected && (
                   <span
                     className="w-2.5 h-2.5 rounded-full block"
-                    style={{ background: method.id === "phonepe_qr" ? "#5F259F" : "var(--color-crimson)" }}
+                    style={{ background: (method.id === "phonepe" || method.id === "phonepe_qr") ? "#5F259F" : "var(--color-crimson)" }}
                   />
                 )}
               </div>
@@ -412,10 +484,10 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
                 className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                 style={{
                   background: isSelected
-                    ? method.id === "phonepe_qr" ? "rgba(95,37,159,0.1)" : "rgba(192,39,45,0.1)"
+                    ? (method.id === "phonepe" || method.id === "phonepe_qr") ? "rgba(95,37,159,0.1)" : "rgba(192,39,45,0.1)"
                     : "rgba(200,150,12,0.08)",
                   color: isSelected
-                    ? method.id === "phonepe_qr" ? "#5F259F" : "var(--color-crimson)"
+                    ? (method.id === "phonepe" || method.id === "phonepe_qr") ? "#5F259F" : "var(--color-crimson)"
                     : "var(--color-gold)",
                 }}
               >
@@ -460,6 +532,58 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
           );
         })}
       </div>
+
+      {/* ── UPI Collect section (shows when "Pay via UPI" is selected) ──── */}
+      {paymentMethod === "phonepe" && (
+        <div className="px-6 pb-4">
+          <div
+            className="rounded-2xl overflow-hidden"
+            style={{
+              border: "2px solid #5F259F",
+              background: "linear-gradient(135deg, rgba(95,37,159,0.04) 0%, rgba(95,37,159,0.02) 100%)",
+            }}
+          >
+            <div className="h-1" style={{ background: "linear-gradient(90deg, #5F259F, #8B2FC9, #5F259F)" }} />
+            <div className="p-5">
+              <p className="font-dm-sans font-bold text-sm text-center mb-1" style={{ color: "#5F259F" }}>
+                Enter Your UPI ID
+              </p>
+              <p className="font-dm-sans text-xs text-center mb-4" style={{ color: "var(--color-grey)" }}>
+                A collect request will be sent to your PhonePe, GPay, CRED, or any UPI app.
+              </p>
+              <div>
+                <label
+                  htmlFor="upi-collect-id"
+                  className="font-dm-sans text-xs font-semibold block mb-1.5"
+                  style={{ color: "var(--color-brown)" }}
+                >
+                  UPI ID *
+                </label>
+                <input
+                  id="upi-collect-id"
+                  type="text"
+                  value={upiCollectId}
+                  onChange={(e) => { setUpiCollectId(e.target.value); setOrderError(""); }}
+                  placeholder="e.g. ram@okaxis or 9876543210@ybl"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  className="w-full px-4 py-3 rounded-xl font-dm-sans text-sm outline-none transition-all"
+                  style={{
+                    border: "2px solid rgba(95,37,159,0.3)",
+                    background: "white",
+                    color: "var(--color-brown)",
+                  }}
+                  onFocus={(e) => (e.target.style.borderColor = "#5F259F")}
+                  onBlur={(e) => (e.target.style.borderColor = "rgba(95,37,159,0.3)")}
+                />
+                <p className="font-dm-sans text-xs mt-1.5" style={{ color: "var(--color-grey)" }}>
+                  Find your UPI ID in PhonePe → Profile, or GPay → Settings.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── PhonePe QR section ──────────────────────────────────────────── */}
       {paymentMethod === "phonepe_qr" && (
@@ -647,11 +771,12 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
           disabled={
             isPlacingOrder ||
             (paymentMethod === "cod" && !codConfirmed) ||
-            (paymentMethod === "phonepe_qr" && !upiTxnId.trim())
+            (paymentMethod === "phonepe_qr" && !upiTxnId.trim()) ||
+            (paymentMethod === "phonepe" && !upiCollectId.includes("@"))
           }
           className="w-full py-4 text-base rounded-xl font-dm-sans font-bold flex items-center justify-center gap-3 transition-all duration-200 disabled:opacity-60"
           style={
-            paymentMethod === "phonepe_qr"
+            paymentMethod === "phonepe" || paymentMethod === "phonepe_qr"
               ? {
                   background: "linear-gradient(135deg, #5F259F, #8B2FC9)",
                   color: "white",
@@ -667,13 +792,21 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
           {isPlacingOrder ? (
             <>
               <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              {paymentMethod === "cod" ? "Placing Order…" : paymentMethod === "phonepe_qr" ? "Confirming Order…" : "Opening Payment…"}
+              {paymentMethod === "cod"
+                ? "Placing Order…"
+                : paymentMethod === "phonepe"
+                ? "Sending Collect Request…"
+                : paymentMethod === "phonepe_qr"
+                ? "Confirming Order…"
+                : "Opening Payment…"}
             </>
           ) : (
             <>
               <Lock size={17} />
               {paymentMethod === "cod"
                 ? `Place Order — ${formatPrice(codTotal)}`
+                : paymentMethod === "phonepe"
+                ? `Pay via UPI — ${formatPrice(cartTotal)}`
                 : paymentMethod === "phonepe_qr"
                 ? `Confirm PhonePe Order — ${formatPrice(cartTotal)}`
                 : `Pay Securely — ${formatPrice(cartTotal)}`}
@@ -683,7 +816,7 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
 
         {/* Security badges */}
         <div className="flex items-center justify-center gap-4 mt-4">
-          {paymentMethod === "phonepe_qr"
+          {paymentMethod === "phonepe" || paymentMethod === "phonepe_qr"
             ? ["🔒 SSL Secured", "💜 PhonePe", "🏦 UPI Verified"].map((badge) => (
                 <span key={badge} className="font-dm-sans text-xs" style={{ color: "var(--color-grey)" }}>
                   {badge}

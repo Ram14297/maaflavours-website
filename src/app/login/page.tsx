@@ -10,13 +10,21 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import {
-  Phone, ShieldCheck, ArrowRight, CheckCircle2,
+  ShieldCheck, ArrowRight, CheckCircle2,
   User, Mail, Star, Package,
 } from "lucide-react";
 import OtpBoxes from "@/components/auth/OtpBoxes";
 import ResendTimer from "@/components/auth/ResendTimer";
-import { isValidMobile, maskMobile, normalizeMobile } from "@/lib/utils";
 import toast from "react-hot-toast";
+
+// ─── Helpers ─────────────────────────────────────────────────────────────
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+}
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  return local.slice(0, 2) + "***@" + domain;
+}
 
 // ─── Testimonial strip ───────────────────────────────────────────────────
 const TESTIMONIALS = [
@@ -25,7 +33,7 @@ const TESTIMONIALS = [
   { name: "Ananya M.", city: "Bangalore", text: "No preservatives and still so fresh. Ordering every month now!" },
 ];
 
-type LoginStep = "mobile" | "otp" | "profile" | "success";
+type LoginStep = "email" | "otp" | "profile" | "success";
 
 // ─── Inner content (needs useSearchParams — wrapped in Suspense) ─────────
 function LoginPageContent() {
@@ -33,24 +41,24 @@ function LoginPageContent() {
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/account";
 
-  const [step, setStep] = useState<LoginStep>("mobile");
-  const [mobile, setMobile] = useState("");
-  const [mobileError, setMobileError] = useState("");
+  const [step, setStep] = useState<LoginStep>("email");
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [otp, setOtp] = useState(Array(6).fill(""));
   const [otpError, setOtpError] = useState("");
-  const [maskedNumber, setMaskedNumber] = useState("");
+  const [maskedEmail, setMaskedEmail] = useState("");
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
   const [profileError, setProfileError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendKey, setResendKey] = useState(0);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
 
-  const mobileRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
 
-  // Auto-focus mobile on mount
-  useEffect(() => { setTimeout(() => mobileRef.current?.focus(), 200); }, []);
+  // Auto-focus email on mount
+  useEffect(() => { setTimeout(() => emailRef.current?.focus(), 200); }, []);
 
   // Rotate testimonials
   useEffect(() => {
@@ -62,28 +70,27 @@ function LoginPageContent() {
 
   // ─── Step 1: Send OTP ────────────────────────────────────────────────
   const handleSendOtp = async () => {
-    const digits = mobile.replace(/\D/g, "");
-    if (!isValidMobile(digits)) {
-      setMobileError("Enter a valid 10-digit Indian mobile number.");
+    if (!isValidEmail(email)) {
+      setEmailError("Enter a valid email address.");
       return;
     }
     setLoading(true);
-    setMobileError("");
+    setEmailError("");
     try {
       const res = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile: digits }),
+        body: JSON.stringify({ email: email.trim() }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        setMobileError(data.error || "Failed to send OTP.");
+        setEmailError(data.error || "Failed to send OTP.");
         return;
       }
-      setMaskedNumber(data.maskedMobile || maskMobile(digits));
+      setMaskedEmail(data.maskedEmail || maskEmail(email.trim()));
       setStep("otp");
     } catch {
-      setMobileError("Network error. Please try again.");
+      setEmailError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -96,11 +103,10 @@ function LoginPageContent() {
     setLoading(true);
     setOtpError("");
     try {
-      const digits = mobile.replace(/\D/g, "");
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile: digits, otp: otpCode }),
+        body: JSON.stringify({ email: email.trim(), otp: otpCode }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -114,7 +120,7 @@ function LoginPageContent() {
       } else {
         setStep("success");
         window.dispatchEvent(new CustomEvent("mf:auth:login", {
-          detail: { name: data.user?.name, mobile: normalizeMobile(digits), isNewUser: false }
+          detail: { name: data.user?.name, email: email.trim(), isNewUser: false }
         }));
         setTimeout(() => router.push(redirectTo), 1800);
       }
@@ -123,15 +129,14 @@ function LoginPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [mobile, otp, redirectTo, router]);
+  }, [email, otp, redirectTo, router]);
 
   // ─── Resend ──────────────────────────────────────────────────────────
   const handleResend = async () => {
-    const digits = mobile.replace(/\D/g, "");
     const res = await fetch("/api/auth/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mobile: digits }),
+      body: JSON.stringify({ email: email.trim() }),
     });
     const data = await res.json();
     if (data.success) {
@@ -148,22 +153,23 @@ function LoginPageContent() {
     if (!name.trim() || name.trim().length < 2) {
       setProfileError("Please enter your full name."); return;
     }
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setProfileError("Enter a valid email address."); return;
+    const mobileDigits = mobile.replace(/\D/g, "");
+    if (mobileDigits && !/^[6-9]\d{9}$/.test(mobileDigits)) {
+      setProfileError("Enter a valid 10-digit Indian mobile number."); return;
     }
     setLoading(true); setProfileError("");
     try {
-      const digits = mobile.replace(/\D/g, "");
+      const mobileFormatted = mobileDigits ? `+91${mobileDigits}` : undefined;
       const res = await fetch("/api/auth/update-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile: normalizeMobile(digits), name: name.trim(), email: email.trim() || undefined }),
+        body: JSON.stringify({ email: email.trim(), name: name.trim(), mobile: mobileFormatted }),
       });
       const data = await res.json();
       if (!data.success) { setProfileError(data.error || "Could not save profile."); return; }
       setStep("success");
       window.dispatchEvent(new CustomEvent("mf:auth:login", {
-        detail: { name: name.trim(), mobile: normalizeMobile(digits), isNewUser: true }
+        detail: { name: name.trim(), email: email.trim(), isNewUser: true }
       }));
       setTimeout(() => router.push(redirectTo), 1800);
     } catch {
@@ -326,28 +332,28 @@ function LoginPageContent() {
               ) : (
                 <div className="w-14 h-14 rounded-full flex items-center justify-center"
                   style={{ background: "rgba(192,39,45,0.08)", border: "2px solid rgba(192,39,45,0.18)" }}>
-                  <Phone size={24} strokeWidth={1.75} style={{ color: "var(--color-crimson)" }} />
+                  <Mail size={24} strokeWidth={1.75} style={{ color: "var(--color-crimson)" }} />
                 </div>
               )}
             </div>
 
             <h1 className="font-playfair font-bold text-xl" style={{ color: "var(--color-brown)" }}>
-              {step === "mobile" && "Sign In"}
+              {step === "email" && "Sign In"}
               {step === "otp" && "Enter OTP"}
               {step === "profile" && "Complete Your Profile"}
               {step === "success" && "You're in! 🎉"}
             </h1>
             <p className="font-dm-sans text-sm mt-1" style={{ color: "var(--color-grey)" }}>
-              {step === "mobile" && "Use your mobile number — no password needed"}
-              {step === "otp" && `OTP sent to ${maskedNumber}`}
+              {step === "email" && "We'll send a 6-digit OTP to your email"}
+              {step === "otp" && `OTP sent to ${maskedEmail}`}
               {step === "profile" && "Tell us your name to complete registration"}
               {step === "success" && "Redirecting you now…"}
             </p>
 
             {/* Step progress bar */}
             <div className="flex gap-1 mt-4 justify-center">
-              {(["mobile", "otp", "profile"] as LoginStep[]).map((s, i) => {
-                const idx = ["mobile", "otp", "profile"].indexOf(step);
+              {(["email", "otp", "profile"] as LoginStep[]).map((s, i) => {
+                const idx = ["email", "otp", "profile"].indexOf(step);
                 const active = s === step;
                 const done = i < idx;
                 return (
@@ -365,38 +371,37 @@ function LoginPageContent() {
           {/* Form body */}
           <div className="px-7 py-6 flex flex-col gap-4">
 
-            {/* ══ STEP 1: Mobile ══ */}
-            {step === "mobile" && (
+            {/* ══ STEP 1: Email ══ */}
+            {step === "email" && (
               <>
                 <div>
-                  <label htmlFor="login-mobile" className="block font-dm-sans text-sm font-semibold mb-1.5"
-                    style={{ color: "var(--color-brown)" }}>Mobile Number</label>
+                  <label htmlFor="login-email" className="block font-dm-sans text-sm font-semibold mb-1.5"
+                    style={{ color: "var(--color-brown)" }}>Email Address</label>
                   <div className="flex rounded-xl overflow-hidden"
-                    style={{ border: `2px solid ${mobileError ? "var(--color-crimson)" : "rgba(200,150,12,0.25)"}` }}>
-                    <div className="flex items-center gap-2 px-3.5 flex-shrink-0"
+                    style={{ border: `2px solid ${emailError ? "var(--color-crimson)" : "rgba(200,150,12,0.25)"}` }}>
+                    <div className="flex items-center justify-center w-11"
                       style={{ background: "var(--color-cream)", borderRight: "1.5px solid rgba(200,150,12,0.2)" }}>
-                      <span className="text-base leading-none">🇮🇳</span>
-                      <span className="font-dm-sans font-bold text-sm" style={{ color: "var(--color-brown)" }}>+91</span>
+                      <Mail size={16} style={{ color: "var(--color-gold)" }} />
                     </div>
-                    <input id="login-mobile" ref={mobileRef} type="tel" inputMode="numeric"
-                      value={mobile}
-                      onChange={(e) => { setMobile(e.target.value.replace(/\D/g, "").slice(0, 10)); setMobileError(""); }}
+                    <input id="login-email" ref={emailRef} type="email"
+                      value={email}
+                      onChange={(e) => { setEmail(e.target.value); setEmailError(""); }}
                       onKeyDown={(e) => e.key === "Enter" && handleSendOtp()}
-                      placeholder="98765 43210" maxLength={10}
-                      autoComplete="tel-national"
+                      placeholder="you@example.com"
+                      autoComplete="email"
                       className="flex-1 px-4 py-3.5 font-dm-sans text-base bg-white outline-none"
-                      style={{ color: "var(--color-brown)", letterSpacing: "0.05em" }}
+                      style={{ color: "var(--color-brown)" }}
                     />
-                    {mobile.length === 10 && isValidMobile(mobile) && (
+                    {isValidEmail(email) && (
                       <div className="flex items-center pr-3">
                         <CheckCircle2 size={18} style={{ color: "#2E7D32" }} />
                       </div>
                     )}
                   </div>
-                  {mobileError && (
+                  {emailError && (
                     <p role="alert" className="font-dm-sans text-xs mt-1.5 flex gap-1.5"
                       style={{ color: "var(--color-crimson)" }}>
-                      ⚠️ {mobileError}
+                      ⚠️ {emailError}
                     </p>
                   )}
                 </div>
@@ -405,14 +410,14 @@ function LoginPageContent() {
                   className="btn-primary w-full py-4 text-base gap-3 disabled:opacity-60">
                   {loading
                     ? <><span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Sending…</>
-                    : <><Phone size={18} />Send OTP<ArrowRight size={18} /></>
+                    : <><Mail size={18} />Send OTP<ArrowRight size={18} /></>
                   }
                 </button>
 
                 <p className="font-dm-sans text-xs text-center" style={{ color: "var(--color-grey)" }}>
                   No account? You'll be registered automatically.
                   <br />
-                  🔒 We never share your number.
+                  🔒 We never share your email.
                 </p>
               </>
             )}
@@ -441,10 +446,10 @@ function LoginPageContent() {
                 <ResendTimer key={resendKey} onResend={handleResend} />
 
                 <button type="button"
-                  onClick={() => { setStep("mobile"); setOtp(Array(6).fill("")); setOtpError(""); }}
+                  onClick={() => { setStep("email"); setOtp(Array(6).fill("")); setOtpError(""); }}
                   className="font-dm-sans text-sm text-center underline hover:no-underline"
                   style={{ color: "var(--color-grey)" }}>
-                  ← Change mobile number
+                  ← Change email address
                 </button>
               </>
             )}
@@ -456,7 +461,7 @@ function LoginPageContent() {
                   style={{ background: "rgba(46,125,50,0.07)", border: "1px solid rgba(46,125,50,0.2)" }}>
                   <CheckCircle2 size={16} style={{ color: "#2E7D32" }} />
                   <p className="font-dm-sans text-sm" style={{ color: "#2E7D32" }}>
-                    Mobile verified! Setting up your account.
+                    Email verified! Setting up your account.
                   </p>
                 </div>
 
@@ -480,26 +485,27 @@ function LoginPageContent() {
                 </div>
 
                 <div>
-                  <label htmlFor="reg-email" className="block font-dm-sans text-sm font-semibold mb-1.5"
+                  <label htmlFor="reg-mobile" className="block font-dm-sans text-sm font-semibold mb-1.5"
                     style={{ color: "var(--color-brown)" }}>
-                    Email{" "}<span className="font-normal" style={{ color: "var(--color-grey)" }}>(optional)</span>
+                    Mobile{" "}<span className="font-normal" style={{ color: "var(--color-grey)" }}>(optional)</span>
                   </label>
                   <div className="flex rounded-xl overflow-hidden"
                     style={{ border: "2px solid rgba(200,150,12,0.2)" }}>
-                    <div className="flex items-center justify-center w-11"
-                      style={{ background: "var(--color-cream)" }}>
-                      <Mail size={16} style={{ color: "var(--color-gold)" }} />
+                    <div className="flex items-center gap-2 px-3.5 flex-shrink-0"
+                      style={{ background: "var(--color-cream)", borderRight: "1.5px solid rgba(200,150,12,0.2)" }}>
+                      <span className="text-base leading-none">🇮🇳</span>
+                      <span className="font-dm-sans font-bold text-sm" style={{ color: "var(--color-brown)" }}>+91</span>
                     </div>
-                    <input id="reg-email" type="email"
-                      value={email} onChange={(e) => { setEmail(e.target.value); setProfileError(""); }}
+                    <input id="reg-mobile" type="tel" inputMode="numeric"
+                      value={mobile} onChange={(e) => { setMobile(e.target.value.replace(/\D/g, "").slice(0, 10)); setProfileError(""); }}
                       onKeyDown={(e) => e.key === "Enter" && handleSaveProfile()}
-                      placeholder="priya@example.com"
+                      placeholder="98765 43210"
                       className="flex-1 px-3.5 py-3.5 font-dm-sans text-base bg-white outline-none"
-                      style={{ color: "var(--color-brown)" }} autoComplete="email"
+                      style={{ color: "var(--color-brown)" }} autoComplete="tel-national" maxLength={10}
                     />
                   </div>
                   <p className="font-dm-sans text-xs mt-1" style={{ color: "var(--color-grey)" }}>
-                    For order receipts and exclusive pickle offers
+                    For delivery updates and exclusive pickle offers
                   </p>
                 </div>
 

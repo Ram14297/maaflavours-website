@@ -80,8 +80,9 @@ export async function middleware(request: NextRequest) {
   // ── 3. Protected Customer Routes ──────────────────────────────────────
   // NOTE: We use custom mf_session cookie for auth — NOT Supabase session.
   // Supabase session will always be null for our OTP-based auth flow.
+  // phonepe-status is a post-payment redirect landing page — no auth needed
   const PROTECTED = ["/account", "/checkout"];
-  if (PROTECTED.some(r => pathname.startsWith(r))) {
+  if (PROTECTED.some(r => pathname.startsWith(r)) && pathname !== "/checkout/phonepe-status") {
     let isAuthenticated = false;
     const mfSessionVal = request.cookies.get("mf_session")?.value;
     if (mfSessionVal) {

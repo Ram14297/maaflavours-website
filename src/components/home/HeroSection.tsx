@@ -198,6 +198,7 @@ export default function HeroSection() {
                   boxShadow: "0 4px 16px rgba(74, 44, 10, 0.12)",
                   border: "1px solid rgba(200, 150, 12, 0.2)",
                   animation: "float 3s ease-in-out infinite",
+                  zIndex: 10,
                 }}
               >
                 <span
