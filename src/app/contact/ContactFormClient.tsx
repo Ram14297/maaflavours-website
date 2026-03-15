@@ -81,7 +81,7 @@ export default function ContactFormClient() {
             We've received your message and will get back to you within 2 hours during business hours.
           </p>
           <p className="font-dm-sans text-xs mt-3" style={{ color: "var(--color-grey)" }}>
-            For faster response, WhatsApp us at +91 98765 43210
+            For faster response, WhatsApp us at +91 9701452929
           </p>
         </div>
         <button onClick={() => { setSubmitted(false); setForm({ name: "", mobile: "", email: "", topic: "", message: "" }); }}
@@ -179,7 +179,7 @@ export default function ContactFormClient() {
       </button>
 
       <p className="font-dm-sans text-xs text-center" style={{ color: "var(--color-grey)" }}>
-        For urgent queries, WhatsApp us directly at +91 98765 43210 for the fastest response.
+        For urgent queries, WhatsApp us directly at +91 9701452929 for the fastest response.
       </p>
     </form>
   );
