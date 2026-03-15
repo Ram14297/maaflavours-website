@@ -140,7 +140,7 @@ function LoginPageContent() {
     });
     const data = await res.json();
     if (data.success) {
-      setOtp(Array(6).fill("")); setOtpError("");
+      setOtp(Array(8).fill("")); setOtpError("");
       setResendKey((k) => k + 1);
       toast.success("OTP sent again!");
     } else {
