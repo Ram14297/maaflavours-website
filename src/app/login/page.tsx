@@ -344,7 +344,7 @@ function LoginPageContent() {
               {step === "success" && "You're in! 🎉"}
             </h1>
             <p className="font-dm-sans text-sm mt-1" style={{ color: "var(--color-grey)" }}>
-              {step === "email" && "We'll send an OTP code to your email"}
+              {step === "email" && "We'll send an 8-digit OTP to your email"}
               {step === "otp" && `OTP sent to ${maskedEmail}`}
               {step === "profile" && "Tell us your name to complete registration"}
               {step === "success" && "Redirecting you now…"}
