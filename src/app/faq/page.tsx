@@ -123,7 +123,7 @@ const FAQ_CATEGORIES = [
     items: [
       {
         q: "How do I create an account?",
-        a: "Click the account icon in the top navigation. Enter your Indian mobile number, receive a 6-digit OTP, verify, and you're in. If you're a new user, we'll ask for your name — that's it. No passwords to remember.",
+        a: "Click the account icon in the top navigation. Enter your email address, receive an OTP code, verify, and you're in. If you're a new user, we'll ask for your name — that's it. No passwords to remember.",
       },
       {
         q: "I didn't receive my OTP — what should I do?",
