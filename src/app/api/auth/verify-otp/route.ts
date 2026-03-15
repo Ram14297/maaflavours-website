@@ -11,7 +11,7 @@ import { createServerClient, createAdminSupabaseClient } from "@/lib/supabase/se
 
 const RequestSchema = z.object({
   email: z.string().email("Invalid email address"),
-  otp: z.string().regex(/^\d{6}$/, "OTP must be exactly 6 digits"),
+  otp: z.string().regex(/^\d{6,8}$/, "OTP must be 6 or 8 digits"),
 });
 
 const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 days in seconds
