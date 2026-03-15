@@ -39,9 +39,16 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      console.error("[send-otp] Supabase error:", error.message);
+      console.error("[send-otp] Supabase error:", error.message, error.status);
+      // Rate limit: Supabase allows ~3 OTP emails per hour per address
+      if (error.message?.toLowerCase().includes("rate") || error.status === 429) {
+        return NextResponse.json(
+          { error: "Too many OTP requests. Please wait a few minutes and try again." },
+          { status: 429 }
+        );
+      }
       return NextResponse.json(
-        { error: "Failed to send OTP. Please try again." },
+        { error: `Failed to send OTP: ${error.message}` },
         { status: 500 }
       );
     }
