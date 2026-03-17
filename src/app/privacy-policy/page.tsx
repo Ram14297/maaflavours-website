@@ -53,7 +53,7 @@ export default function PrivacyPolicyPage() {
         <div>
           <p className="font-dm-sans font-bold text-sm" style={{ color: "var(--color-brown)" }}>Our Privacy Commitment</p>
           <p className="font-dm-sans text-sm mt-1 leading-relaxed" style={{ color: "var(--color-grey)" }}>
-            Maa Flavours ("we", "us", "our") is committed to protecting your personal information and your right to privacy. This policy describes what information we collect, how we use it, and your rights over it. If you have any questions, contact us at <a href="mailto:support@maaflavours.com" className="underline" style={{ color: "var(--color-crimson)" }}>support@maaflavours.com</a>.
+            Maa Flavours ("we", "us", "our") is committed to protecting your personal information and your right to privacy. This policy describes what information we collect, how we use it, and your rights over it. If you have any questions, contact us at <a href="mailto:maaflavours74@gmail.com" className="underline" style={{ color: "var(--color-crimson)" }}>maaflavours74@gmail.com</a>.
           </p>
         </div>
       </div>
@@ -144,7 +144,7 @@ export default function PrivacyPolicyPage() {
           "Right to opt-out: Unsubscribe from marketing communications at any time",
           "Right to data portability: Request your data in a machine-readable format",
         ]} />
-        <p>To exercise any of these rights, contact us at <a href="mailto:support@maaflavours.com" className="underline" style={{ color: "var(--color-crimson)" }}>support@maaflavours.com</a> with the subject line "Privacy Request". We will respond within 7 working days.</p>
+        <p>To exercise any of these rights, contact us at <a href="mailto:maaflavours74@gmail.com" className="underline" style={{ color: "var(--color-crimson)" }}>maaflavours74@gmail.com</a> with the subject line "Privacy Request". We will respond within 7 working days.</p>
       </PolicySection>
 
       <PolicySection title="7. Data Retention">
@@ -170,7 +170,7 @@ export default function PrivacyPolicyPage() {
         <div className="p-4 rounded-2xl mt-3" style={{ background: "var(--color-cream)", border: "1px solid rgba(200,150,12,0.12)" }}>
           <p className="font-dm-sans font-bold text-sm" style={{ color: "var(--color-brown)" }}>Maa Flavours — Privacy Officer</p>
           <p className="font-dm-sans text-sm mt-1" style={{ color: "var(--color-grey)" }}>
-            📧 <a href="mailto:support@maaflavours.com" className="underline" style={{ color: "var(--color-crimson)" }}>support@maaflavours.com</a><br />
+            📧 <a href="mailto:maaflavours74@gmail.com" className="underline" style={{ color: "var(--color-crimson)" }}>maaflavours74@gmail.com</a><br />
             📍 Ongole, Andhra Pradesh, India — 523001<br />
             ⏱️ Response time: Within 7 working days
           </p>

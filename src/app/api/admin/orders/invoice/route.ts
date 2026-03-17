@@ -18,7 +18,7 @@ const SELLER = {
   pan:        "PENDING",  // Update when available
   gstin:      "PENDING",  // Update when GSTIN is issued
   fssai:      "Application In Progress",
-  email:      "support@maaflavours.com",
+  email:      "maaflavours74@gmail.com",
   phone:      "+91 98765 43210",
 };
 
@@ -116,7 +116,7 @@ export async function GET(req: NextRequest) {
       notes:          [
         "Homemade product. Made in small batches with no artificial preservatives.",
         "FSSAI License: Application In Progress.",
-        "For complaints/queries: support@maaflavours.com | +91 98765 43210",
+        "For complaints/queries: maaflavours74@gmail.com | +91 98765 43210",
       ],
     };
 

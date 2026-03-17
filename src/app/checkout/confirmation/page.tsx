@@ -328,11 +328,11 @@ function ConfirmationContent() {
           </a>{" "}
           or email us at{" "}
           <a
-            href="mailto:support@maaflavours.com"
+            href="mailto:maaflavours74@gmail.com"
             className="font-semibold"
             style={{ color: "var(--color-crimson)" }}
           >
-            support@maaflavours.com
+            maaflavours74@gmail.com
           </a>
         </p>
       </div>

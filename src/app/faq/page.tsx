@@ -105,7 +105,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "My jar arrived damaged — what do I do?",
-        a: "Please photograph the damaged jar and packaging, and send it to us via WhatsApp (+91 97014 52929) or email (support@maaflavours.com) within 48 hours of delivery. We'll arrange a replacement or full refund immediately.",
+        a: "Please photograph the damaged jar and packaging, and send it to us via WhatsApp (+91 97014 52929) or email (maaflavours74@gmail.com) within 48 hours of delivery. We'll arrange a replacement or full refund immediately.",
       },
       {
         q: "I received the wrong product — what now?",
@@ -135,7 +135,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "How do I delete my account?",
-        a: "We don't have a self-serve account deletion option yet. Please email us at support@maaflavours.com with your registered mobile number and we'll delete your account and all associated data within 7 working days.",
+        a: "We don't have a self-serve account deletion option yet. Please email us at maaflavours74@gmail.com with your registered mobile number and we'll delete your account and all associated data within 7 working days.",
       },
     ],
   },

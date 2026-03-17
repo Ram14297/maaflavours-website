@@ -7,7 +7,7 @@ const ALLOWED_SECTIONS = ["business","shipping","payments","notifications","soci
 const DEFAULTS: Record<string, any> = {
   business: {
     name: "Maa Flavours", tagline: "Authentic Andhra Taste — The Way Maa Made It",
-    email: "support@maaflavours.com", phone: "",
+    email: "maaflavours74@gmail.com", phone: "",
     address: "Ongole, Andhra Pradesh — 523001", gstin: "", fssai: "Application In Progress", pincode: "523001",
   },
   shipping: {

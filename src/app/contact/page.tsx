@@ -84,7 +84,7 @@ export default async function ContactPage() {
 
   // Build dynamic contact values with sensible fallbacks
   const phone     = business.phone     || "";
-  const email     = business.email     || "support@maaflavours.com";
+  const email     = business.email     || "maaflavours74@gmail.com";
   const address   = business.address   || "Ongole, Andhra Pradesh, India — 523001";
   const waNumber  = (social.whatsapp_number || "").replace(/\D/g, "") || "919701452929";
   const waLink    = (msg: string) => `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;

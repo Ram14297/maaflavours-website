@@ -753,11 +753,11 @@ function ConfirmationPageContent() {
             </a>
             <span style={{ color: "rgba(200,150,12,0.3)" }}>·</span>
             <a
-              href="mailto:support@maaflavours.com"
+              href="mailto:maaflavours74@gmail.com"
               className="font-dm-sans text-sm font-semibold transition-opacity hover:opacity-75"
               style={{ color: "var(--color-crimson)" }}
             >
-              support@maaflavours.com
+              maaflavours74@gmail.com
             </a>
             <span style={{ color: "rgba(200,150,12,0.3)" }}>·</span>
             <Link

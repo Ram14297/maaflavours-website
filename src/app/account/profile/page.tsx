@@ -202,7 +202,7 @@ export default function ProfilePage() {
             </p>
             <button className="mt-2 font-dm-sans text-sm font-semibold underline hover:no-underline transition-opacity"
               style={{ color: "var(--color-crimson)" }}
-              onClick={() => alert("Please contact support@maaflavours.com to delete your account.")}>
+              onClick={() => alert("Please contact maaflavours74@gmail.com to delete your account.")}>
               Request Account Deletion
             </button>
           </div>

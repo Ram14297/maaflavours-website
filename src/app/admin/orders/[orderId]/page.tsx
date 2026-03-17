@@ -742,7 +742,7 @@ function GstInvoice({ data }: { data: any }) {
           <div style={{ marginTop:8, fontSize:11, color:"#4A2C0A", lineHeight:1.6 }}>
             <p>{seller.address || "Ongole, Andhra Pradesh — 523001"}</p>
             <p>📞 {seller.phone || "+91 98765 43210"}</p>
-            <p>✉ {seller.email || "support@maaflavours.com"}</p>
+            <p>✉ {seller.email || "maaflavours74@gmail.com"}</p>
             <p>GSTIN: {seller.gstin || "Application Pending"}</p>
             <p>FSSAI: {seller.fssai || "Application In Progress"}</p>
           </div>

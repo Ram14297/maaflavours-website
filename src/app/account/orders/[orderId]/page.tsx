@@ -394,7 +394,7 @@ export default function OrderDetailPage() {
             style={{ background: "#25D366" }}>
             <MessageCircle size={14} />WhatsApp
           </a>
-          <a href="mailto:support@maaflavours.com"
+          <a href="mailto:maaflavours74@gmail.com"
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-dm-sans text-sm font-semibold transition-opacity hover:opacity-80"
             style={{ border: "1.5px solid var(--color-brown)", color: "var(--color-brown)" }}>
             Email Us

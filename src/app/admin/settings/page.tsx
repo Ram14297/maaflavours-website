@@ -197,7 +197,7 @@ export default function SettingsPage() {
                   onChange={e => patch("business","name",e.target.value)}/>
                 <Input label="Tagline" value={s.business?.tagline||""} placeholder="Your brand tagline"
                   onChange={e => patch("business","tagline",e.target.value)}/>
-                <Input label="Support Email" type="email" value={s.business?.email||""} placeholder="support@maaflavours.com"
+                <Input label="Support Email" type="email" value={s.business?.email||""} placeholder="maaflavours74@gmail.com"
                   onChange={e => patch("business","email",e.target.value)}/>
                 <Input label="Support Phone (+91)" type="tel" value={s.business?.phone||""} placeholder="98765 43210"
                   onChange={e => patch("business","phone",e.target.value)}/>

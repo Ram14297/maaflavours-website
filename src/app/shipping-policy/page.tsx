@@ -175,10 +175,10 @@ export default function ShippingPolicyPage() {
             style={{ background: "#25D366" }}>
             💬 WhatsApp: +91 97014 52929
           </a>
-          <a href="mailto:support@maaflavours.com"
+          <a href="mailto:maaflavours74@gmail.com"
             className="flex items-center gap-2 px-5 py-3 rounded-xl font-dm-sans font-bold text-sm transition-opacity hover:opacity-80"
             style={{ border: "2px solid rgba(200,150,12,0.3)", color: "var(--color-brown)" }}>
-            ✉️ support@maaflavours.com
+            ✉️ maaflavours74@gmail.com
           </a>
         </div>
       </PolicySection>
