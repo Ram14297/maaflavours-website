@@ -205,7 +205,7 @@ export default function AddressForm() {
                   {...register("mobile")}
                   type="tel"
                   inputMode="numeric"
-                  placeholder="98765 43210"
+                  placeholder="10-digit mobile"
                   maxLength={10}
                   className={`${inputClass(!!errors.mobile)} pl-12`}
                   autoComplete="tel-national"
