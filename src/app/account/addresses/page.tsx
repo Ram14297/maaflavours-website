@@ -354,40 +354,33 @@ export default function AddressesPage() {
     try {
       const res = await fetch("/api/account/addresses");
       const data = await res.json();
-      // Use real data or show demo address
-      setAddresses(
-        data.addresses?.length
-          ? data.addresses
-          : [{
-            id: "demo-1", full_name: "Priya Reddy", mobile: "9876543210",
-            address_line1: "Flat 4B, Green Valley Apartments",
-            address_line2: "Beside HDFC Bank", landmark: "Near Durgam Cheruvu",
-            city: "Hyderabad", state: "Telangana", pincode: "500032",
-            is_default: true,
-          }]
-      );
+      setAddresses(data.addresses || []);
     } catch { /* silent */ }
     finally { setLoading(false); }
   }
 
   async function handleSave(form: Omit<Address, "id" | "is_default">) {
-    if (editTarget) {
-      // Update
-      setAddresses((prev) =>
-        prev.map((a) => a.id === editTarget.id ? { ...a, ...form } : a)
-      );
+    if (editTarget && !editTarget.id.startsWith("local-")) {
+      // Update existing in DB
+      const res = await fetch(`/api/account/addresses/${editTarget.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || "Failed to update");
       toast.success("Address updated!");
     } else {
-      // Add new
-      const newAddr: Address = {
-        ...form,
-        id: `local-${Date.now()}`,
-        is_default: addresses.length === 0,
-      };
-      setAddresses((prev) => [...prev, newAddr]);
+      // Create new in DB
+      const res = await fetch("/api/account/addresses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || "Failed to save");
       toast.success("Address saved!");
     }
     setEditTarget(undefined);
+    fetchAddresses(); // refresh from DB
   }
 
   function handleEdit(address: Address) {
@@ -395,13 +388,17 @@ export default function AddressesPage() {
     setModalOpen(true);
   }
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     if (!confirm("Remove this address?")) return;
+    const res = await fetch(`/api/account/addresses/${id}`, { method: "DELETE" });
+    if (!res.ok) { toast.error("Failed to remove address"); return; }
     setAddresses((prev) => prev.filter((a) => a.id !== id));
     toast.success("Address removed");
   }
 
-  function handleSetDefault(id: string) {
+  async function handleSetDefault(id: string) {
+    const res = await fetch(`/api/account/addresses/${id}`, { method: "PATCH" });
+    if (!res.ok) { toast.error("Failed to update default"); return; }
     setAddresses((prev) =>
       prev.map((a) => ({ ...a, is_default: a.id === id }))
     );

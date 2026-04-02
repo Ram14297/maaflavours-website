@@ -84,7 +84,7 @@ function inputClass(hasError?: boolean) {
 
 type SavedAddress = {
   id: string;
-  name: string;
+  full_name: string;
   mobile: string;
   address_line1: string;
   address_line2?: string;
@@ -133,7 +133,7 @@ export default function AddressForm() {
   // ─── Fill form from saved address ────────────────────────────────────
   const fillFromSaved = (a: SavedAddress) => {
     setSelectedSavedId(a.id);
-    setValue("full_name",     a.name,           { shouldValidate: true });
+    setValue("full_name",     a.full_name,       { shouldValidate: true });
     setValue("mobile",        a.mobile,          { shouldValidate: true });
     setValue("address_line1", a.address_line1,   { shouldValidate: true });
     setValue("address_line2", a.address_line2 || "");
@@ -245,7 +245,7 @@ export default function AddressForm() {
                     </span>
                   )}
                   <p className="font-dm-sans text-sm font-semibold truncate"
-                    style={{ color: "var(--color-brown)" }}>{a.name}</p>
+                    style={{ color: "var(--color-brown)" }}>{a.full_name}</p>
                   <p className="font-dm-sans text-xs mt-0.5 truncate"
                     style={{ color: "var(--color-grey)" }}>{a.address_line1}</p>
                   <p className="font-dm-sans text-xs truncate"
