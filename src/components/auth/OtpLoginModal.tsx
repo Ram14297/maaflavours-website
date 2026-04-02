@@ -66,7 +66,7 @@ export default function OtpLoginModal({
   const [step, setStep] = useState<AuthStep>("email");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [otp, setOtp] = useState(Array(8).fill(""));
+  const [otp, setOtp] = useState(Array(6).fill(""));
   const [otpError, setOtpError] = useState("");
   const [maskedEmail, setMaskedEmail] = useState("");
   const [name, setName] = useState("");
@@ -107,7 +107,7 @@ export default function OtpLoginModal({
     setStep("email");
     setEmail("");
     setEmailError("");
-    setOtp(Array(8).fill(""));
+    setOtp(Array(6).fill(""));
     setOtpError("");
     setMaskedEmail("");
     setName("");
@@ -157,7 +157,7 @@ export default function OtpLoginModal({
   // ─── STEP 2: Verify OTP ─────────────────────────────────────────────
   const handleVerifyOtp = useCallback(async (code?: string) => {
     const otpCode = code ?? otp.join("");
-    if (otpCode.length < 8) {
+    if (otpCode.length < 6) {
       setOtpError("Please enter all 8 digits of your OTP.");
       return;
     }
@@ -175,7 +175,7 @@ export default function OtpLoginModal({
 
       if (!res.ok || !data.success) {
         setOtpError(data.error || "Incorrect OTP. Please try again.");
-        setOtp(Array(8).fill(""));
+        setOtp(Array(6).fill(""));
         return;
       }
 
@@ -203,7 +203,7 @@ export default function OtpLoginModal({
     });
     const data = await res.json();
     if (data.success) {
-      setOtp(Array(8).fill(""));
+      setOtp(Array(6).fill(""));
       setOtpError("");
       setResendKey((k) => k + 1);
       toast.success("OTP sent again!");
@@ -496,7 +496,7 @@ export default function OtpLoginModal({
 
                 <button
                   onClick={() => handleVerifyOtp()}
-                  disabled={loading || otp.length < 8 || otp.some((d) => !d)}
+                  disabled={loading || otp.length < 6 || otp.some((d) => !d)}
                   className="btn-primary w-full py-4 text-base gap-3 disabled:opacity-60"
                 >
                   {loading
@@ -510,7 +510,7 @@ export default function OtpLoginModal({
                 <p className="font-dm-sans text-xs text-center" style={{ color: "var(--color-grey)" }}>
                   Wrong email?{" "}
                   <button type="button"
-                    onClick={() => { setStep("email"); setOtp(Array(8).fill("")); setOtpError(""); }}
+                    onClick={() => { setStep("email"); setOtp(Array(6).fill("")); setOtpError(""); }}
                     className="font-semibold underline hover:no-underline"
                     style={{ color: "var(--color-crimson)" }}>
                     Change email
