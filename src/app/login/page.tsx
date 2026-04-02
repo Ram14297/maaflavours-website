@@ -44,7 +44,7 @@ function LoginPageContent() {
   const [step, setStep] = useState<LoginStep>("email");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [otp, setOtp] = useState(Array(4).fill(""));
+  const [otp, setOtp] = useState(Array(6).fill(""));
   const [otpError, setOtpError] = useState("");
   const [maskedEmail, setMaskedEmail] = useState("");
   const [name, setName] = useState("");
@@ -99,7 +99,7 @@ function LoginPageContent() {
   // ─── Step 2: Verify OTP ──────────────────────────────────────────────
   const handleVerifyOtp = useCallback(async (code?: string) => {
     const otpCode = code ?? otp.join("");
-    if (otpCode.length < 4) { setOtpError("Enter all 4 digits."); return; }
+    if (otpCode.length < 6) { setOtpError("Enter all 6 digits."); return; }
     setLoading(true);
     setOtpError("");
     try {
@@ -111,7 +111,7 @@ function LoginPageContent() {
       const data = await res.json();
       if (!res.ok || !data.success) {
         setOtpError(data.error || "Incorrect OTP.");
-        setOtp(Array(4).fill(""));
+        setOtp(Array(6).fill(""));
         return;
       }
       if (data.isNewUser) {
@@ -140,7 +140,7 @@ function LoginPageContent() {
     });
     const data = await res.json();
     if (data.success) {
-      setOtp(Array(4).fill("")); setOtpError("");
+      setOtp(Array(6).fill("")); setOtpError("");
       setResendKey((k) => k + 1);
       toast.success("OTP sent again!");
     } else {
@@ -344,7 +344,7 @@ function LoginPageContent() {
               {step === "success" && "You're in! 🎉"}
             </h1>
             <p className="font-dm-sans text-sm mt-1" style={{ color: "var(--color-grey)" }}>
-              {step === "email" && "We'll send a 4-digit OTP to your email"}
+              {step === "email" && "We'll send a 6-digit OTP to your email"}
               {step === "otp" && `OTP sent to ${maskedEmail}`}
               {step === "profile" && "Tell us your name to complete registration"}
               {step === "success" && "Redirecting you now…"}
@@ -446,7 +446,7 @@ function LoginPageContent() {
                 <ResendTimer key={resendKey} onResend={handleResend} />
 
                 <button type="button"
-                  onClick={() => { setStep("email"); setOtp(Array(4).fill("")); setOtpError(""); }}
+                  onClick={() => { setStep("email"); setOtp(Array(6).fill("")); setOtpError(""); }}
                   className="font-dm-sans text-sm text-center underline hover:no-underline"
                   style={{ color: "var(--color-grey)" }}>
                   ← Change email address

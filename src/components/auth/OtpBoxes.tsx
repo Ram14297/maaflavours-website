@@ -1,6 +1,6 @@
 "use client";
 // src/components/auth/OtpBoxes.tsx
-// Maa Flavours — Dynamic OTP Input Row (currently 4 digits)
+// Maa Flavours — Dynamic OTP Input Row (currently 6 digits)
 // Auto-advances to next box on digit entry
 // Backspace moves to previous box
 // Paste support — pastes all digits at once
