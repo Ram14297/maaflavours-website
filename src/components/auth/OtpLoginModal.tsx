@@ -276,7 +276,7 @@ export default function OtpLoginModal({
   const STEP_TEXT: Record<AuthStep, { heading: string; sub: string }> = {
     email: {
       heading: title || "Sign In to Maa Flavours",
-      sub: subtitle || "We'll send an 8-digit OTP to your email",
+      sub: subtitle || "We'll send a 6-digit OTP to your email",
     },
     otp: {
       heading: "Check Your Email",
@@ -470,7 +470,7 @@ export default function OtpLoginModal({
                 </button>
 
                 <p className="font-dm-sans text-xs text-center" style={{ color: "var(--color-grey)" }}>
-                  🔒 We'll send an 8-digit OTP to verify your email. Free, no spam.
+                  🔒 We'll send a 6-digit OTP to verify your email. Free, no spam.
                 </p>
               </>
             )}
