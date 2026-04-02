@@ -174,7 +174,7 @@ export const SITE = {
   youtube: "https://youtube.com/@maaflavours",
   address: "Ongole, Andhra Pradesh 523001",
   gst: "37XXXXX0000X1Z5",            // REPLACE with actual GST once received
-  fssai: "Application In Progress",  // REPLACE when received
+  fssai: "20126171000153",
   copyright_year: "2025",
 } as const;
 

@@ -8,7 +8,7 @@ const DEFAULTS: Record<string, any> = {
   business: {
     name: "Maa Flavours", tagline: "Authentic Andhra Taste — The Way Maa Made It",
     email: "maaflavours74@gmail.com", phone: "",
-    address: "Ongole, Andhra Pradesh — 523001", gstin: "", fssai: "Application In Progress", pincode: "523001",
+    address: "Ongole, Andhra Pradesh — 523001", gstin: "", fssai: "20126171000153", pincode: "523001",
   },
   shipping: {
     free_threshold: 49900, standard_fee: 6000, cod_extra: 3000,
