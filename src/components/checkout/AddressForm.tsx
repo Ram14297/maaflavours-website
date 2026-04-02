@@ -207,7 +207,8 @@ export default function AddressForm() {
                   inputMode="numeric"
                   placeholder="10-digit mobile"
                   maxLength={10}
-                  className={`${inputClass(!!errors.mobile)} pl-12`}
+                  className={inputClass(!!errors.mobile)}
+                  style={{ paddingLeft: "3rem" }}
                   autoComplete="tel-national"
                   onChange={(e) => {
                     const v = e.target.value.replace(/\D/g, "").slice(0, 10);
