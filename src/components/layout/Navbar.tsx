@@ -154,14 +154,14 @@ export default function Navbar({
               className="flex items-center gap-2.5 flex-shrink-0 group"
               aria-label="Maa Flavours Home"
             >
-              <div className="relative h-14 w-44 flex-shrink-0 transition-transform duration-300 group-hover:scale-105">
+              <div className="relative h-16 w-16 flex-shrink-0 transition-transform duration-300 group-hover:scale-105">
                 <Image
                   src="/maa-flavours-logo.png"
                   alt="Maa Flavours — Authentic Andhra Pickles"
                   fill
-                  className="object-contain object-left"
+                  className="object-contain"
                   priority
-                  sizes="176px"
+                  sizes="64px"
                 />
               </div>
             </Link>
@@ -379,13 +379,13 @@ export default function Navbar({
             onClick={() => setMobileOpen(false)}
             className="flex items-center gap-2.5"
           >
-            <div className="relative h-11 w-40 flex-shrink-0">
+            <div className="relative h-12 w-12 flex-shrink-0">
               <Image
                 src="/maa-flavours-logo.png"
                 alt="Maa Flavours"
                 fill
-                className="object-contain object-left"
-                sizes="160px"
+                className="object-contain"
+                sizes="48px"
               />
             </div>
           </Link>

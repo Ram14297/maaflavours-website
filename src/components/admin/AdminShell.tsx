@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 
 // ─── Navigation Structure ────────────────────────────────────────────────────
@@ -180,16 +181,15 @@ function SidebarContent({
         style={{ borderBottom: `1px solid ${C.border}` }}
       >
         <div className="flex items-center gap-3">
-          {/* Jar icon */}
-          <div
-            className="flex items-center justify-center rounded-lg shrink-0"
-            style={{ width: 36, height: 36, background: C.goldFaint, border: `1px solid rgba(200,150,12,0.3)` }}
-          >
-            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
-              <rect x="7" y="4" width="10" height="3" rx="1.5" fill={C.gold} opacity="0.7"/>
-              <rect x="6" y="6.5" width="12" height="14" rx="3" stroke={C.gold} strokeWidth="1.2" fill="none"/>
-              <circle cx="12" cy="13" r="3" fill={C.crimson} opacity="0.7"/>
-            </svg>
+          {/* Logo */}
+          <div className="relative shrink-0" style={{ width: 44, height: 44 }}>
+            <Image
+              src="/maa-flavours-logo.png"
+              alt="Maa Flavours"
+              fill
+              className="object-contain"
+              sizes="44px"
+            />
           </div>
           <div>
             <p style={{ color: C.goldLight, fontSize: 14, fontWeight: 700, fontFamily: "'Playfair Display', serif", lineHeight: 1.2 }}>

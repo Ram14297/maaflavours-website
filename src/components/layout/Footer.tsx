@@ -5,6 +5,7 @@
 // Falls back to SITE constants from products.ts if fetch fails
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Instagram, Facebook, Phone, Mail, MapPin, MessageCircle } from "lucide-react";
 import { SITE } from "@/lib/constants/products";
@@ -90,15 +91,15 @@ export default function Footer() {
 
             {/* ─── Col 1: Brand ─────────────────────────────────────────── */}
             <div>
-              <Link href="/" className="inline-flex items-center gap-2.5 group mb-4">
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: "linear-gradient(135deg, #C0272D, #9E1F24)",
-                    boxShadow: "0 2px 12px rgba(192, 39, 45, 0.4)",
-                  }}
-                >
-                  <span className="font-dancing font-bold text-white text-xl">M</span>
+              <Link href="/" className="inline-flex items-center gap-3 group mb-4">
+                <div className="relative w-20 h-20 flex-shrink-0 transition-transform duration-300 group-hover:scale-105">
+                  <Image
+                    src="/maa-flavours-logo.png"
+                    alt="Maa Flavours — Authentic Andhra Pickles"
+                    fill
+                    className="object-contain"
+                    sizes="80px"
+                  />
                 </div>
                 <div className="flex flex-col leading-none">
                   <span className="font-playfair font-bold text-lg" style={{ color: "#F5EFE0" }}>
