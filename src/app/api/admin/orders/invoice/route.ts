@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
         description:   item.product_name,
         hsn:           HSN_CODE,
         quantity:      item.quantity,
-        unit:          "Jar",
+        unit:          "Pack",
         variantLabel:  item.variant_label,
         unitPrice:     Math.round(item.unit_price / 1.12),  // Taxable unit price (ex-GST)
         taxableValue,

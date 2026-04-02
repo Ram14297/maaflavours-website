@@ -120,7 +120,7 @@ export default function BrandStory() {
                 className="font-dm-sans text-base leading-relaxed mb-6"
                 style={{ color: "var(--color-grey)" }}
               >
-                No factory. No machines. No shortcuts. Every jar of Maa Flavours is made in
+                No factory. No machines. No shortcuts. Every pack of Maa Flavours is made in
                 small batches, hand-packed with care, and seasoned with the same spice blends
                 that have flavoured Andhra kitchens for decades.
               </p>
@@ -276,7 +276,7 @@ export default function BrandStory() {
                     className="font-dm-sans text-xs mt-1"
                     style={{ color: "var(--color-grey)" }}
                   >
-                    Every jar made by hand in Ongole
+                    Every pack made by hand in Ongole
                   </p>
                 </div>
               </div>

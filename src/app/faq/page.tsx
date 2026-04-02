@@ -71,7 +71,7 @@ const FAQ_CATEGORIES = [
     items: [
       {
         q: "Are your pickles really homemade?",
-        a: "Yes — genuinely. Every jar is made in our kitchen in Ongole, Andhra Pradesh, following generations-old family recipes. No factory, no production line. Small batches, by hand, every time.",
+        a: "Yes — genuinely. Every pack is made in our kitchen in Ongole, Andhra Pradesh, following generations-old family recipes. No factory, no production line. Small batches, by hand, every time.",
       },
       {
         q: "Do your pickles contain any preservatives?",
@@ -83,7 +83,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Are all your products 100% vegetarian?",
-        a: "Yes — every single product is 100% vegetarian. No animal products of any kind in any of our pickles. The green dot on every jar is a guarantee.",
+        a: "Yes — every single product is 100% vegetarian. No animal products of any kind in any of our pickles. The green dot on every pack is a guarantee.",
       },
       {
         q: "What oil do you use?",
@@ -101,11 +101,11 @@ const FAQ_CATEGORIES = [
     items: [
       {
         q: "What is your return policy?",
-        a: "We don't accept returns of opened pickle jars for hygiene reasons — once a food product is opened, it cannot be resold. However, if you receive a damaged, leaking, or incorrect product, we will replace it or refund you in full. No questions asked.",
+        a: "We don't accept returns of opened pickle packs for hygiene reasons — once a food product is opened, it cannot be resold. However, if you receive a damaged, leaking, or incorrect product, we will replace it or refund you in full. No questions asked.",
       },
       {
-        q: "My jar arrived damaged — what do I do?",
-        a: "Please photograph the damaged jar and packaging, and send it to us via WhatsApp (+91 97014 52929) or email (maaflavours74@gmail.com) within 48 hours of delivery. We'll arrange a replacement or full refund immediately.",
+        q: "My pack arrived damaged — what do I do?",
+        a: "Please photograph the damaged pack and packaging, and send it to us via WhatsApp (+91 97014 52929) or email (maaflavours74@gmail.com) within 48 hours of delivery. We'll arrange a replacement or full refund immediately.",
       },
       {
         q: "I received the wrong product — what now?",
@@ -153,7 +153,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Do you offer bulk or wholesale orders?",
-        a: "Yes — we offer bulk pricing for orders of 20+ jars. We also supply to restaurants and cloud kitchens in Andhra Pradesh and Telangana. Contact us via WhatsApp (+91 97014 52929) to discuss pricing and availability.",
+        a: "Yes — we offer bulk pricing for orders of 20+ packs. We also supply to restaurants and cloud kitchens in Andhra Pradesh and Telangana. Contact us via WhatsApp (+91 97014 52929) to discuss pricing and availability.",
       },
       {
         q: "Can I gift Maa Flavours pickles?",

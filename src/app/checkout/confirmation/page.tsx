@@ -269,7 +269,7 @@ function ConfirmationContent() {
             className="font-dm-sans text-sm mb-4"
             style={{ color: "var(--color-grey)" }}
           >
-            Share with your family and friends — every jar brings a taste of home.
+            Share with your family and friends — every pack brings a taste of home.
           </p>
           <a
             href={`https://wa.me/?text=Just ordered authentic Andhra pickles from Maa Flavours! 🫙🌶️ Try them at https://maaflavours.com — no preservatives, handmade in Ongole!`}

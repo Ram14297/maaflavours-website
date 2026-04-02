@@ -228,9 +228,9 @@ export default function ProductInfoTabs({
               icon: "📦",
               title: "Packaging",
               lines: [
-                "Jars are bubble-wrapped individually",
+                "Packs are bubble-wrapped individually",
                 "Packed in sturdy corrugated boxes",
-                "Leakage-proof seal on every jar",
+                "Leakage-proof seal on every pack",
               ],
             },
             {
@@ -239,7 +239,7 @@ export default function ProductInfoTabs({
               lines: [
                 "Damaged on transit: full replacement",
                 "Wrong product sent: full replacement",
-                "Opened jars cannot be returned",
+                "Opened packs cannot be returned",
                 "Report issues within 48 hrs of delivery",
               ],
             },
@@ -310,7 +310,7 @@ export default function ProductInfoTabs({
               {
                 emoji: "🏺",
                 tip: "Keep Sealed When Not in Use",
-                detail: "Always close the jar tightly after every use to prevent air exposure.",
+                detail: "Always close the pack tightly after every use to prevent air exposure.",
               },
               {
                 emoji: "🌡️",
@@ -320,7 +320,7 @@ export default function ProductInfoTabs({
               {
                 emoji: "🥄",
                 tip: "Use a Dry Spoon Always",
-                detail: "Never introduce water into the jar. Always use a dry, clean spoon to avoid spoilage.",
+                detail: "Never introduce water into the pack. Always use a dry, clean spoon to avoid spoilage.",
               },
               {
                 emoji: "❄️",

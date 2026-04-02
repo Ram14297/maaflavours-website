@@ -786,7 +786,7 @@ function VariantEditor({
           >
             {v.label}
           </span>
-          <span style={{ color:A.grey, fontSize:11 }}>{v.weight_grams}g jar</span>
+          <span style={{ color:A.grey, fontSize:11 }}>{v.weight_grams}g pack</span>
         </div>
         <Toggle
           value={v.is_active}
@@ -874,7 +874,7 @@ function VariantEditor({
               ? "Out of stock — not visible on store"
               : parseInt(v.stock_quantity) <= parseInt(v.low_stock_threshold)
               ? `Low stock — alert will trigger (${v.stock_quantity} remaining)`
-              : `In stock — ${v.stock_quantity} jars available`}
+              : `In stock — ${v.stock_quantity} packs available`}
           </p>
         </div>
       )}

@@ -59,7 +59,7 @@ Made the way Maa always made it — in small batches, with patience, and without
     short_description: "Tangy Indian gooseberry pickle, bursting with Vitamin C and authentic Andhra spice.",
     description: `Amla, the powerhouse of Vitamin C, meets Andhra's bold pickling tradition in this classic recipe. Our Amla Pickle uses fresh Indian gooseberries, preserved in a tangy, spiced oil marinade that intensifies beautifully over days.
 
-The sour bite of amla balanced with red chilli heat and the warmth of fenugreek makes this a perfectly complex pickle — healthy and incredibly flavourful. A jar that belongs in every Indian kitchen.`,
+The sour bite of amla balanced with red chilli heat and the warmth of fenugreek makes this a perfectly complex pickle — healthy and incredibly flavourful. A pack that belongs in every Indian kitchen.`,
     ingredients: "Indian Gooseberry (Amla), Sesame Oil, Red Chilli Powder, Mustard Seeds, Fenugreek Seeds, Turmeric, Salt, Curry Leaves, Asafoetida",
     shelf_life_days: 120,
     is_vegetarian: true,

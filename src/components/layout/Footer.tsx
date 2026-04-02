@@ -115,7 +115,7 @@ export default function Footer() {
                 style={{ color: "rgba(245, 239, 224, 0.65)" }}
               >
                 Handcrafted Andhra pickles from Ongole, made the way Maa always made them.
-                No preservatives. No shortcuts. Just tradition in every jar.
+                No preservatives. No shortcuts. Just tradition in every pack.
               </p>
 
               {/* Social Links */}

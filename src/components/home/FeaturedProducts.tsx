@@ -301,7 +301,7 @@ export default function FeaturedProducts() {
             className="font-cormorant italic text-xl"
             style={{ color: "var(--color-grey)" }}
           >
-            Each jar holds a memory, a tradition, a flavour
+            Each pack holds a memory, a tradition, a flavour
           </p>
         </div>
 

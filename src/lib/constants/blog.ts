@@ -77,7 +77,7 @@ export const BLOG_POSTS: BlogPost[] = [
       {
         type: "recipe",
         title: "Andhra Drumstick Pickle (Murungakkai Pachadi)",
-        serves: "Fills 1 × 500g jar",
+        serves: "Fills 1 × 500g pack",
         prepTime: "30 minutes",
         cookTime: "15 minutes + 2 days maturing",
         ingredients: [
@@ -100,7 +100,7 @@ export const BLOG_POSTS: BlogPost[] = [
           "Toss drumstick pieces with salt and turmeric. Let sit 15 minutes to release moisture.",
           "Add red chilli powder and the ground mustard-fenugreek powder. Mix thoroughly, coating every piece.",
           "Pour warm (not hot) oil mixture over the drumsticks. Add lemon juice. Mix one final time.",
-          "Pack tightly into a clean, dry glass jar. Press down so oil covers the top. Seal and store for at least 2 days before eating.",
+          "Pack tightly into a clean, dry glass pack. Press down so oil covers the top. Seal and store for at least 2 days before eating.",
         ],
       },
       { type: "heading", level: 2, text: "Storing Your Pickle" },

@@ -10,7 +10,7 @@ export default function ProductNotFound() {
       className="min-h-screen flex flex-col items-center justify-center px-6 text-center"
       style={{ background: "var(--color-warm-white)" }}
     >
-      {/* Decorative jar */}
+      {/* Decorative pack */}
       <div
         className="w-24 h-24 rounded-full flex items-center justify-center text-4xl mb-6"
         style={{
@@ -30,7 +30,7 @@ export default function ProductNotFound() {
         className="font-playfair font-bold text-3xl mb-3 leading-tight"
         style={{ color: "var(--color-brown)" }}
       >
-        This Jar Has Run Out
+        This Pack Has Run Out
       </h1>
       <p
         className="font-dm-sans text-base mb-8 max-w-sm"

@@ -104,7 +104,7 @@ export default function HeroSection() {
               style={{ color: "var(--color-grey)" }}
             >
               Authentic Andhra pickles, handcrafted with generations of tradition.
-              No preservatives. No shortcuts. Just pure flavour in every jar.
+              No preservatives. No shortcuts. Just pure flavour in every pack.
             </p>
 
             {/* CTA Buttons */}
@@ -166,7 +166,7 @@ export default function HeroSection() {
                     "0 20px 60px rgba(74, 44, 10, 0.15), 0 4px 16px rgba(200, 150, 12, 0.1)",
                 }}
               >
-                {/* Product jar illustration placeholder */}
+                {/* Product pack illustration placeholder */}
                 <div className="text-center">
                   <div
                     className="text-7xl mb-2"
@@ -243,7 +243,7 @@ export default function HeroSection() {
                 </div>
               </div>
 
-              {/* Small pickle jars around */}
+              {/* Small pickle packs around */}
               {[
                 { top: "10%", right: "12%", delay: "0s", emoji: "🌿", label: "Amla" },
                 { bottom: "18%", right: "5%", delay: "0.8s", emoji: "🍋", label: "Lemon" },

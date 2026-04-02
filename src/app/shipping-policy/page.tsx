@@ -56,7 +56,7 @@ export default function ShippingPolicyPage() {
         <InfoCard icon={Truck}    label="Free Shipping"       value="On all orders above ₹499"                         color="var(--color-crimson)"  bg="rgba(192,39,45,0.04)" />
         <InfoCard icon={Clock}    label="Standard Delivery"   value="5–7 working days across India"                    color="var(--color-gold)"     bg="rgba(200,150,12,0.05)" />
         <InfoCard icon={MapPin}   label="Delivery Coverage"   value="Pan-India · All states and union territories"     color="var(--color-brown)"    bg="rgba(74,44,10,0.04)" />
-        <InfoCard icon={Package}  label="Packing"             value="Airtight glass jars · Bubble-wrap protected"      color="var(--color-grey)"     bg="rgba(107,107,107,0.05)" />
+        <InfoCard icon={Package}  label="Packing"             value="Airtight glass packs · Bubble-wrap protected"      color="var(--color-grey)"     bg="rgba(107,107,107,0.05)" />
       </div>
 
       <OrnamentLine className="mb-8" />
@@ -97,7 +97,7 @@ export default function ShippingPolicyPage() {
       </PolicySection>
 
       <PolicySection title="3. Processing Time">
-        <p>Once your order is placed and payment is confirmed, we begin preparing your pickle within <strong style={{ color: "var(--color-brown)" }}>12–24 hours</strong>. We make pickles in small batches, so your jar is freshly prepared for your order.</p>
+        <p>Once your order is placed and payment is confirmed, we begin preparing your pickle within <strong style={{ color: "var(--color-brown)" }}>12–24 hours</strong>. We make pickles in small batches, so your pack is freshly prepared for your order.</p>
         <p>Orders placed on <strong style={{ color: "var(--color-brown)" }}>Sundays and public holidays</strong> will begin processing on the next working day.</p>
         <p>You'll receive an SMS with your tracking ID once your order is dispatched from our Ongole kitchen.</p>
       </PolicySection>
@@ -152,8 +152,8 @@ export default function ShippingPolicyPage() {
         <p>Your pickles are packed with the same care we put into making them:</p>
         <ul className="list-none flex flex-col gap-2">
           {[
-            "Airtight glass jars with sealed lids to prevent spillage",
-            "Each jar wrapped in bubble wrap individually",
+            "Airtight glass packs with sealed lids to prevent spillage",
+            "Each pack wrapped in bubble wrap individually",
             "Packed in corrugated cardboard boxes for outer protection",
             "Fragile sticker applied to all packages",
           ].map((item) => (
@@ -163,7 +163,7 @@ export default function ShippingPolicyPage() {
             </li>
           ))}
         </ul>
-        <p>Despite our careful packing, transit damage can occasionally occur. If your jar arrives damaged, please see our <Link href="/return-policy" className="underline" style={{ color: "var(--color-crimson)" }}>Return & Refund Policy</Link> for how we handle this.</p>
+        <p>Despite our careful packing, transit damage can occasionally occur. If your pack arrives damaged, please see our <Link href="/return-policy" className="underline" style={{ color: "var(--color-crimson)" }}>Return & Refund Policy</Link> for how we handle this.</p>
       </PolicySection>
 
       <PolicySection title="8. Missing or Delayed Orders">
