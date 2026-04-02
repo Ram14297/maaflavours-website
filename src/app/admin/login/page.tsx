@@ -8,6 +8,7 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 // ─── Brand colours (mirrored from tailwind.config.ts) ────────────────────────
@@ -84,17 +85,15 @@ export default function AdminLoginPage() {
         >
           {/* ── Brand logo / wordmark ── */}
           <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4"
-              style={{ background: "rgba(200, 150, 12, 0.1)", border: "1px solid rgba(200, 150, 12, 0.3)" }}
-            >
-              {/* Pickle jar icon */}
-              <svg viewBox="0 0 40 40" className="w-8 h-8">
-                <rect x="12" y="8" width="16" height="4" rx="2" fill="#C8960C" opacity="0.8"/>
-                <rect x="10" y="11" width="20" height="22" rx="4" fill="#C8960C" opacity="0.2"/>
-                <rect x="10" y="11" width="20" height="22" rx="4" stroke="#C8960C" strokeWidth="1.5" fill="none"/>
-                <circle cx="20" cy="22" r="5" fill="#C0272D" opacity="0.6"/>
-                <path d="M16 22 Q20 18 24 22 Q20 26 16 22Z" fill="#C0272D" opacity="0.8"/>
-              </svg>
+            <div className="relative w-20 h-20 mx-auto mb-4">
+              <Image
+                src="/maa-flavours-logo.png"
+                alt="Maa Flavours"
+                fill
+                className="object-contain"
+                sizes="80px"
+                priority
+              />
             </div>
 
             <h1
