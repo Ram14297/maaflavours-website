@@ -485,7 +485,6 @@ export default function OtpLoginModal({
                   disabled={loading}
                   hasError={!!otpError}
                   autoFocus
-                  length={8}
                 />
 
                 {otpError && (
