@@ -429,7 +429,6 @@ function LoginPageContent() {
                   onChange={(v) => { setOtp(v); setOtpError(""); }}
                   onComplete={handleVerifyOtp}
                   disabled={loading} hasError={!!otpError} autoFocus
-                  length={8}
                 />
                 {otpError && (
                   <p role="alert" className="font-dm-sans text-sm text-center" style={{ color: "var(--color-crimson)" }}>
