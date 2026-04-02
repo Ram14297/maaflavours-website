@@ -111,7 +111,7 @@ export default function OtpBoxes({
 
   return (
     <div
-      className="flex items-center justify-center gap-2 sm:gap-3"
+      className="flex items-center justify-center gap-2 px-2"
       role="group"
       aria-label="OTP input"
     >
@@ -129,10 +129,10 @@ export default function OtpBoxes({
           onPaste={handlePaste}
           onFocus={(e) => e.target.select()}
           disabled={disabled}
-          className="text-center font-dm-sans font-bold text-2xl transition-all duration-200 focus:outline-none rounded-xl disabled:opacity-50"
+          className="text-center font-dm-sans font-bold text-xl transition-all duration-200 focus:outline-none rounded-xl disabled:opacity-50"
           style={{
-            width: "clamp(48px, 14vw, 64px)",
-            height: "clamp(56px, 16vw, 72px)",
+            width: "clamp(36px, 9vw, 48px)",
+            height: "clamp(44px, 11vw, 56px)",
             background: digit
               ? "rgba(192,39,45,0.05)"
               : "var(--color-cream)",
