@@ -42,8 +42,7 @@ export async function POST(request: NextRequest) {
 
     if (error || !data.user) {
       console.log("[verify-otp] OTP verification failed:", error?.message);
-      const isExpired = error?.message?.toLowerCase().includes("expired") ||
-                        error?.message?.toLowerCase().includes("invalid");
+      const isExpired = error?.message?.toLowerCase().includes("expired");
       return NextResponse.json(
         {
           error: isExpired
