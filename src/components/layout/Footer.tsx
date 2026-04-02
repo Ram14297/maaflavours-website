@@ -92,13 +92,13 @@ export default function Footer() {
             {/* ─── Col 1: Brand ─────────────────────────────────────────── */}
             <div>
               <Link href="/" className="inline-flex items-center gap-3 group mb-4">
-                <div className="relative w-20 h-20 flex-shrink-0 transition-transform duration-300 group-hover:scale-105">
+                <div className="relative w-28 h-28 flex-shrink-0 transition-transform duration-300 group-hover:scale-105">
                   <Image
                     src="/maa-flavours-logo.png"
                     alt="Maa Flavours — Authentic Andhra Pickles"
                     fill
                     className="object-contain"
-                    sizes="80px"
+                    sizes="112px"
                   />
                 </div>
                 <div className="flex flex-col leading-none">
