@@ -5,11 +5,11 @@
 // React Hook Form validation with Zod schema
 // On submit → moves checkout to payment step
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowRight, MapPin } from "lucide-react";
+import { ArrowRight, MapPin, CheckCircle2 } from "lucide-react";
 import { useCheckoutStore, DeliveryAddress } from "@/store/checkoutStore";
 import PincodeField from "./PincodeField";
 
@@ -82,8 +82,23 @@ function inputClass(hasError?: boolean) {
   return `input-brand w-full ${hasError ? "border-crimson" : ""}`;
 }
 
+type SavedAddress = {
+  id: string;
+  name: string;
+  mobile: string;
+  address_line1: string;
+  address_line2?: string;
+  landmark?: string;
+  city: string;
+  state: string;
+  pincode: string;
+  is_default: boolean;
+};
+
 export default function AddressForm() {
   const { address, updateAddress, setStep, pincodeData } = useCheckoutStore();
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([]);
+  const [selectedSavedId, setSelectedSavedId] = useState<string | null>(null);
 
   const {
     register,
@@ -106,6 +121,27 @@ export default function AddressForm() {
   });
 
   const pincode = watch("pincode");
+
+  // ─── Fetch saved addresses ────────────────────────────────────────────
+  useEffect(() => {
+    fetch("/api/account/addresses")
+      .then(r => r.json())
+      .then(d => { if (d.addresses?.length) setSavedAddresses(d.addresses); })
+      .catch(() => {});
+  }, []);
+
+  // ─── Fill form from saved address ────────────────────────────────────
+  const fillFromSaved = (a: SavedAddress) => {
+    setSelectedSavedId(a.id);
+    setValue("full_name",     a.name,           { shouldValidate: true });
+    setValue("mobile",        a.mobile,          { shouldValidate: true });
+    setValue("address_line1", a.address_line1,   { shouldValidate: true });
+    setValue("address_line2", a.address_line2 || "");
+    setValue("landmark",      a.landmark || "");
+    setValue("pincode",       a.pincode,         { shouldValidate: true });
+    setValue("city",          a.city,            { shouldValidate: true });
+    setValue("state",         a.state,           { shouldValidate: true });
+  };
 
   // ─── Sync auto-filled city/state from pincode lookup ─────────────────
   useEffect(() => {
@@ -178,6 +214,52 @@ export default function AddressForm() {
             </p>
           </div>
         </div>
+
+        {/* ─── Saved Addresses ──────────────────────────────────────── */}
+        {savedAddresses.length > 0 && (
+          <div className="px-6 pt-5 pb-1">
+            <p className="font-dm-sans text-xs font-semibold mb-3 uppercase tracking-wide"
+              style={{ color: "var(--color-grey)" }}>
+              Saved Addresses
+            </p>
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
+              {savedAddresses.map(a => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => fillFromSaved(a)}
+                  className="flex-shrink-0 w-56 text-left rounded-xl p-3 transition-all duration-200 relative"
+                  style={{
+                    border: `1.5px solid ${selectedSavedId === a.id ? "var(--color-crimson)" : "rgba(200,150,12,0.25)"}`,
+                    background: selectedSavedId === a.id ? "rgba(192,39,45,0.04)" : "var(--color-cream)",
+                  }}
+                >
+                  {selectedSavedId === a.id && (
+                    <CheckCircle2 size={14} className="absolute top-2.5 right-2.5"
+                      style={{ color: "var(--color-crimson)" }} />
+                  )}
+                  {a.is_default && (
+                    <span className="inline-block font-dm-sans text-[10px] font-semibold px-1.5 py-0.5 rounded-full mb-1"
+                      style={{ background: "rgba(200,150,12,0.12)", color: "var(--color-gold)" }}>
+                      Default
+                    </span>
+                  )}
+                  <p className="font-dm-sans text-sm font-semibold truncate"
+                    style={{ color: "var(--color-brown)" }}>{a.name}</p>
+                  <p className="font-dm-sans text-xs mt-0.5 truncate"
+                    style={{ color: "var(--color-grey)" }}>{a.address_line1}</p>
+                  <p className="font-dm-sans text-xs truncate"
+                    style={{ color: "var(--color-grey)" }}>{a.city}, {a.pincode}</p>
+                </button>
+              ))}
+            </div>
+            <div className="mt-3 mb-1 flex items-center gap-2">
+              <div className="h-px flex-1" style={{ background: "rgba(200,150,12,0.15)" }} />
+              <span className="font-dm-sans text-xs" style={{ color: "var(--color-grey)" }}>or enter manually</span>
+              <div className="h-px flex-1" style={{ background: "rgba(200,150,12,0.15)" }} />
+            </div>
+          </div>
+        )}
 
         {/* ─── Form Fields ──────────────────────────────────────────── */}
         <div className="px-6 py-6 flex flex-col gap-5">

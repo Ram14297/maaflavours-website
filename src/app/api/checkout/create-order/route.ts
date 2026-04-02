@@ -302,6 +302,40 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // Auto-save delivery address to customer profile (non-fatal)
+      if (customerId && !customerId.startsWith("guest-")) {
+        try {
+          const { data: existing } = await adminSupa
+            .from("customer_addresses")
+            .select("id")
+            .eq("customer_id", customerId)
+            .eq("mobile", deliveryAddress.mobile)
+            .eq("pincode", deliveryAddress.pincode)
+            .eq("address_line1", deliveryAddress.address_line1)
+            .maybeSingle();
+
+          if (!existing) {
+            const { count } = await adminSupa
+              .from("customer_addresses")
+              .select("id", { count: "exact", head: true })
+              .eq("customer_id", customerId);
+
+            await adminSupa.from("customer_addresses").insert({
+              customer_id:   customerId,
+              name:          deliveryAddress.name,
+              mobile:        deliveryAddress.mobile,
+              address_line1: deliveryAddress.address_line1,
+              address_line2: deliveryAddress.address_line2 || null,
+              landmark:      deliveryAddress.landmark || null,
+              city:          deliveryAddress.city,
+              state:         deliveryAddress.state,
+              pincode:       deliveryAddress.pincode,
+              is_default:    count === 0,
+            });
+          }
+        } catch { /* non-fatal — don't block order */ }
+      }
+
     } catch (dbErr: any) {
       // DB not configured — use timestamp ID for dev
       console.warn("[create-order] DB save skipped:", dbErr.message);
