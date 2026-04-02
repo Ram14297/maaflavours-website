@@ -248,7 +248,7 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
         currency,
         order_id: razorpayOrderId,
         name: "Maa Flavours",
-        description: `${items.length} pickle jar${items.length > 1 ? "s" : ""}`,
+        description: `${items.length} pickle pack${items.length > 1 ? "s" : ""}`,
         image: "/maa-flavours-logo.png",
         prefill: {
           name: address.full_name,

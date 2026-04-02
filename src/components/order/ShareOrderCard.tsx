@@ -53,7 +53,7 @@ export default function ShareOrderCard({
       />
 
       <div className="p-5 text-center">
-        {/* Decorative jar */}
+        {/* Decorative pack */}
         <div className="text-4xl mb-3">🫙❤️</div>
 
         <h3
@@ -67,7 +67,7 @@ export default function ShareOrderCard({
           className="font-cormorant italic text-lg mb-4 leading-snug"
           style={{ color: "var(--color-grey)" }}
         >
-          Every jar brings a little taste of home.
+          Every pack brings a little taste of home.
           <br />
           Share with people you love.
         </p>

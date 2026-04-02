@@ -88,7 +88,7 @@ export default function BlogPage() {
                   className="font-cormorant italic text-lg leading-relaxed"
                   style={{ color: "var(--color-grey)" }}
                 >
-                  Stories, pickle recipes, Andhra food culture, and the love that goes into every jar —
+                  Stories, pickle recipes, Andhra food culture, and the love that goes into every pack —
                   coming straight from our kitchen to yours. Stay tuned!
                 </p>
               </div>

@@ -41,7 +41,7 @@ export function buildOrderTimeline(
     },
     packed: {
       label: "Packed & Ready",
-      description: "Jars bubble-wrapped and boxed securely for safe transit.",
+      description: "Packs bubble-wrapped and boxed securely for safe transit.",
     },
     shipped: {
       label: "Shipped",

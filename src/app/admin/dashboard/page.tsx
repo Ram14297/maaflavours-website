@@ -333,7 +333,7 @@ export default function DashboardPage() {
                         <p style={{ fontSize:13, fontWeight:700, color: isEmpty ? "#C0272D" : "#B8750A" }}>
                           {v.stock_quantity}
                         </p>
-                        <p style={{ fontSize:9, color:A.grey }}>jars</p>
+                        <p style={{ fontSize:9, color:A.grey }}>packs</p>
                       </div>
                     </div>
                   );

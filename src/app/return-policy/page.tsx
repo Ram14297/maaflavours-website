@@ -27,7 +27,7 @@ export default function ReturnPolicyPage() {
   return (
     <StaticPageLayout
       title="Return & Refund Policy"
-      subtitle="We stand behind every jar we make — here's our commitment to you"
+      subtitle="We stand behind every pack we make — here's our commitment to you"
       emoji="↩️"
       breadcrumb="Return & Refund Policy"
       updatedAt="Last updated: July 2025"
@@ -39,10 +39,10 @@ export default function ReturnPolicyPage() {
           <p className="font-playfair font-bold text-lg mb-4" style={{ color: "var(--color-brown)" }}>Quick Summary</p>
           <div className="flex flex-col gap-3">
             {[
-              { ok: true,  text: "Damaged / leaking jar on delivery → Full replacement or refund" },
+              { ok: true,  text: "Damaged / leaking pack on delivery → Full replacement or refund" },
               { ok: true,  text: "Wrong product received → Replacement dispatched at no charge" },
               { ok: true,  text: "Refund request approved within 24 hours of claim" },
-              { ok: false, text: "Opened jars cannot be returned (food hygiene regulation)" },
+              { ok: false, text: "Opened packs cannot be returned (food hygiene regulation)" },
               { ok: false, text: "Change-of-mind returns not accepted (perishable food product)" },
               { ok: false, text: "Damage claims must be raised within 48 hours of delivery" },
             ].map((item) => (
@@ -60,7 +60,7 @@ export default function ReturnPolicyPage() {
       <OrnamentLine className="mb-8" />
 
       <PolicySection title="1. Our Commitment">
-        <p>At Maa Flavours, every jar of pickle is made with the same love and care we'd put into food made for our own family. We take quality seriously — and when something goes wrong, we take responsibility.</p>
+        <p>At Maa Flavours, every pack of pickle is made with the same love and care we'd put into food made for our own family. We take quality seriously — and when something goes wrong, we take responsibility.</p>
         <p>If you receive a product that is damaged, leaking, incorrect, or otherwise not as expected, we will make it right. No lengthy forms, no bureaucratic process — just a quick resolution.</p>
       </PolicySection>
 
@@ -69,8 +69,8 @@ export default function ReturnPolicyPage() {
           {[
             {
               emoji: "💔",
-              title: "Damaged or Broken Jars",
-              desc: "If your jar arrives broken, cracked, or damaged during transit, we will send a replacement at no cost, or refund you in full — your choice.",
+              title: "Damaged or Broken Packs",
+              desc: "If your pack arrives broken, cracked, or damaged during transit, we will send a replacement at no cost, or refund you in full — your choice.",
             },
             {
               emoji: "🫗",
@@ -85,7 +85,7 @@ export default function ReturnPolicyPage() {
             {
               emoji: "⚠️",
               title: "Significantly Short Fill",
-              desc: "Our jars are filled by hand and weights may vary slightly (±5%). If you believe your jar is significantly underfilled, contact us with a photo.",
+              desc: "Our packs are filled by hand and weights may vary slightly (±5%). If you believe your pack is significantly underfilled, contact us with a photo.",
             },
           ].map((item) => (
             <div key={item.title} className="flex gap-4 p-4 rounded-xl" style={{ background: "rgba(46,125,50,0.04)", border: "1px solid rgba(46,125,50,0.12)" }}>
@@ -103,7 +103,7 @@ export default function ReturnPolicyPage() {
         <p>As a food product company, we are bound by food safety regulations and hygiene standards. We cannot accept returns for the following:</p>
         <div className="flex flex-col gap-3 mt-3">
           {[
-            "Opened pickle jars — once opened, a food product cannot be resold or reused",
+            "Opened pickle packs — once opened, a food product cannot be resold or reused",
             "Change of mind or taste preference — we recommend reading product descriptions and trying our 250g size first",
             "Damage caused after delivery (e.g., dropped by customer)",
             "Damage claims raised more than 48 hours after delivery confirmation",
@@ -121,7 +121,7 @@ export default function ReturnPolicyPage() {
         <p>Raising a request is simple — just follow these 3 steps:</p>
         <div className="flex flex-col gap-4 mt-3">
           {[
-            { step: "01", title: "Contact us within 48 hours", desc: "Reach out via WhatsApp (+91 97014 52929) or email (support@maaflavours.com) within 48 hours of your delivery." },
+            { step: "01", title: "Contact us within 48 hours", desc: "Reach out via WhatsApp (+91 97014 52929) or email (maaflavours74@gmail.com) within 48 hours of your delivery." },
             { step: "02", title: "Send photos of the issue", desc: "Share clear photos of the damaged product and outer packaging. This helps us process your claim quickly and also helps us improve our packing." },
             { step: "03", title: "We resolve within 24 hours", desc: "Once we've reviewed your claim, we'll confirm a replacement dispatch or initiate a refund — within 24 hours of receiving your photos." },
           ].map((item) => (
@@ -188,7 +188,7 @@ export default function ReturnPolicyPage() {
               Contact us immediately via{" "}
               <a href="https://wa.me/919701452929" className="underline" style={{ color: "var(--color-crimson)" }}>WhatsApp (+91 97014 52929)</a>
               {" "}or{" "}
-              <a href="mailto:support@maaflavours.com" className="underline" style={{ color: "var(--color-crimson)" }}>support@maaflavours.com</a>.
+              <a href="mailto:maaflavours74@gmail.com" className="underline" style={{ color: "var(--color-crimson)" }}>maaflavours74@gmail.com</a>.
               We resolve all issues within 24 hours, no questions asked.
             </p>
           </div>

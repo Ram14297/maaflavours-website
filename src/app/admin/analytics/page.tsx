@@ -323,7 +323,7 @@ export default function AnalyticsPage() {
                     <Tooltip
                       contentStyle={tooltipStyle}
                       formatter={(v:number, n:string) => [
-                        n === "revenue" ? `₹${v.toLocaleString("en-IN")}` : `${v} jars`,
+                        n === "revenue" ? `₹${v.toLocaleString("en-IN")}` : `${v} packs`,
                         n === "revenue" ? "Revenue" : "Units Sold",
                       ]}
                       cursor={{ fill:"rgba(200,150,12,0.06)" }}
@@ -343,7 +343,7 @@ export default function AnalyticsPage() {
                       <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background:PRODUCT_COLS[i % PRODUCT_COLS.length] }}/>
                       <div>
                         <p style={{ fontSize:11, color:A.brown, fontWeight:500 }}>{p.name}</p>
-                        <p style={{ fontSize:10, color:A.grey }}>{p.units} jars</p>
+                        <p style={{ fontSize:10, color:A.grey }}>{p.units} packs</p>
                       </div>
                     </div>
                   ))}
@@ -423,7 +423,7 @@ export default function AnalyticsPage() {
       <div className="grid lg:grid-cols-2 gap-5">
 
         {/* Top Cities */}
-        <Card title="Top Delivery Cities" subtitle="Where your jars are shipped most">
+        <Card title="Top Delivery Cities" subtitle="Where your packs are shipped most">
           {loading ? (
             <div className="space-y-3">
               {[1,2,3,4,5].map(i => (

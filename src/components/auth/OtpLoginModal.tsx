@@ -3,7 +3,7 @@
 // Maa Flavours — Complete OTP Login Modal (Email-based)
 // 4-step authenticated flow:
 //   Step 1: Enter email address
-//   Step 2: Enter 6-digit OTP (sent to email by Supabase — free)
+//   Step 2: Enter 4-digit OTP (sent to email by Supabase — free)
 //   Step 3: New users enter name + optional mobile
 //   Step 4: Success animation then auto-close
 
@@ -66,7 +66,7 @@ export default function OtpLoginModal({
   const [step, setStep] = useState<AuthStep>("email");
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [otp, setOtp] = useState(Array(6).fill(""));
+  const [otp, setOtp] = useState(Array(4).fill(""));
   const [otpError, setOtpError] = useState("");
   const [maskedEmail, setMaskedEmail] = useState("");
   const [name, setName] = useState("");
@@ -107,7 +107,7 @@ export default function OtpLoginModal({
     setStep("email");
     setEmail("");
     setEmailError("");
-    setOtp(Array(6).fill(""));
+    setOtp(Array(4).fill(""));
     setOtpError("");
     setMaskedEmail("");
     setName("");
@@ -157,8 +157,8 @@ export default function OtpLoginModal({
   // ─── STEP 2: Verify OTP ─────────────────────────────────────────────
   const handleVerifyOtp = useCallback(async (code?: string) => {
     const otpCode = code ?? otp.join("");
-    if (otpCode.length < 6) {
-      setOtpError("Please enter all 6 digits.");
+    if (otpCode.length < 4) {
+      setOtpError("Please enter all 4 digits.");
       return;
     }
 
@@ -175,7 +175,7 @@ export default function OtpLoginModal({
 
       if (!res.ok || !data.success) {
         setOtpError(data.error || "Incorrect OTP. Please try again.");
-        setOtp(Array(6).fill(""));
+        setOtp(Array(4).fill(""));
         return;
       }
 
@@ -203,7 +203,7 @@ export default function OtpLoginModal({
     });
     const data = await res.json();
     if (data.success) {
-      setOtp(Array(6).fill(""));
+      setOtp(Array(4).fill(""));
       setOtpError("");
       setResendKey((k) => k + 1);
       toast.success("OTP sent again!");
@@ -276,7 +276,7 @@ export default function OtpLoginModal({
   const STEP_TEXT: Record<AuthStep, { heading: string; sub: string }> = {
     email: {
       heading: title || "Sign In to Maa Flavours",
-      sub: subtitle || "We'll send a 6-digit OTP to your email",
+      sub: subtitle || "We'll send a 4-digit OTP to your email",
     },
     otp: {
       heading: "Check Your Email",
@@ -470,7 +470,7 @@ export default function OtpLoginModal({
                 </button>
 
                 <p className="font-dm-sans text-xs text-center" style={{ color: "var(--color-grey)" }}>
-                  🔒 We'll send a 6-digit OTP to verify your email. Free, no spam.
+                  🔒 We'll send a 4-digit OTP to verify your email. Free, no spam.
                 </p>
               </>
             )}
@@ -510,7 +510,7 @@ export default function OtpLoginModal({
                 <p className="font-dm-sans text-xs text-center" style={{ color: "var(--color-grey)" }}>
                   Wrong email?{" "}
                   <button type="button"
-                    onClick={() => { setStep("email"); setOtp(Array(6).fill("")); setOtpError(""); }}
+                    onClick={() => { setStep("email"); setOtp(Array(4).fill("")); setOtpError(""); }}
                     className="font-semibold underline hover:no-underline"
                     style={{ color: "var(--color-crimson)" }}>
                     Change email

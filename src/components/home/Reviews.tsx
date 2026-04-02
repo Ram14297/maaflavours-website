@@ -16,7 +16,7 @@ const REVIEWS = [
     rating: 5,
     product: "Pulihora Gongura",
     review:
-      "I've been searching for a gongura pickle that tastes exactly like what my grandmother used to make. Maa Flavours nailed it — the balance of sour and spice is perfect. Ordered three jars already!",
+      "I've been searching for a gongura pickle that tastes exactly like what my grandmother used to make. Maa Flavours nailed it — the balance of sour and spice is perfect. Ordered three packs already!",
     date: "2 weeks ago",
   },
   {
@@ -46,7 +46,7 @@ const REVIEWS = [
     rating: 5,
     product: "Maamidi Allam",
     review:
-      "Maamidi Allam with hot dosa is heaven! The sweet-spicy balance is incredible. My kids devour it. We've gifted jars to relatives visiting and everyone wants to order online now.",
+      "Maamidi Allam with hot dosa is heaven! The sweet-spicy balance is incredible. My kids devour it. We've gifted packs to relatives visiting and everyone wants to order online now.",
     date: "2 months ago",
   },
   {

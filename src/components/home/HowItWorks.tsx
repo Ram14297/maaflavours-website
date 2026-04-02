@@ -17,7 +17,7 @@ const STEPS = [
     icon: "🫙",
     title: "We Pack Fresh",
     description:
-      "Each jar is carefully packed the same day, sealed with care, and labelled with the batch date so you always know it's fresh.",
+      "Each pack is carefully packed the same day, sealed with care, and labelled with the batch date so you always know it's fresh.",
     accent: "var(--color-gold)",
     featured: true,
   },
@@ -148,7 +148,7 @@ export default function HowItWorks() {
             href="/products"
             className="btn-primary inline-flex items-center gap-2 py-3.5 px-8"
           >
-            Order Your First Jar
+            Order Your First Pack
             <span>→</span>
           </a>
         </div>

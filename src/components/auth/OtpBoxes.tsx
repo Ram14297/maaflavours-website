@@ -1,15 +1,15 @@
 "use client";
 // src/components/auth/OtpBoxes.tsx
-// Maa Flavours — 6-Digit OTP Input Row
+// Maa Flavours — Dynamic OTP Input Row (currently 4 digits)
 // Auto-advances to next box on digit entry
 // Backspace moves to previous box
-// Paste support — pastes all 6 digits at once
+// Paste support — pastes all digits at once
 // All boxes numeric keyboard on mobile (inputMode="numeric")
 
 import { useRef, KeyboardEvent, ClipboardEvent, useEffect } from "react";
 
 interface OtpBoxesProps {
-  value: string[];          // 6-element array, each "" or single digit
+  value: string[];          // array of "" or single digit, length = OTP length
   onChange: (newValue: string[]) => void;
   onComplete?: (otp: string) => void;
   disabled?: boolean;
@@ -25,13 +25,14 @@ export default function OtpBoxes({
   hasError = false,
   autoFocus = true,
 }: OtpBoxesProps) {
-  const inputRefs = useRef<(HTMLInputElement | null)[]>(Array(6).fill(null));
+  const len = value.length;
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Auto-focus first empty box on mount
   useEffect(() => {
     if (!autoFocus) return;
     const firstEmpty = value.findIndex((v) => !v);
-    const focusIdx = firstEmpty === -1 ? 5 : firstEmpty;
+    const focusIdx = firstEmpty === -1 ? len - 1 : firstEmpty;
     inputRefs.current[focusIdx]?.focus();
   }, []); // eslint-disable-line
 
@@ -43,10 +44,10 @@ export default function OtpBoxes({
 
     if (digit) {
       // Move to next box
-      if (idx < 5) {
+      if (idx < len - 1) {
         inputRefs.current[idx + 1]?.focus();
       }
-      // Auto-submit when all 6 filled
+      // Auto-submit when all filled
       if (next.every((v) => v)) {
         onComplete?.(next.join(""));
       }
@@ -73,7 +74,7 @@ export default function OtpBoxes({
     if (e.key === "ArrowLeft" && idx > 0) {
       inputRefs.current[idx - 1]?.focus();
     }
-    if (e.key === "ArrowRight" && idx < 5) {
+    if (e.key === "ArrowRight" && idx < len - 1) {
       inputRefs.current[idx + 1]?.focus();
     }
 
@@ -82,7 +83,7 @@ export default function OtpBoxes({
       const next = [...value];
       next[idx] = e.key;
       onChange(next);
-      if (idx < 5) inputRefs.current[idx + 1]?.focus();
+      if (idx < len - 1) inputRefs.current[idx + 1]?.focus();
       if (next.every((v) => v)) onComplete?.(next.join(""));
       e.preventDefault();
     }
@@ -91,16 +92,16 @@ export default function OtpBoxes({
   // Handle paste: paste OTP from clipboard
   const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, len);
     if (!pasted) return;
 
-    const next = Array(6)
+    const next = Array(len)
       .fill("")
       .map((_, i) => pasted[i] || "");
     onChange(next);
 
     // Focus last filled or last box
-    const focusIdx = Math.min(pasted.length, 5);
+    const focusIdx = Math.min(pasted.length, len - 1);
     inputRefs.current[focusIdx]?.focus();
 
     if (next.every((v) => v)) {
@@ -130,8 +131,8 @@ export default function OtpBoxes({
           disabled={disabled}
           className="text-center font-dm-sans font-bold text-2xl transition-all duration-200 focus:outline-none rounded-xl disabled:opacity-50"
           style={{
-            width: "clamp(40px, 11vw, 52px)",
-            height: "clamp(52px, 14vw, 64px)",
+            width: "clamp(48px, 14vw, 64px)",
+            height: "clamp(56px, 16vw, 72px)",
             background: digit
               ? "rgba(192,39,45,0.05)"
               : "var(--color-cream)",
