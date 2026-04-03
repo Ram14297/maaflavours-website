@@ -6,6 +6,8 @@ import type { Metadata, Viewport } from "next";
 import "@/styles/globals.css";
 import { Playfair_Display, Cormorant_Garamond, DM_Sans, Dancing_Script } from "next/font/google";
 import { Toaster } from "react-hot-toast";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import CartProvider from "@/components/cart/CartProvider";
 
 // ─── Font Loading — Next.js Font Optimization ─────────────────────────────
@@ -198,6 +200,9 @@ export default function RootLayout({
             },
           }}
         />
+
+        <Analytics />
+        <SpeedInsights />
 
         {/* Structured Data — JSON-LD for SEO */}
         <script
