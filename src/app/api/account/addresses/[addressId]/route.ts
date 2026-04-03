@@ -12,7 +12,7 @@ function getSession(request: NextRequest) {
   if (!cookie) return null;
   try {
     const s = JSON.parse(cookie);
-    if (!s.userId || s.isNewUser) return null;
+    if (!s.userId) return null;
     return s;
   } catch {
     return null;
