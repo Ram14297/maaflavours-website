@@ -105,7 +105,7 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
           })),
           couponCode:      coupon?.code,
           deliveryAddress: address,
-          paymentMethod:   "razorpay_upi", // stored as online payment
+          paymentMethod:   "cashfree",
         }),
       });
 

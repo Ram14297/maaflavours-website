@@ -61,7 +61,7 @@ const RequestSchema = z.object({
   items:           z.array(CartItemSchema).min(1).max(20),
   couponCode:      z.string().optional(),
   deliveryAddress: AddressSchema,
-  paymentMethod:   z.enum(["razorpay_upi", "razorpay_card", "razorpay_netbanking", "cod", "phonepe", "phonepe_qr"]),
+  paymentMethod:   z.enum(["razorpay_upi", "razorpay_card", "razorpay_netbanking", "cod", "phonepe", "phonepe_qr", "cashfree"]),
   customerNotes:   z.string().max(500).optional(),
 });
 
@@ -401,6 +401,30 @@ export async function POST(request: NextRequest) {
         couponDiscount,
         deliveryCharge,
         // Client should POST to /api/checkout/phonepe-initiate with { orderId, amount: total }
+      });
+    }
+
+    // ─── 7b. PhonePe QR — manual scan, no gateway needed ─────────────────
+    if (paymentMethod === "phonepe_qr") {
+      return NextResponse.json({
+        orderId:       supabaseOrderId,
+        paymentMethod: "phonepe_qr",
+        total,
+        subtotal,
+        couponDiscount,
+        deliveryCharge,
+      });
+    }
+
+    // ─── 7c. Cashfree — DB order created; caller will hit /api/checkout/cashfree-create ─
+    if (paymentMethod === "cashfree") {
+      return NextResponse.json({
+        orderId: supabaseOrderId,
+        amount:  total,          // paise — passed to cashfree-create
+        paymentMethod: "cashfree",
+        subtotal,
+        couponDiscount,
+        deliveryCharge,
       });
     }
 
