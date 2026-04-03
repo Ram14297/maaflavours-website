@@ -42,7 +42,9 @@ const CartItemSchema = z.object({
 });
 
 const AddressSchema = z.object({
-  name:          z.string().min(2).max(80),
+  // Accept both 'name' and 'full_name' (checkout store uses full_name)
+  name:          z.string().min(2).max(80).optional(),
+  full_name:     z.string().min(2).max(80).optional(),
   mobile:        z.string().regex(/^[6-9]\d{9}$/),
   address_line1: z.string().min(5).max(120),
   address_line2: z.string().max(120).optional().default(""),
@@ -50,13 +52,16 @@ const AddressSchema = z.object({
   pincode:       z.string().regex(/^\d{6}$/),
   city:          z.string().min(2).max(60),
   state:         z.string().min(2).max(60),
-});
+}).transform(d => ({
+  ...d,
+  name: d.name || d.full_name || "",
+})).refine(d => d.name.length >= 2, { message: "Name must be at least 2 characters", path: ["name"] });
 
 const RequestSchema = z.object({
   items:           z.array(CartItemSchema).min(1).max(20),
   couponCode:      z.string().optional(),
   deliveryAddress: AddressSchema,
-  paymentMethod:   z.enum(["razorpay_upi", "razorpay_card", "razorpay_netbanking", "cod", "phonepe"]),
+  paymentMethod:   z.enum(["razorpay_upi", "razorpay_card", "razorpay_netbanking", "cod", "phonepe", "phonepe_qr"]),
   customerNotes:   z.string().max(500).optional(),
 });
 
@@ -223,17 +228,28 @@ export async function POST(request: NextRequest) {
     const sgstAmount   = isIntraState ? Math.round(gstTotal / 2) : 0;
     const igstAmount   = isIntraState ? 0 : gstTotal;
 
-    // ─── 4. Authenticate customer ─────────────────────────────────────────
+    // ─── 4. Authenticate customer (reads mf_session cookie) ──────────────
     let customerId: string | null = null;
     try {
-      const supabase = await createServerClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) customerId = user.id;
-    } catch { /* Not logged in — guest checkout not supported, but don't block */ }
+      const sessionCookie = request.cookies.get("mf_session")?.value;
+      if (sessionCookie) {
+        const session = JSON.parse(sessionCookie);
+        if (session.userId && (!session.exp || session.exp > Math.floor(Date.now() / 1000))) {
+          customerId = session.userId;
+        }
+      }
+    } catch { /* ignore parse errors */ }
 
     if (!customerId) {
-      // In production, require login before checkout
-      // In dev, generate a placeholder
+      // Fallback: try Supabase auth session
+      try {
+        const supabase = createServerClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) customerId = user.id;
+      } catch { /* Not logged in */ }
+    }
+
+    if (!customerId) {
       customerId = `guest-${Date.now()}`;
     }
 
@@ -247,11 +263,18 @@ export async function POST(request: NextRequest) {
         .from("customers").select("id").eq("id", customerId).single();
 
       if (!existingCustomer && !customerId.startsWith("guest-")) {
-        await adminSupa.from("customers").upsert({
+        await adminSupa.from("customers").insert({
           id:     customerId,
           mobile: deliveryAddress.mobile,
           name:   deliveryAddress.name,
-        }, { onConflict: "id", ignoreDuplicates: true });
+        }).throwOnError().catch(async () => {
+          // If insert fails (e.g. mobile UNIQUE conflict), try with placeholder mobile
+          await adminSupa.from("customers").insert({
+            id:     customerId,
+            mobile: `_ph_${customerId!.replace(/-/g,"").substring(0,16)}`,
+            name:   deliveryAddress.name,
+          }).throwOnError().catch(() => { /* ignore — row might already exist */ });
+        });
       }
 
       // Create order row (schema column names)
