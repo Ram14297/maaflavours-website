@@ -540,23 +540,40 @@ function AddressesTab() {
   }
 
   async function handleSave(form: Omit<Address,"id"|"is_default">) {
-    if (editTarget) {
-      setAddresses(prev => prev.map(a => a.id === editTarget.id ? { ...a, ...form } : a));
+    if (editTarget && !editTarget.id.startsWith("local-")) {
+      // Update existing in DB
+      const res = await fetch(`/api/account/addresses/${editTarget.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || "Failed to update");
       toast.success("Address updated!");
     } else {
-      setAddresses(prev => [...prev, { ...form, id: `local-${Date.now()}`, is_default: prev.length === 0 }]);
+      // Save new address to DB
+      const res = await fetch("/api/account/addresses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error((await res.json()).error || "Failed to save");
       toast.success("Address saved!");
     }
     setEditTarget(undefined);
+    fetchAddresses(); // refresh from DB
   }
 
   function handleEdit(a: Address) { setEditTarget(a); setModalOpen(true); }
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     if (!confirm("Remove this address?")) return;
+    const res = await fetch(`/api/account/addresses/${id}`, { method: "DELETE" });
+    if (!res.ok) { toast.error("Failed to remove address"); return; }
     setAddresses(prev => prev.filter(a => a.id !== id));
     toast.success("Address removed");
   }
-  function handleSetDefault(id: string) {
+  async function handleSetDefault(id: string) {
+    const res = await fetch(`/api/account/addresses/${id}`, { method: "PATCH" });
+    if (!res.ok) { toast.error("Failed to update default"); return; }
     setAddresses(prev => prev.map(a => ({ ...a, is_default: a.id === id })));
     toast.success("Default address updated!");
   }
