@@ -154,12 +154,12 @@ function LoginPageContent() {
       setProfileError("Please enter your full name."); return;
     }
     const mobileDigits = mobile.replace(/\D/g, "");
-    if (mobileDigits && !/^[6-9]\d{9}$/.test(mobileDigits)) {
-      setProfileError("Enter a valid 10-digit Indian mobile number."); return;
+    if (!mobileDigits || !/^[6-9]\d{9}$/.test(mobileDigits)) {
+      setProfileError("Please enter a valid 10-digit mobile number for delivery updates."); return;
     }
     setLoading(true); setProfileError("");
     try {
-      const mobileFormatted = mobileDigits ? `+91${mobileDigits}` : undefined;
+      const mobileFormatted = `+91${mobileDigits}`;
       const res = await fetch("/api/auth/update-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -346,7 +346,7 @@ function LoginPageContent() {
             <p className="font-dm-sans text-sm mt-1" style={{ color: "var(--color-grey)" }}>
               {step === "email" && "We'll send a 6-digit OTP to your email"}
               {step === "otp" && `OTP sent to ${maskedEmail}`}
-              {step === "profile" && "Tell us your name to complete registration"}
+              {step === "profile" && "Tell us your name & mobile for delivery updates"}
               {step === "success" && "Redirecting you now…"}
             </p>
 
@@ -487,7 +487,7 @@ function LoginPageContent() {
                 <div>
                   <label htmlFor="reg-mobile" className="block font-dm-sans text-sm font-semibold mb-1.5"
                     style={{ color: "var(--color-brown)" }}>
-                    Mobile{" "}<span className="font-normal" style={{ color: "var(--color-grey)" }}>(optional)</span>
+                    Mobile Number *
                   </label>
                   <div className="flex rounded-xl overflow-hidden"
                     style={{ border: "2px solid rgba(200,150,12,0.2)" }}>
@@ -505,7 +505,7 @@ function LoginPageContent() {
                     />
                   </div>
                   <p className="font-dm-sans text-xs mt-1" style={{ color: "var(--color-grey)" }}>
-                    For delivery updates and exclusive pickle offers
+                    📦 Required for order delivery & offer updates
                   </p>
                 </div>
 
@@ -515,7 +515,7 @@ function LoginPageContent() {
                   </p>
                 )}
 
-                <button onClick={handleSaveProfile} disabled={loading || !name.trim()}
+                <button onClick={handleSaveProfile} disabled={loading || !name.trim() || mobile.length < 10}
                   className="btn-primary w-full py-4 text-base gap-2 disabled:opacity-60">
                   {loading
                     ? <><span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Saving…</>
