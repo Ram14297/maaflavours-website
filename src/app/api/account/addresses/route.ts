@@ -60,20 +60,20 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (!existingCustomer) {
-      // Auto-create customer row so FK constraint is satisfied
+      // Auto-create customer row so FK constraint is satisfied.
+      // Use a placeholder mobile (prefixed with _ph_) if mobile is NOT NULL in schema.
+      // The real mobile is updated when the user saves their profile.
+      const placeholderMobile = `_ph_${session.userId.replace(/-/g, "").substring(0, 16)}`;
+
       const { error: insertErr } = await supabase.from("customers").insert({
         id:     session.userId,
         email:  session.email || null,
         name:   session.name  || "",
-        mobile: null,
+        mobile: placeholderMobile,
       });
       if (insertErr && insertErr.code !== "23505") {
         // 23505 = unique violation (row already exists) — safe to ignore
         console.error("[addresses POST] customer auto-create failed:", insertErr.message);
-        return NextResponse.json(
-          { error: "Could not create customer record. Please save your profile first." },
-          { status: 500 }
-        );
       }
     }
 

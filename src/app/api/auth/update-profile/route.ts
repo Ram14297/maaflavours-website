@@ -53,13 +53,18 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminSupabaseClient();
 
     // Step 1: Try UPDATE the existing row by userId
+    // Only update mobile if a real value is provided (don't overwrite real mobile with placeholder)
+    const updatePayload: Record<string, any> = {
+      name,
+      updated_at: new Date().toISOString(),
+    };
+    if (mobile) {
+      updatePayload.mobile = mobile; // real mobile provided — update it
+    }
+
     const { data: updated, error: updateError } = await supabase
       .from("customers")
-      .update({
-        name,
-        mobile: mobile || null,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updatePayload)
       .eq("id", userId!)
       .select("id");
 
@@ -74,13 +79,16 @@ export async function POST(request: NextRequest) {
     if (rowsUpdated === 0 && userId) {
       console.log("[update-profile] No existing row — inserting:", { email, userId });
 
+      // Use placeholder mobile if none provided (in case mobile NOT NULL constraint exists)
+      const mobileForInsert = mobile || `_ph_${userId.replace(/-/g, "").substring(0, 16)}`;
+
       const { error: insertError } = await supabase
         .from("customers")
         .insert({
           id: userId,
           email,
           name,
-          mobile: mobile || null,
+          mobile: mobileForInsert,
         });
 
       if (insertError) {

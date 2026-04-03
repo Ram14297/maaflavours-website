@@ -38,10 +38,12 @@ export async function GET(request: NextRequest) {
         .maybeSingle();
 
       if (customer) {
+        // Strip placeholder mobile (set by auto-create in addresses route)
+        const realMobile = customer.mobile?.startsWith("_ph_") ? null : customer.mobile;
         return NextResponse.json({
           user: {
             id: customer.id,
-            mobile: customer.mobile,
+            mobile: realMobile,
             name: customer.name || session.name || "",
             email: customer.email || null,
           },
@@ -58,10 +60,11 @@ export async function GET(request: NextRequest) {
         .maybeSingle();
 
       if (customer) {
+        const realMobile = customer.mobile?.startsWith("_ph_") ? null : customer.mobile;
         return NextResponse.json({
           user: {
             id: customer.id,
-            mobile: customer.mobile,
+            mobile: realMobile,
             name: customer.name || session.name || "",
             email: customer.email || null,
           },
@@ -78,10 +81,11 @@ export async function GET(request: NextRequest) {
         .maybeSingle();
 
       if (customer) {
+        const realMobile = customer.mobile?.startsWith("_ph_") ? null : customer.mobile;
         return NextResponse.json({
           user: {
             id: customer.id,
-            mobile: customer.mobile,
+            mobile: realMobile,
             name: customer.name || session.name || "",
             email: customer.email || null,
           },
