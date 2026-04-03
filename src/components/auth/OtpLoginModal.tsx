@@ -218,8 +218,8 @@ export default function OtpLoginModal({
       setProfileError("Please enter your full name (minimum 2 characters).");
       return;
     }
-    if (mobile && !/^[6-9]\d{9}$/.test(mobile.replace(/\D/g, ""))) {
-      setProfileError("Please enter a valid 10-digit mobile number.");
+    if (!mobile || !/^[6-9]\d{9}$/.test(mobile.replace(/\D/g, ""))) {
+      setProfileError("Please enter a valid 10-digit mobile number for delivery updates.");
       return;
     }
 
@@ -227,7 +227,7 @@ export default function OtpLoginModal({
     setProfileError("");
 
     try {
-      const mobileFormatted = mobile ? `+91${mobile.replace(/\D/g, "")}` : undefined;
+      const mobileFormatted = `+91${mobile.replace(/\D/g, "")}`;
       const res = await fetch("/api/auth/update-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -284,7 +284,7 @@ export default function OtpLoginModal({
     },
     profile: {
       heading: "Welcome to Maa Flavours! 🎉",
-      sub: "One last step — tell us your name",
+      sub: "Tell us your name & mobile for delivery updates",
     },
     success: {
       heading: loggedInUser?.name
@@ -555,15 +555,14 @@ export default function OtpLoginModal({
                   </div>
                 </div>
 
-                {/* Mobile (optional) */}
+                {/* Mobile (mandatory) */}
                 <div>
                   <label htmlFor="auth-mobile" className="block font-dm-sans text-sm font-semibold mb-1.5"
                     style={{ color: "var(--color-brown)" }}>
-                    Mobile Number{" "}
-                    <span className="font-normal" style={{ color: "var(--color-grey)" }}>(optional, for delivery updates)</span>
+                    Mobile Number *
                   </label>
                   <div className="flex rounded-xl overflow-hidden"
-                    style={{ border: "2px solid rgba(200,150,12,0.2)" }}>
+                    style={{ border: `2px solid ${profileError && !name.trim() ? "rgba(200,150,12,0.2)" : profileError ? "var(--color-crimson)" : "rgba(200,150,12,0.2)"}` }}>
                     <div className="flex items-center gap-1.5 px-3 flex-shrink-0"
                       style={{ background: "var(--color-cream)", borderRight: "1.5px solid rgba(200,150,12,0.2)" }}>
                       <span className="text-sm">🇮🇳</span>
@@ -577,9 +576,14 @@ export default function OtpLoginModal({
                       style={{ color: "var(--color-brown)" }}
                       autoComplete="tel-national" maxLength={10}
                     />
+                    {mobile.length === 10 && /^[6-9]\d{9}$/.test(mobile) && (
+                      <div className="flex items-center pr-3">
+                        <CheckCircle2 size={18} style={{ color: "#2E7D32" }} />
+                      </div>
+                    )}
                   </div>
                   <p className="font-dm-sans text-xs mt-1" style={{ color: "var(--color-grey)" }}>
-                    For order delivery updates via SMS
+                    📦 Required for order delivery & offer updates
                   </p>
                 </div>
 
@@ -590,7 +594,7 @@ export default function OtpLoginModal({
                   </p>
                 )}
 
-                <button onClick={handleSaveProfile} disabled={loading || !name.trim()}
+                <button onClick={handleSaveProfile} disabled={loading || !name.trim() || mobile.length < 10}
                   className="btn-primary w-full py-4 text-base gap-2 disabled:opacity-60">
                   {loading
                     ? <><span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Setting up…</>
