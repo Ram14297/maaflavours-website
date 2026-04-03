@@ -13,8 +13,10 @@ export default function ProfilePage() {
   const { user, refreshUser } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
   const [nameError, setNameError] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [mobileError, setMobileError] = useState("");
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -22,6 +24,7 @@ export default function ProfilePage() {
     if (user) {
       setName(user.name || "");
       setEmail(user.email || "");
+      setMobile(user.mobile ? user.mobile.replace("+91", "") : "");
     }
   }, [user]);
 
@@ -34,15 +37,21 @@ export default function ProfilePage() {
       setEmailError("Enter a valid email address."); return;
     }
 
+    setMobileError("");
+    if (mobile && !/^[6-9]\d{9}$/.test(mobile)) {
+      setMobileError("Enter a valid 10-digit mobile number."); return;
+    }
+
     setLoading(true);
     try {
+      const mobileFull = mobile ? `+91${mobile}` : (user?.mobile || "");
       const res = await fetch("/api/auth/update-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          mobile: user?.mobile,
+          mobile: mobileFull || undefined,
           name: name.trim(),
-          email: email.trim() || undefined,
+          email: email.trim() || user?.email || "",
         }),
       });
       const data = await res.json();
@@ -94,25 +103,53 @@ export default function ProfilePage() {
         </div>
 
         <div className="px-6 py-5 flex flex-col gap-5">
-          {/* Mobile (read-only) */}
+          {/* Mobile — read-only if already set, editable if empty */}
           <div>
             <label className="block font-dm-sans text-sm font-semibold mb-1.5" style={{ color: "var(--color-brown)" }}>
               Mobile Number
             </label>
-            <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl"
-              style={{ background: "var(--color-cream)", border: "2px solid rgba(200,150,12,0.15)" }}>
-              <Phone size={16} style={{ color: "var(--color-grey)" }} />
-              <span className="font-dm-sans text-base flex-1" style={{ color: "var(--color-brown)", letterSpacing: "0.04em" }}>
-                {user?.mobile || "—"}
-              </span>
-              <span className="font-dm-sans text-xs px-2 py-0.5 rounded-full"
-                style={{ background: "rgba(46,125,50,0.1)", color: "#2E7D32" }}>
-                ✓ Verified
-              </span>
-            </div>
-            <p className="font-dm-sans text-xs mt-1" style={{ color: "var(--color-grey)" }}>
-              Mobile number cannot be changed — it's your login credential
-            </p>
+            {user?.mobile ? (
+              <>
+                <div className="flex items-center gap-3 px-4 py-3.5 rounded-xl"
+                  style={{ background: "var(--color-cream)", border: "2px solid rgba(200,150,12,0.15)" }}>
+                  <Phone size={16} style={{ color: "var(--color-grey)" }} />
+                  <span className="font-dm-sans text-base flex-1" style={{ color: "var(--color-brown)", letterSpacing: "0.04em" }}>
+                    {user.mobile}
+                  </span>
+                  <span className="font-dm-sans text-xs px-2 py-0.5 rounded-full"
+                    style={{ background: "rgba(46,125,50,0.1)", color: "#2E7D32" }}>
+                    ✓ Verified
+                  </span>
+                </div>
+                <p className="font-dm-sans text-xs mt-1" style={{ color: "var(--color-grey)" }}>
+                  Mobile number cannot be changed — it&apos;s your login credential
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center rounded-xl overflow-hidden"
+                  style={{ border: `2px solid ${mobileError ? "#C0272D" : "rgba(200,150,12,0.25)"}` }}>
+                  <span className="px-4 py-3.5 font-dm-sans text-sm font-medium select-none"
+                    style={{ background: "var(--color-cream)", color: "var(--color-brown)", borderRight: "1px solid rgba(200,150,12,0.2)" }}>
+                    +91
+                  </span>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="10-digit mobile number"
+                    value={mobile}
+                    onChange={e => { setMobile(e.target.value.replace(/\D/g, "")); setMobileError(""); }}
+                    className="flex-1 px-4 py-3.5 font-dm-sans text-base outline-none bg-white"
+                    style={{ color: "var(--color-brown)" }}
+                  />
+                </div>
+                {mobileError && <p className="font-dm-sans text-xs mt-1" style={{ color: "#C0272D" }}>{mobileError}</p>}
+                <p className="font-dm-sans text-xs mt-1" style={{ color: "var(--color-grey)" }}>
+                  Add your mobile number for faster checkout
+                </p>
+              </>
+            )}
           </div>
 
           {/* Name */}

@@ -14,7 +14,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/server";
 const RequestSchema = z.object({
   email: z.string().email(),
   name: z.string().min(2).max(80).trim(),
-  mobile: z.string().regex(/^\+91[6-9]\d{9}$/).optional().or(z.literal("")),
+  mobile: z.string().regex(/^\+91[6-9]\d{9}$/).optional().nullable().or(z.literal("")),
 });
 
 const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 days

@@ -71,20 +71,9 @@ export async function POST(request: NextRequest) {
 
     const isNewUser = !existingCustomer || !existingCustomer.name;
 
-    if (!existingCustomer) {
-      const { error: insertErr } = await adminSupa.from("customers").insert({
-        id: authUserId,
-        email,
-        name: "",
-        mobile: null,
-        created_at: new Date().toISOString(),
-      });
-      if (insertErr) {
-        console.warn("[verify-otp] Insert customer error:", insertErr.message);
-      } else {
-        console.log("[verify-otp] New customer created:", authUserId);
-      }
-    }
+    // Note: customer row creation is deferred to update-profile (which handles
+    // mobile correctly). Do not insert here — mobile NOT NULL would fail for
+    // email-auth users who haven't provided a mobile yet.
 
     // ─── 3. Set session cookie ─────────────────────────────────────────────
     const sessionPayload = JSON.stringify({
