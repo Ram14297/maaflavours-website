@@ -232,11 +232,12 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
         }),
       });
 
+      const orderData = await orderRes.json();
       if (!orderRes.ok) {
-        throw new Error("Failed to create order. Please try again.");
+        throw new Error(orderData.error || "Failed to create order. Please try again.");
       }
 
-      const { razorpayOrderId, amount, currency, key } = await orderRes.json();
+      const { razorpayOrderId, amount, currency, key } = orderData;
       setRazorpayOrderId(razorpayOrderId);
 
       const loaded = await loadRazorpay();
