@@ -264,18 +264,21 @@ export async function POST(request: NextRequest) {
         .from("customers").select("id").eq("id", customerId).single();
 
       if (!existingCustomer && !customerId.startsWith("guest-")) {
-        await adminSupa.from("customers").insert({
+        // Try with real mobile first
+        const { error: insertErr } = await adminSupa.from("customers").insert({
           id:     customerId,
           mobile: deliveryAddress.mobile,
           name:   deliveryAddress.name,
-        }).throwOnError().catch(async () => {
-          // If insert fails (e.g. mobile UNIQUE conflict), try with placeholder mobile
+        });
+        if (insertErr) {
+          // Fallback: placeholder mobile (in case NOT NULL or UNIQUE constraint)
           await adminSupa.from("customers").insert({
             id:     customerId,
-            mobile: `_ph_${customerId!.replace(/-/g,"").substring(0,16)}`,
+            mobile: `_ph_${customerId!.replace(/-/g, "").substring(0, 16)}`,
             name:   deliveryAddress.name,
-          }).throwOnError().catch(() => { /* ignore — row might already exist */ });
-        });
+          });
+          // Ignore error — row may already exist from a previous save
+        }
       }
 
       // Create order row (schema column names)
