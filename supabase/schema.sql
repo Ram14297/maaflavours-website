@@ -226,7 +226,7 @@ CREATE INDEX IF NOT EXISTS idx_product_images_product_id ON product_images (prod
 
 CREATE TABLE IF NOT EXISTS customers (
   id            UUID    PRIMARY KEY,         -- = auth.users.id
-  mobile        TEXT    UNIQUE NOT NULL,      -- 10-digit Indian mobile, no country code
+  mobile        TEXT    UNIQUE,               -- Indian mobile with +91 prefix (nullable for email-auth users)
   name          TEXT,
   email         TEXT,
   is_active     BOOLEAN NOT NULL DEFAULT TRUE,

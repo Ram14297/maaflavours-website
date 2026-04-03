@@ -52,6 +52,31 @@ export async function POST(request: NextRequest) {
 
     const supabase = createAdminSupabaseClient();
 
+    // ── Ensure customer row exists (email-auth users may not have one yet) ──
+    const { data: existingCustomer } = await supabase
+      .from("customers")
+      .select("id")
+      .eq("id", session.userId)
+      .maybeSingle();
+
+    if (!existingCustomer) {
+      // Auto-create customer row so FK constraint is satisfied
+      const { error: insertErr } = await supabase.from("customers").insert({
+        id:     session.userId,
+        email:  session.email || null,
+        name:   session.name  || "",
+        mobile: null,
+      });
+      if (insertErr && insertErr.code !== "23505") {
+        // 23505 = unique violation (row already exists) — safe to ignore
+        console.error("[addresses POST] customer auto-create failed:", insertErr.message);
+        return NextResponse.json(
+          { error: "Could not create customer record. Please save your profile first." },
+          { status: 500 }
+        );
+      }
+    }
+
     // If this is the first address, make it default
     const { count } = await supabase
       .from("customer_addresses")
