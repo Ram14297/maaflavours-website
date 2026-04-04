@@ -11,22 +11,17 @@ import { useCheckoutStore, PaymentMethod } from "@/store/checkoutStore";
 import { useCartStore } from "@/store/cartStore";
 import { formatPrice } from "@/lib/utils";
 import toast from "react-hot-toast";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { load: loadCashfreeSDK } = require("@cashfreepayments/cashfree-js") as { load: (opts: { mode: string }) => Promise<any> };
 
 const COD_CHARGE = 3000; // ₹30 in paise
 
-// ─── Load Cashfree SDK ─────────────────────────────────────────────────────
-function loadCashfree(): Promise<boolean> {
-  return new Promise((resolve) => {
-    if (typeof window !== "undefined" && (window as any).Cashfree) {
-      resolve(true);
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
-    script.onload  = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.body.appendChild(script);
-  });
+// ─── Load Cashfree SDK (npm package — no CDN dependency) ───────────────────
+let _cashfreeInstance: any = null;
+async function loadCashfree(mode: "sandbox" | "production"): Promise<any> {
+  if (_cashfreeInstance) return _cashfreeInstance;
+  _cashfreeInstance = await loadCashfreeSDK({ mode });
+  return _cashfreeInstance;
 }
 
 // ─── Payment method config ─────────────────────────────────────────────────
@@ -133,11 +128,10 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
 
       const { paymentSessionId, cfEnv } = cfData;
 
-      // Step 3: Load Cashfree SDK & open modal
-      const loaded = await loadCashfree();
-      if (!loaded) throw new Error("Could not load payment SDK. Check your internet connection.");
-
-      const cashfree = (window as any).Cashfree({ mode: cfEnv === "production" ? "production" : "sandbox" });
+      // Step 3: Load Cashfree SDK (npm package) & open modal
+      const sdkMode = cfEnv === "production" ? "production" : "sandbox";
+      const cashfree = await loadCashfree(sdkMode);
+      if (!cashfree) throw new Error("Could not load payment SDK. Check your internet connection.");
 
       cashfree.checkout({
         paymentSessionId,
