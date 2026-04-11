@@ -1,5 +1,5 @@
 // src/app/blog/page.tsx
-// Maa Flavours — Blog / Recipes (Coming Soon)
+// Maa Flavours — Blog (Coming Soon) + Customer Reviews
 
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -7,14 +7,40 @@ import { ChevronRight, BookOpen } from "lucide-react";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import NavbarWithCart from "@/components/layout/NavbarWithCart";
 import Footer from "@/components/layout/Footer";
+import TestimonialsSection, { Testimonial } from "@/components/reviews/TestimonialsSection";
+import { createAdminSupabaseClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Recipes & Stories — Coming Soon | Maa Flavours",
+  title: "Recipes & Stories | Maa Flavours",
   description:
-    "Our blog is coming soon! Stories, recipes, and Andhra food culture — straight from the Maa Flavours kitchen in Ongole.",
+    "Stories, recipes, and Andhra food culture — straight from the Maa Flavours kitchen in Ongole. See what our customers across India are saying.",
 };
 
-export default function BlogPage() {
+// Fetch approved testimonials from Supabase (server-side, no API key exposed)
+async function getTestimonials(): Promise<Testimonial[]> {
+  try {
+    const supabase = createAdminSupabaseClient();
+    const { data, error } = await supabase
+      .from("testimonials")
+      .select("id, name, city, rating, review, product, source, created_at")
+      .eq("is_approved", true)
+      .order("sort_order", { ascending: true })
+      .limit(12);
+
+    if (error) throw error;
+    return (data as Testimonial[]) ?? [];
+  } catch {
+    // Return empty array on error — section simply won't render
+    return [];
+  }
+}
+
+// Google review link — update once Google Business is verified
+const GOOGLE_REVIEW_LINK = ""; // e.g. https://g.page/r/CXXXXreview
+
+export default async function BlogPage() {
+  const testimonials = await getTestimonials();
+
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--color-warm-white)" }}>
       <AnnouncementBar />
@@ -54,7 +80,7 @@ export default function BlogPage() {
         </section>
 
         {/* ── Coming Soon ─────────────────────────────────────────────── */}
-        <section className="flex-1 section-padding flex items-center" style={{ background: "var(--color-warm-white)" }}>
+        <section className="section-padding" style={{ background: "var(--color-warm-white)" }}>
           <div className="section-container">
             <div className="max-w-lg mx-auto text-center flex flex-col items-center gap-6">
 
@@ -119,6 +145,14 @@ export default function BlogPage() {
             </div>
           </div>
         </section>
+
+        {/* ── Customer Reviews ─────────────────────────────────────────── */}
+        {testimonials.length > 0 && (
+          <TestimonialsSection
+            testimonials={testimonials}
+            googleReviewLink={GOOGLE_REVIEW_LINK || undefined}
+          />
+        )}
 
       </main>
 
