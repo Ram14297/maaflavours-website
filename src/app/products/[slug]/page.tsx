@@ -256,38 +256,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 </p>
               </div>
 
-              {/* Rating row */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <Star
-                      key={s}
-                      size={17}
-                      fill="var(--color-gold)"
-                      style={{ color: "var(--color-gold)" }}
-                    />
-                  ))}
-                </div>
-                <span
-                  className="font-dm-sans font-bold text-lg"
-                  style={{ color: "var(--color-brown)" }}
-                >
-                  4.9
-                </span>
-                <span
-                  className="font-dm-sans text-sm"
-                  style={{ color: "var(--color-grey)" }}
-                >
-                  · 47 reviews
-                </span>
-                <a
-                  href="#reviews"
-                  className="font-dm-sans text-sm font-medium transition-colors hover:opacity-80"
-                  style={{ color: "var(--color-crimson)" }}
-                >
-                  Read all →
-                </a>
-              </div>
 
               {/* Gold ornament */}
               <div className="ornament-line" />

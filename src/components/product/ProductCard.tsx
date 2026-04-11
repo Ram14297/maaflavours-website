@@ -306,15 +306,6 @@ export default function ProductCard({
           <span className={`badge-spice text-[0.65rem] font-semibold ${spiceConfig.className}`}>
             {spiceConfig.emoji} {spiceConfig.label}
           </span>
-          <div className="flex items-center gap-0.5">
-            <Star size={11} fill="var(--color-gold)" style={{ color: "var(--color-gold)" }} />
-            <span
-              className="font-dm-sans text-xs font-semibold"
-              style={{ color: "var(--color-brown)" }}
-            >
-              4.9
-            </span>
-          </div>
         </div>
 
         {/* Name */}
