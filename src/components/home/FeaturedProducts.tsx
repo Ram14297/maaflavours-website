@@ -117,20 +117,6 @@ function ProductCard({ product }: ProductCardProps) {
             {spiceConfig.emoji} {spiceConfig.label}
           </span>
 
-          {/* Star rating placeholder */}
-          <div className="flex items-center gap-1">
-            <Star
-              size={11}
-              fill="var(--color-gold)"
-              style={{ color: "var(--color-gold)" }}
-            />
-            <span
-              className="font-dm-sans text-xs font-semibold"
-              style={{ color: "var(--color-brown)" }}
-            >
-              4.9
-            </span>
-          </div>
         </div>
 
         {/* Product name */}
