@@ -5,7 +5,7 @@
 // Accessible tab panel with smooth transitions
 
 import { useState } from "react";
-import { Truck, Package, Leaf, Info } from "lucide-react";
+import { Truck, Package, Leaf, Info, Lock, Thermometer, Utensils, Snowflake, Sun, Droplets, AlertTriangle } from "lucide-react";
 import { SHIPPING } from "@/lib/constants/products";
 
 interface ProductInfoTabsProps {
@@ -296,7 +296,7 @@ export default function ProductInfoTabs({
               border: "1px solid rgba(200,150,12,0.15)",
             }}
           >
-            <span className="text-xl flex-shrink-0">⚠️</span>
+            <AlertTriangle size={18} className="flex-shrink-0 mt-0.5" style={{ color: "var(--color-gold)" }} />
             <p
               className="font-dm-sans text-sm leading-relaxed"
               style={{ color: "var(--color-brown)" }}
@@ -308,32 +308,32 @@ export default function ProductInfoTabs({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[
               {
-                emoji: "🏺",
+                icon: Lock,
                 tip: "Keep Sealed When Not in Use",
                 detail: "Always close the pack tightly after every use to prevent air exposure.",
               },
               {
-                emoji: "🌡️",
+                icon: Thermometer,
                 tip: "Cool, Dry Storage",
                 detail: `Unopened: room temperature for up to ${shelfLifeDays} days. Once opened, refrigerate for best results.`,
               },
               {
-                emoji: "🥄",
+                icon: Utensils,
                 tip: "Use a Dry Spoon Always",
                 detail: "Never introduce water into the pack. Always use a dry, clean spoon to avoid spoilage.",
               },
               {
-                emoji: "❄️",
+                icon: Snowflake,
                 tip: "Refrigerate After Opening",
                 detail: "Once opened, refrigerate and consume within 60 days for best taste.",
               },
               {
-                emoji: "☀️",
+                icon: Sun,
                 tip: "Avoid Direct Sunlight",
                 detail: "Store away from direct sunlight or heat sources to preserve colour and flavour.",
               },
               {
-                emoji: "🌊",
+                icon: Droplets,
                 tip: "Oil Should Cover Pickle",
                 detail: "If the oil level drops below the pickle, add a small amount of fresh sesame oil to keep it preserved.",
               },
@@ -346,7 +346,7 @@ export default function ProductInfoTabs({
                   border: "1px solid rgba(200,150,12,0.1)",
                 }}
               >
-                <span className="text-xl flex-shrink-0">{item.emoji}</span>
+                <item.icon size={18} className="flex-shrink-0 mt-0.5" style={{ color: "var(--color-gold)" }} />
                 <div>
                   <p
                     className="font-dm-sans font-semibold text-sm mb-1"

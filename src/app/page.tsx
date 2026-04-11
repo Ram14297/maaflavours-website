@@ -23,7 +23,6 @@ import FeaturedProducts from "@/components/home/FeaturedProducts";
 import CategorySection from "@/components/home/CategorySection";
 import HowItWorks from "@/components/home/HowItWorks";
 import RecipeInspiration from "@/components/home/RecipeInspiration";
-import Newsletter from "@/components/home/Newsletter";
 import Footer from "@/components/layout/Footer";
 
 // Lazy-load OTP modal to keep initial bundle small
@@ -132,9 +131,6 @@ export default function HomePage() {
         <div className="reveal">
           <RecipeInspiration />
         </div>
-
-        {/* ─── 11. Newsletter ──────────────────────────────────────────── */}
-        <Newsletter />
 
       </main>
 

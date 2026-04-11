@@ -282,12 +282,12 @@ function ProfileTab({ user }: { user: NonNullable<ReturnType<typeof useAuth>["us
           </label>
           <div
             className="w-full px-4 py-3 rounded-xl font-dm-sans text-sm"
-            style={{ background: "var(--color-cream)", color: "var(--color-grey)", border: "1px solid rgba(200,150,12,0.15)" }}
+            style={{ background: "var(--color-cream)", color: user.mobile ? "var(--color-brown)" : "var(--color-grey)", border: "1px solid rgba(200,150,12,0.15)" }}
           >
-            {user.mobile}
+            {user.mobile ? `+91 ${user.mobile.replace(/^\+91/, "").replace(/^91/, "")}` : "Not provided"}
           </div>
           <p className="font-dm-sans text-xs mt-1" style={{ color: "var(--color-grey)" }}>
-            Mobile number cannot be changed.
+            {user.mobile ? "Mobile number cannot be changed." : "Mobile number is captured when you place an order."}
           </p>
         </div>
 
