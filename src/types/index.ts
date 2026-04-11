@@ -271,7 +271,7 @@ export interface VerifyOtpResponse {
 export interface ShippingConfig {
   free_shipping_threshold: number;  // in paise (default: ₹499 = 49900)
   standard_delivery_charge: number; // in paise (default: ₹49 = 4900)
-  cod_extra_charge: number;         // in paise (default: ₹30 = 3000)
+  cod_extra_charge: number;         // in paise (default: ₹50 = 5000)
   estimated_days_min: number;
   estimated_days_max: number;
 }

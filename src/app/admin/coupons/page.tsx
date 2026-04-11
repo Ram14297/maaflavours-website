@@ -54,7 +54,7 @@ const STATUS_CFG = {
 const TYPE_CFG = {
   flat:          { icon:"\u20b9", label:"Flat Amount",   colour:"#C8960C", desc:"Fixed rupee discount on cart total" },
   percent:       { icon:"%",   label:"Percentage",    colour:"#C0272D", desc:"% off the cart total"                },
-  free_shipping: { icon:"\ud83dude9a", label:"Free Shipping", colour:"#4A2C0A", desc:"Waives delivery charges entirely"   },
+  free_shipping: { icon:"\ud83d\ude9a", label:"Free Shipping", colour:"#4A2C0A", desc:"Waives delivery charges entirely"   },
 };
 
 const EMPTY_FORM = {
@@ -330,7 +330,7 @@ export default function CouponsPage() {
                     </div>
                     <div className="text-right shrink-0">
                       <p style={{ fontFamily:"'Playfair Display',serif", fontSize:22, fontWeight:700, color:typeC.colour, lineHeight:1 }}>
-                        {c.type==="free_shipping" ? "\ud83dude9a" : c.type==="percent" ? `${c.value}%` : INR(c.value)}
+                        {c.type==="free_shipping" ? "\ud83d\ude9a" : c.type==="percent" ? `${c.value}%` : INR(c.value)}
                       </p>
                       <p style={{ fontSize:10, color:A.grey, marginTop:2 }}>
                         {c.type==="free_shipping" ? "free delivery" : c.type==="percent" ? "off order" : "flat off"}
@@ -580,7 +580,7 @@ export default function CouponsPage() {
               />
             )}
             <Input
-              label="Min Order Value (\u20b9)"
+              label="Min Order Value (₹)"
               type="number" min={0}
               placeholder="e.g. 299 (optional)"
               value={form.minOrderAmount}
@@ -589,7 +589,7 @@ export default function CouponsPage() {
             />
             {form.type === "percent" && (
               <Input
-                label="Max Discount Cap (\u20b9)"
+                label="Max Discount Cap (₹)"
                 type="number" min={0}
                 placeholder="e.g. 200 (optional)"
                 value={form.maxDiscountAmount}

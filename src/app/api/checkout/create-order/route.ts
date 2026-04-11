@@ -68,7 +68,7 @@ const RequestSchema = z.object({
 // ─── Business rules (paise) ──────────────────────────────────────────────────
 const FREE_SHIPPING_THRESHOLD = 49900;  // ₹499
 const STANDARD_SHIPPING       = 6000;   // ₹60
-const COD_CHARGE              = 3000;   // ₹30
+const COD_CHARGE              = 5000;   // ₹50
 
 // GST rates for pickles (HSN 2001, 12%)
 const CGST_RATE  = 6;   // percent
@@ -259,25 +259,41 @@ export async function POST(request: NextRequest) {
     try {
       const adminSupa = createAdminSupabaseClient();
 
-      // Ensure customer row exists (create if missing)
-      const { data: existingCustomer } = await adminSupa
-        .from("customers").select("id").eq("id", customerId).single();
+      // Ensure customer row exists — create if missing (including guests)
+      let resolvedCustomerId = customerId;
 
-      if (!existingCustomer && !customerId.startsWith("guest-")) {
-        // Try with real mobile first
-        const { error: insertErr } = await adminSupa.from("customers").insert({
-          id:     customerId,
+      if (customerId.startsWith("guest-")) {
+        // Create a guest customer row so customer_id NOT NULL is satisfied
+        // Must provide id — customers.id has no default (it's normally = auth.users.id)
+        const guestId = crypto.randomUUID();
+        const { data: newGuest } = await adminSupa.from("customers").insert({
+          id:     guestId,
           mobile: deliveryAddress.mobile,
           name:   deliveryAddress.name,
-        });
-        if (insertErr) {
-          // Fallback: placeholder mobile (in case NOT NULL or UNIQUE constraint)
-          await adminSupa.from("customers").insert({
+        }).select("id").single();
+        if (newGuest) resolvedCustomerId = newGuest.id;
+        else {
+          // Mobile might already exist — look it up
+          const { data: existing } = await adminSupa.from("customers")
+            .select("id").eq("mobile", deliveryAddress.mobile).single();
+          if (existing) resolvedCustomerId = existing.id;
+        }
+      } else {
+        const { data: existingCustomer } = await adminSupa
+          .from("customers").select("id").eq("id", customerId).single();
+        if (!existingCustomer) {
+          const { error: insertErr } = await adminSupa.from("customers").insert({
             id:     customerId,
-            mobile: `_ph_${customerId!.replace(/-/g, "").substring(0, 16)}`,
+            mobile: deliveryAddress.mobile,
             name:   deliveryAddress.name,
           });
-          // Ignore error — row may already exist from a previous save
+          if (insertErr) {
+            await adminSupa.from("customers").insert({
+              id:     customerId,
+              mobile: `_ph_${customerId.replace(/-/g, "").substring(0, 16)}`,
+              name:   deliveryAddress.name,
+            });
+          }
         }
       }
 
@@ -285,7 +301,7 @@ export async function POST(request: NextRequest) {
       const { data: newOrder, error: orderError } = await adminSupa
         .from("orders")
         .insert({
-          customer_id:      customerId.startsWith("guest-") ? null : customerId,
+          customer_id:      resolvedCustomerId,
           shipping_address: deliveryAddress,        // JSONB snapshot
           status:           "pending",
           payment_status:   "pending",

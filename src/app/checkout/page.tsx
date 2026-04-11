@@ -53,12 +53,15 @@ function CheckoutContent() {
   const { items, clearCart } = useCartStore();
   const [loginOpen, setLoginOpen] = useState(false);
 
-  // Redirect if cart is empty
-  if (items.length === 0) {
-    return <EmptyCartRedirect />;
-  }
+  // ─── Hydration guard ──────────────────────────────────────────────────────
+  // Zustand persist reads from localStorage (client-only). Without this the
+  // server renders items=[] → EmptyCartRedirect, client sees real items →
+  // React hydration mismatch #418/#423 → blank page.
+  // Fix: all hooks must be declared BEFORE any conditional returns.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
-  // ─── Handle successful payment (Razorpay / Razorpay returns here) ────
+  // ─── All callbacks declared unconditionally (Rules of Hooks) ─────────────
   const handleOrderSuccess = useCallback(
     (orderId: string, paymentId: string) => {
       clearCart();
@@ -70,16 +73,30 @@ function CheckoutContent() {
     [clearCart, resetCheckout, router, paymentMethod]
   );
 
-  // ─── COD confirmation from review step ──────────────────────────────
   const handleReviewConfirm = useCallback(async () => {
     setPlacingOrder(true);
     setOrderError("");
-    // PaymentOptions handles the actual API call
-    // For COD from review step, trigger the PaymentOptions handler
-    // This is a safety net — normally PaymentOptions handles it directly
     setPlacingOrder(false);
     setStep("payment");
   }, [setPlacingOrder, setOrderError, setStep]);
+
+  // ─── Conditional renders AFTER all hooks ─────────────────────────────────
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <span className="text-4xl animate-pulse">🫙</span>
+          <p className="font-dm-sans text-sm" style={{ color: "var(--color-grey)" }}>
+            Loading checkout…
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return <EmptyCartRedirect />;
+  }
 
   return (
     <div className="section-container py-6 lg:py-10">
@@ -184,7 +201,7 @@ function CheckoutContent() {
       >
         {[
           { icon: "🔒", text: "256-bit SSL Encryption" },
-          { icon: "🏦", text: "Razorpay Secured" },
+          { icon: "🏦", text: "Cashfree Secured" },
           { icon: "💳", text: "PCI DSS Compliant" },
           { icon: "🚚", text: "Pan-India Delivery" },
           { icon: "🌿", text: "No Preservatives" },

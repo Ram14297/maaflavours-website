@@ -17,19 +17,6 @@ export const viewport: Viewport = {
 
 export default function AdminLoginLayout({ children }: { children: React.ReactNode }) {
   // Standalone layout — no AdminShell wrapper
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com"/>
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous"/>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body suppressHydrationWarning style={{ margin: 0, padding: 0 }}>
-        {children}
-      </body>
-    </html>
-  );
+  // Note: <html>/<body> are provided by the root layout — do NOT add them here
+  return <>{children}</>;
 }

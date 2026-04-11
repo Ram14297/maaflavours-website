@@ -5,6 +5,7 @@
 // Reads cart count from store directly — no props needed for cart
 // Still accepts onAccountClick for OTP modal; defaults to /login navigation
 
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cartStore";
 import Navbar from "./Navbar";
@@ -20,7 +21,9 @@ export default function NavbarWithCart({
 }: NavbarWithCartProps) {
   const { itemCount, openCart } = useCartStore();
   const router = useRouter();
-  const count = itemCount();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  const count = mounted ? itemCount() : 0;
 
   // Default: navigate to /login. Pages that open an OTP modal pass their own handler.
   const handleAccountClick = onAccountClick ?? (() => router.push("/login"));

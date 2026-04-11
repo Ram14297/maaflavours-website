@@ -9,7 +9,7 @@ import { useCheckoutStore } from "@/store/checkoutStore";
 import { useCartStore } from "@/store/cartStore";
 import { formatPrice } from "@/lib/utils";
 
-const COD_CHARGE = 3000;
+const COD_CHARGE = 5000;
 
 interface OrderReviewStepProps {
   onConfirm: () => void;

@@ -15,11 +15,6 @@ export const metadata: Metadata = {
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   // Middleware already validates the JWT — if we reach here, user is authenticated
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>
-        <AdminShell>{children}</AdminShell>
-      </body>
-    </html>
-  );
+  // Note: <html>/<body> are provided by the root layout — do NOT add them here
+  return <AdminShell>{children}</AdminShell>;
 }

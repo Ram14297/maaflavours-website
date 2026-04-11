@@ -9,7 +9,6 @@ import { createAdminSupabaseClient } from "@/lib/supabase/server";
 
 // Cashfree sends a signature header we can verify for security
 // (optional but recommended in production)
-const CF_SECRET_KEY = process.env.CASHFREE_SECRET_KEY || "";
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,10 +36,6 @@ export async function POST(request: NextRequest) {
     // We cannot reverse the UUID from just the truncated form, so we query by cf_order_id
     const adminSupa = createAdminSupabaseClient();
 
-    // Find order by cashfree_order_id column, or by matching pattern in metadata
-    // We store the raw UUID as the orderId; cf_order_id = MF_ + uuid.replace(/-/g,"").slice(0,40)
-    // Best approach: store cf_order_id in the orders table on creation (we'll add it here via update)
-
     // ─── Map Cashfree status → our order/payment status ──────────────────
     let orderStatus: string | null   = null;
     let paymentStatusDb: string | null = null;
@@ -57,45 +52,49 @@ export async function POST(request: NextRequest) {
     }
 
     if (orderStatus) {
-      // Try to find the order. cashfree_order_id column might not exist yet —
-      // we'll search orders table. The cfOrderId is `MF_` + first 40 chars of uuid (no dashes).
-      // We stored the order UUID in the return_url as orderId param — but we can also
-      // try updating by a generated match.
-
-      // Strategy: query orders where cashfree_order_id = cfOrderId (best)
-      // or where the generated cf_id matches (fallback)
-      const { data: orders, error: findErr } = await adminSupa
+      // First try direct lookup by cashfree_order_id (stored during cashfree-create)
+      const { data: directMatch } = await adminSupa
         .from("orders")
         .select("id, status, payment_status")
-        .or(`cashfree_order_id.eq.${cfOrderId},payment_method.eq.cashfree`)
-        .limit(50);
+        .eq("cashfree_order_id", cfOrderId)
+        .maybeSingle();
 
-      if (!findErr && orders) {
-        // Find the exact one by regenerating cf_order_id
-        const matchedOrder = orders.find(o => {
-          const generatedCfId = `MF_${o.id.replace(/-/g, "").substring(0, 40)}`;
-          return generatedCfId === cfOrderId;
-        });
+      // Fallback: scan recent cashfree orders and match by regenerating the cf_order_id
+      let matchedOrder = directMatch;
+      if (!matchedOrder) {
+        const { data: orders, error: findErr } = await adminSupa
+          .from("orders")
+          .select("id, status, payment_status")
+          .eq("payment_method", "cashfree")
+          .order("created_at", { ascending: false })
+          .limit(100);
 
-        if (matchedOrder) {
-          const { error: updateErr } = await adminSupa
-            .from("orders")
-            .update({
-              status:           orderStatus,
-              payment_status:   paymentStatusDb,
-              cashfree_payment_id: cfPaymentId || null,
-              updated_at:       new Date().toISOString(),
-            })
-            .eq("id", matchedOrder.id);
-
-          if (updateErr) {
-            console.error("[cashfree-webhook] Update failed:", updateErr.message);
-          } else {
-            console.log(`[cashfree-webhook] Order ${matchedOrder.id} → ${orderStatus} / ${paymentStatusDb}`);
-          }
-        } else {
-          console.warn("[cashfree-webhook] No matching order found for cf_order_id:", cfOrderId);
+        if (!findErr && orders) {
+          matchedOrder = orders.find(o => {
+            const generatedCfId = `MF_${o.id.replace(/-/g, "").substring(0, 40)}`;
+            return generatedCfId === cfOrderId;
+          }) || null;
         }
+      }
+
+      if (matchedOrder) {
+        const { error: updateErr } = await adminSupa
+          .from("orders")
+          .update({
+            status:              orderStatus,
+            payment_status:      paymentStatusDb,
+            cashfree_payment_id: cfPaymentId || null,
+            updated_at:          new Date().toISOString(),
+          })
+          .eq("id", matchedOrder.id);
+
+        if (updateErr) {
+          console.error("[cashfree-webhook] Update failed:", updateErr.message);
+        } else {
+          console.log(`[cashfree-webhook] Order ${matchedOrder.id} → ${orderStatus} / ${paymentStatusDb}`);
+        }
+      } else {
+        console.warn("[cashfree-webhook] No matching order found for cf_order_id:", cfOrderId);
       }
     }
 

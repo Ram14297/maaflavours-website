@@ -91,7 +91,7 @@ export default function TermsPage() {
           "UPI (PhonePe, GPay, Paytm, and all UPI apps)",
           "Debit and credit cards (Visa, Mastercard, RuPay)",
           "Net banking",
-          "Cash on Delivery (COD) — subject to ₹30 convenience charge",
+          "Cash on Delivery (COD) — subject to ₹50 convenience charge",
         ]} />
         <p>All online payments are processed securely through Razorpay. We do not store any card or banking information on our servers.</p>
         <p>We reserve the right to refuse or cancel orders at our discretion, including in cases of suspected fraud, incorrect pricing, or product unavailability. In such cases, a full refund will be issued.</p>

@@ -23,7 +23,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Do you accept Cash on Delivery (COD)?",
-        a: "Yes! COD is available across India. A convenience charge of ₹30 is added to COD orders. For orders above ₹499, shipping is free — the COD charge is separate from shipping.",
+        a: "Yes! COD is available across India. A convenience charge of ₹50 is added to COD orders. For orders above ₹499, shipping is free — the COD charge is separate from shipping.",
       },
       {
         q: "Is it safe to pay online on your website?",

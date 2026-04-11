@@ -219,7 +219,7 @@ export default function ProductInfoTabs({
               icon: "💵",
               title: "Cash on Delivery",
               lines: [
-                "COD available at extra ₹30",
+                "COD available at extra ₹50",
                 "Select COD at checkout",
                 "Pay on delivery to courier partner",
               ],

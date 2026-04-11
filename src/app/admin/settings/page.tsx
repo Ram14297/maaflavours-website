@@ -145,6 +145,24 @@ export default function SettingsPage() {
 
   return (
     <AdminPage>
+      {/* Mobile tab pills — outside the flex row so they don't steal width */}
+      <div className="lg:hidden w-full -mt-2 mb-4">
+        <div className="flex gap-2 overflow-x-auto pb-1 flex-nowrap">
+          {TABS.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap shrink-0"
+              style={{
+                background: tab===t.id ? A.brown : "#fff",
+                color:      tab===t.id ? "#fff"  : A.grey,
+                border:`1px solid ${A.border}`, fontWeight: tab===t.id ? 600 : 400,
+              }}>
+              {t.icon} {t.label}
+              {dirty.has(t.id) && <span className="w-1.5 h-1.5 rounded-full" style={{ background:tab===t.id?"#fff":A.gold }}/>}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="flex gap-6 items-start">
 
         {/* Sidebar tabs */}
@@ -164,24 +182,6 @@ export default function SettingsPage() {
               {dirty.has(t.id) && <span className="ml-auto w-2 h-2 rounded-full" style={{ background:A.gold }}/>}
             </button>
           ))}
-        </div>
-
-        {/* Mobile tab pills */}
-        <div className="lg:hidden w-full -mt-2 mb-2">
-          <div className="flex gap-2 overflow-x-auto pb-1 flex-nowrap">
-            {TABS.map(t => (
-              <button key={t.id} onClick={() => setTab(t.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs whitespace-nowrap shrink-0"
-                style={{
-                  background: tab===t.id ? A.brown : "#fff",
-                  color:      tab===t.id ? "#fff"  : A.grey,
-                  border:`1px solid ${A.border}`, fontWeight: tab===t.id ? 600 : 400,
-                }}>
-                {t.icon} {t.label}
-                {dirty.has(t.id) && <span className="w-1.5 h-1.5 rounded-full" style={{ background:tab===t.id?"#fff":A.gold }}/>}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Content */}

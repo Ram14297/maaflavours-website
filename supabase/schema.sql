@@ -61,7 +61,8 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
   CREATE TYPE payment_method_enum AS ENUM (
-    'razorpay_upi', 'razorpay_card', 'razorpay_netbanking', 'cod'
+    'razorpay_upi', 'razorpay_card', 'razorpay_netbanking', 'cod',
+    'cashfree', 'phonepe', 'phonepe_qr'
   );
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
@@ -326,6 +327,10 @@ CREATE TABLE IF NOT EXISTS orders (
   -- Razorpay
   razorpay_order_id    TEXT   UNIQUE,   -- rzp_ord_xxx
   razorpay_payment_id  TEXT   UNIQUE,   -- rzp_pay_xxx
+
+  -- Cashfree
+  cashfree_order_id    TEXT   UNIQUE,   -- MF_<uuid_no_dashes>
+  cashfree_payment_id  TEXT   UNIQUE,   -- cf_pay_xxx
 
   -- Shipping
   tracking_id          TEXT,

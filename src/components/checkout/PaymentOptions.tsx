@@ -11,18 +11,8 @@ import { useCheckoutStore, PaymentMethod } from "@/store/checkoutStore";
 import { useCartStore } from "@/store/cartStore";
 import { formatPrice } from "@/lib/utils";
 import toast from "react-hot-toast";
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { load: loadCashfreeSDK } = require("@cashfreepayments/cashfree-js") as { load: (opts: { mode: string }) => Promise<any> };
 
-const COD_CHARGE = 3000; // ₹30 in paise
-
-// ─── Load Cashfree SDK (npm package — no CDN dependency) ───────────────────
-let _cashfreeInstance: any = null;
-async function loadCashfree(mode: "sandbox" | "production"): Promise<any> {
-  if (_cashfreeInstance) return _cashfreeInstance;
-  _cashfreeInstance = await loadCashfreeSDK({ mode });
-  return _cashfreeInstance;
-}
+const COD_CHARGE = 5000; // ₹50 in paise
 
 // ─── Payment method config ─────────────────────────────────────────────────
 const PAYMENT_METHODS: {
@@ -53,7 +43,7 @@ const PAYMENT_METHODS: {
     label: "Cash on Delivery",
     subtitle: "Pay in cash when your order arrives",
     icon: <Banknote size={20} />,
-    tag: "+ ₹30",
+    tag: "+ ₹50",
     codCharge: true,
   },
 ];
@@ -127,30 +117,16 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
       if (!cfRes.ok) throw new Error(cfData.error || "Failed to init payment");
 
       const { paymentSessionId, cfEnv } = cfData;
+      if (!paymentSessionId) throw new Error("Could not get payment session. Please try again.");
 
-      // Step 3: Load Cashfree SDK (npm package) & open modal
-      const sdkMode = cfEnv === "production" ? "production" : "sandbox";
-      const cashfree = await loadCashfree(sdkMode);
-      if (!cashfree) throw new Error("Could not load payment SDK. Check your internet connection.");
+      // Step 3: Redirect to Cashfree hosted checkout page.
+      // Sandbox: payments-test.cashfree.com | Production: payments.cashfree.com
+      const checkoutBase = cfEnv === "production"
+        ? "https://payments.cashfree.com/order"
+        : "https://payments-test.cashfree.com/order";
 
-      cashfree.checkout({
-        paymentSessionId,
-        redirectTarget: "_modal",
-      }).then((result: any) => {
-        if (result.error) {
-          setOrderError(result.error.message || "Payment failed. Please try again.");
-          setPlacingOrder(false);
-          toast.error(result.error.message || "Payment failed");
-        } else if (result.paymentDetails || result.redirect) {
-          // Payment successful
-          clearCart();
-          onOrderSuccess(orderId, paymentSessionId);
-        }
-      }).catch((err: any) => {
-        setOrderError(err.message || "Payment failed");
-        setPlacingOrder(false);
-        toast.error("Payment failed. Please try again.");
-      });
+      clearCart();
+      window.location.href = `${checkoutBase}/?session_id=${paymentSessionId}`;
 
     } catch (err: any) {
       setOrderError(err.message || "Something went wrong");
@@ -376,7 +352,7 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
             <span className="text-lg flex-shrink-0">💡</span>
             <div>
               <p className="font-dm-sans font-semibold text-sm" style={{ color: "var(--color-brown)" }}>
-                Cash on Delivery (+₹30 convenience fee)
+                Cash on Delivery (+₹50 convenience fee)
               </p>
               <p className="font-dm-sans text-xs mt-1 leading-relaxed" style={{ color: "var(--color-grey)" }}>
                 Please keep <strong style={{ color: "var(--color-brown)" }}>{formatPrice(codTotal)}</strong> ready at delivery.

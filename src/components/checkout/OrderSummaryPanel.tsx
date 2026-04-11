@@ -9,7 +9,7 @@ import { ShoppingBag, Edit2 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { formatPrice } from "@/lib/utils";
 
-const COD_CHARGE = 3000;
+const COD_CHARGE = 5000;
 
 export default function OrderSummaryPanel({ isCOD = false }: { isCOD?: boolean }) {
   const {

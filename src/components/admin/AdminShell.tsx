@@ -92,6 +92,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     router.refresh();
   }
 
+  // Login page gets its own full-screen layout — no shell
+  if (pathname === "/admin/login") return <>{children}</>;
+
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: "#1a0f05", fontFamily: "'DM Sans', sans-serif" }}>
 

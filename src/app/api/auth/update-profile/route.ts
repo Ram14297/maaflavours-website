@@ -12,7 +12,7 @@ import { z } from "zod";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 
 const RequestSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().optional().or(z.literal("")),
   name: z.string().min(2).max(80).trim(),
   mobile: z.string().regex(/^\+91[6-9]\d{9}$/).optional().nullable().or(z.literal("")),
 });
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
         .from("customers")
         .insert({
           id: userId,
-          email,
+          ...(email ? { email } : {}),
           name,
           mobile: mobileForInsert,
         });
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
   const updatedSession = {
     ...(existingSession || {}),
     userId:    userId || existingSession?.userId || "",
-    email:     existingSession?.email || email,
+    email:     existingSession?.email || email || "",
     name,
     isNewUser: false,
     exp:       Math.floor(Date.now() / 1000) + SESSION_MAX_AGE,

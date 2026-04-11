@@ -296,7 +296,7 @@ export default function CartDrawer({ onClose }: CartDrawerProps) {
               }}
             >
               <Zap size={16} fill="var(--color-brown)" />
-              Express Pay — UPI / Razorpay
+              Express Pay — UPI / Cashfree
             </Link>
 
             <button
