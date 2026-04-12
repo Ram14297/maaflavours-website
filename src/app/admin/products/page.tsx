@@ -37,6 +37,7 @@ export default function ProductsPage() {
   const [pages,      setPages]      = useState(1);
   const [loading,    setLoading]    = useState(true);
   const [search,     setSearch]     = useState("");
+  const [typeTab,    setTypeTab]    = useState<"" | "pickle" | "powder">("");
   const [spiceFilter,setSpiceFilter]= useState("");
   const [activeFilter,setActiveFilter] = useState("");
   const [viewMode,   setViewMode]   = useState<"cards" | "table">("cards");
@@ -53,8 +54,9 @@ export default function ProductsPage() {
   const load = useCallback(async (p: number) => {
     setLoading(true);
     const params = new URLSearchParams({ page: String(p), limit:"12" });
-    if (search)      params.set("search", search);
-    if (spiceFilter) params.set("spice",  spiceFilter);
+    if (search)       params.set("search", search);
+    if (typeTab)      params.set("type",   typeTab);
+    if (spiceFilter)  params.set("spice",  spiceFilter);
     if (activeFilter !== "") params.set("active", activeFilter);
     try {
       const r = await fetch(`/api/admin/products?${params}`);
@@ -64,7 +66,7 @@ export default function ProductsPage() {
       setPages(d.pages   || 1);
     } catch {}
     setLoading(false);
-  }, [search, spiceFilter, activeFilter]);
+  }, [search, typeTab, spiceFilter, activeFilter]);
 
   useEffect(() => { load(page); }, [page, load]);
 
@@ -114,6 +116,33 @@ export default function ProductsPage() {
           ✅ {toast}
         </div>
       )}
+
+      {/* ── Type Tabs ── */}
+      <div className="flex gap-1 border-b" style={{ borderColor: A.border }}>
+        {([
+          { value: "",       label: "All Products" },
+          { value: "pickle", label: "🫙 Pickles" },
+          { value: "powder", label: "🌶️ Spice Powders" },
+        ] as const).map(tab => (
+          <button
+            key={tab.value}
+            onClick={() => { setTypeTab(tab.value); setPage(1); }}
+            className="px-4 py-2.5 text-sm font-medium transition-colors relative"
+            style={{
+              color:      typeTab === tab.value ? A.brown : A.grey,
+              fontWeight: typeTab === tab.value ? 700 : 400,
+            }}
+          >
+            {tab.label}
+            {typeTab === tab.value && (
+              <div
+                className="absolute bottom-0 left-0 right-0 h-0.5 rounded-t"
+                style={{ background: A.gold }}
+              />
+            )}
+          </button>
+        ))}
+      </div>
 
       {/* ── Toolbar ── */}
       <div className="flex flex-wrap items-end gap-3">

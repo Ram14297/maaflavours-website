@@ -123,7 +123,7 @@ function ProductsContent() {
   const [liveProducts, setLiveProducts] = useState<ProductSeed[]>(PRODUCTS);
 
   useEffect(() => {
-    fetch("/api/products?limit=50")
+    fetch("/api/products?limit=50&type=pickle")
       .then((r) => r.json())
       .then((data) => {
         if (!Array.isArray(data.products) || data.products.length === 0) return;

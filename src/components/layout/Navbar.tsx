@@ -15,7 +15,8 @@ import { cn } from "@/lib/utils";
 // ─── Static nav links ──────────────────────────────────────────────────────
 const NAV_LINKS = [
   { label: "Home",     href: "/" },
-  { label: "Products", href: "/products" },
+  { label: "Pickles",  href: "/products" },
+  { label: "Powders",  href: "/powders" },
   { label: "Blog",     href: "/blog" },
   { label: "Contact",  href: "/contact" },
 ];
@@ -174,10 +175,10 @@ export default function Navbar({
                   href={link.href}
                   className={cn(
                     "nav-link px-3 py-2 rounded-md text-sm font-medium font-dm-sans transition-colors duration-200",
-                    activeLink === link.href && "active"
+                    (activeLink === link.href || (link.href !== "/" && activeLink.startsWith(link.href))) && "active"
                   )}
                   style={{
-                    color: activeLink === link.href
+                    color: (activeLink === link.href || (link.href !== "/" && activeLink.startsWith(link.href)))
                       ? "var(--color-crimson)"
                       : "var(--color-brown)",
                   }}
@@ -430,11 +431,11 @@ export default function Navbar({
               onClick={() => setMobileOpen(false)}
               className={cn(
                 "px-4 py-3 rounded-xl font-dm-sans font-medium text-[0.9375rem] transition-colors duration-200",
-                activeLink === link.href
+                (activeLink === link.href || (link.href !== "/" && activeLink.startsWith(link.href)))
                   ? "text-crimson bg-crimson/[0.06]"
                   : "hover:bg-cream"
               )}
-              style={{ color: activeLink === link.href ? "var(--color-crimson)" : "var(--color-brown)" }}
+              style={{ color: (activeLink === link.href || (link.href !== "/" && activeLink.startsWith(link.href))) ? "var(--color-crimson)" : "var(--color-brown)" }}
             >
               {link.label}
             </Link>

@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
   try {
     const sp = req.nextUrl.searchParams;
     const category = sp.get("category");
+    const type     = sp.get("type");   // 'pickle' | 'powder' | null
     const spice    = sp.get("spice");
     const sort     = sp.get("sort") || "featured";
     const search   = sp.get("search")?.toLowerCase();
@@ -35,6 +36,7 @@ export async function GET(req: NextRequest) {
         .eq("is_active", true);
 
       if (featured) query = query.eq("is_featured", true);
+      if (type)     query = query.eq("product_type", type);
       if (spice)    query = query.eq("spice_level", spice);
       if (search)   query = query.ilike("name", `%${search}%`);
 

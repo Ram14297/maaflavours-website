@@ -81,6 +81,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
   const [shelfLife,       setShelfLife]       = useState("180");
   const [metaTitle,       setMetaTitle]       = useState("");
   const [metaDesc,        setMetaDesc]        = useState("");
+  const [productType,     setProductType]     = useState<"pickle" | "powder">("pickle");
   const [isActive,        setIsActive]        = useState(true);
   const [isFeatured,      setIsFeatured]      = useState(false);
   const [variants,        setVariants]        = useState<Variant[]>(DEFAULT_VARIANTS);
@@ -117,6 +118,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
         setShelfLife(String(p.shelf_life_days || 180));
         setMetaTitle(p.meta_title || "");
         setMetaDesc(p.meta_description || "");
+        setProductType(p.product_type === "powder" ? "powder" : "pickle");
         setIsActive(p.is_active ?? true);
         setIsFeatured(p.is_featured ?? false);
 
@@ -253,6 +255,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
       slug:              slug || toSlug(name),
       subtitle:          subtitle.trim(),
       tag:               tag.trim(),
+      product_type:      productType,
       spice_level:       spice,
       short_description: shortDesc.trim(),
       description:       description.trim(),
@@ -428,10 +431,39 @@ export default function ProductForm({ productId }: { productId?: string }) {
                   </div>
                 </div>
 
-                {/* Spice level */}
+                {/* Product Type */}
                 <div>
                   <label style={{ color:A.grey, fontSize:11, textTransform:"uppercase", letterSpacing:"0.08em", fontWeight:600 }}>
-                    Spice Level *
+                    Product Type *
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 mt-1.5">
+                    {([
+                      { value: "pickle", label: "🫙 Pickle",              desc: "Avakaya, Gongura, etc." },
+                      { value: "powder", label: "🌶️ Spice Powder (Podi)", desc: "Karam podi, Andhra podi, etc." },
+                    ] as const).map(opt => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setProductType(opt.value)}
+                        className="py-3 px-3 rounded-xl text-left transition-all"
+                        style={{
+                          background: productType === opt.value ? "rgba(74,44,10,0.06)" : "#fff",
+                          border:     `2px solid ${productType === opt.value ? A.brown : A.border}`,
+                        }}
+                      >
+                        <p style={{ fontSize:13, fontWeight:600, color: productType === opt.value ? A.brown : A.grey }}>
+                          {opt.label}
+                        </p>
+                        <p style={{ fontSize:10, color:A.grey, marginTop:2 }}>{opt.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Spice level — only relevant for pickles */}
+                <div>
+                  <label style={{ color:A.grey, fontSize:11, textTransform:"uppercase", letterSpacing:"0.08em", fontWeight:600 }}>
+                    Spice Level {productType === "pickle" ? "*" : "(optional)"}
                   </label>
                   <div className="grid grid-cols-4 gap-2 mt-1.5">
                     {SPICE_OPTIONS.map(opt => (

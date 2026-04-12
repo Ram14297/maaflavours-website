@@ -38,6 +38,7 @@ export interface Product {
   average_rating?: number;
   review_count?: number;
   category_id?: string;
+  product_type: 'pickle' | 'powder';
   created_at: string;
   updated_at: string;
   // SEO

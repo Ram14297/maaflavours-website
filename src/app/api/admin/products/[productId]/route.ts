@@ -63,6 +63,7 @@ export async function PUT(
         shelf_life_days:   productData.shelf_life_days,
         is_active:         productData.is_active,
         is_featured:       productData.is_featured,
+        product_type:      productData.product_type || "pickle",
         category_id:       productData.category_id || null,
         meta_title:        productData.meta_title   || null,
         meta_description:  productData.meta_description || null,

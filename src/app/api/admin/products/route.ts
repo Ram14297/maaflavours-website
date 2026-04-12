@@ -11,9 +11,10 @@ export async function GET(req: NextRequest) {
   const admin = await requireAdmin(req);
   if (!admin) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
-  const sp     = req.nextUrl.searchParams;
-  const search = sp.get("search");
-  const active = sp.get("active");
+  const sp         = req.nextUrl.searchParams;
+  const search     = sp.get("search");
+  const active     = sp.get("active");
+  const typeFilter = sp.get("type");   // 'pickle' | 'powder' | null
   const { page, limit, from, to } = getPagination(sp);
 
   try {
@@ -25,6 +26,7 @@ export async function GET(req: NextRequest) {
       .order("created_at", { ascending: false });
 
     if (active !== null && active !== "") query = query.eq("is_active", active === "true");
+    if (typeFilter) query = query.eq("product_type", typeFilter);
     if (search) query = query.ilike("name", `%${search}%`);
 
     const { data, count, error } = await query.range(from, to);
@@ -81,6 +83,7 @@ export async function POST(req: NextRequest) {
         is_vegetarian:     productData.is_vegetarian    ?? true,
         is_active:         productData.is_active        ?? true,
         is_featured:       productData.is_featured      ?? false,
+        product_type:      productData.product_type     || "pickle",
         category_id:       productData.category_id      || null,
         meta_title:        productData.meta_title        || null,
         meta_description:  productData.meta_description  || null,
