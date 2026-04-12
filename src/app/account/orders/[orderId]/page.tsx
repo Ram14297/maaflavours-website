@@ -20,6 +20,7 @@ import { formatDate, formatPrice } from "@/lib/utils";
 // ─── Full order type ─────────────────────────────────────────────────────
 interface OrderDetail {
   id: string;
+  order_number?: string | null;
   status: string;
   payment_method: string;
   payment_status: string;
@@ -61,45 +62,6 @@ interface OrderDetail {
   courier_name?: string | null;
 }
 
-// ─── Mock data for dev ───────────────────────────────────────────────────
-const MOCK_ORDER: OrderDetail = {
-  id: "mock-a1b2c3d4-shipped",
-  status: "shipped",
-  payment_method: "upi",
-  payment_status: "paid",
-  razorpay_payment_id: "pay_MockRzpId123",
-  razorpay_order_id: null,
-  subtotal_paise: 67000,
-  discount_paise: 0,
-  coupon_code: null,
-  delivery_charge_paise: 0,
-  cod_charge_paise: 0,
-  total_paise: 67000,
-  delivery_address: {
-    full_name: "Priya Reddy",
-    mobile: "9701452929",
-    address_line1: "Flat 4B, Green Valley Apartments",
-    address_line2: "Beside HDFC Bank",
-    landmark: "Near Durgam Cheruvu",
-    city: "Hyderabad",
-    state: "Telangana",
-    pincode: "500032",
-  },
-  items: [
-    { productSlug: "drumstick-pickle", productName: "Drumstick Pickle", variantLabel: "500g", variantIndex: 1, quantity: 1, unitPrice: 32000, lineTotal: 32000 },
-    { productSlug: "lemon-pickle", productName: "Lemon Pickle", variantLabel: "250g", variantIndex: 0, quantity: 1, unitPrice: 15000, lineTotal: 15000 },
-    { productSlug: "pulihora-gongura", productName: "Pulihora Gongura", variantLabel: "250g", variantIndex: 0, quantity: 2, unitPrice: 10000, lineTotal: 20000 },
-  ],
-  created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-  confirmed_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 5 * 60 * 1000).toISOString(),
-  packed_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-  shipped_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-  out_for_delivery_at: null,
-  delivered_at: null,
-  tracking_id: "DTDC123456789IN",
-  tracking_url: "https://trackdtdc.com?tracking=DTDC123456789IN",
-  courier_name: "DTDC",
-};
 
 function SectionCard({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -131,10 +93,9 @@ export default function OrderDetailPage() {
         const res = await fetch(`/api/orders/${orderId}`);
         if (!res.ok) throw new Error("Not found");
         const data = await res.json();
-        setOrder(data.order);
+        setOrder(data.order || null);
       } catch {
-        // Use mock in dev
-        setOrder(MOCK_ORDER);
+        setOrder(null);
       } finally {
         setLoading(false);
       }
@@ -176,9 +137,7 @@ export default function OrderDetailPage() {
     );
   }
 
-  const displayId = order.id.length > 12
-    ? `MF-${order.id.slice(-8).toUpperCase()}`
-    : order.id.toUpperCase();
+  const displayId = order.order_number || `MF-${order.id.slice(-8).toUpperCase()}`;
 
   const timestamps: Record<string, string | null> = {
     confirmed: order.confirmed_at || order.created_at,

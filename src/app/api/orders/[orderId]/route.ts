@@ -24,9 +24,9 @@ export async function GET(
     const { data: order, error } = await supabase
       .from("orders")
       .select(`
-        id, status, payment_method, payment_status,
+        id, order_number, status, payment_method, payment_status,
         razorpay_payment_id, razorpay_order_id,
-        subtotal, discount, coupon_code,
+        subtotal, discount, coupon_discount, coupon_code,
         delivery_charge, cod_charge, total,
         shipping_address,
         tracking_id, tracking_url, courier_name,
@@ -58,6 +58,7 @@ export async function GET(
     // Map to frontend shape
     const mapped = {
       id:                  order.id,
+      order_number:        (order as any).order_number || null,
       status:              order.status,
       payment_method:      order.payment_method,
       payment_status:      order.payment_status,

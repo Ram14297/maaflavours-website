@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const { data: orders, error } = await supabase
       .from("orders")
       .select(`
-        id, status, payment_method, payment_status,
+        id, order_number, status, payment_method, payment_status,
         total, coupon_code, tracking_id, courier_name, created_at,
         order_items (
           product_name, variant_label, product_slug, quantity, total_price
@@ -43,6 +43,7 @@ export async function GET(request: NextRequest) {
     // Map DB columns to frontend shape (total → total_paise, nested items)
     const mapped = (orders || []).map((o: any) => ({
       id:             o.id,
+      order_number:   o.order_number || null,
       status:         o.status,
       payment_method: o.payment_method,
       payment_status: o.payment_status,

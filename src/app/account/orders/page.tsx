@@ -22,6 +22,7 @@ interface OrderItem {
 
 interface OrderSummary {
   id: string;
+  order_number?: string | null;
   status: string;
   payment_method: string;
   payment_status: string;
@@ -54,59 +55,9 @@ const STATUS_FILTERS = [
   { value: "cancelled", label: "Cancelled" },
 ];
 
-// ─── Dev mock orders (shown when Supabase returns empty) ─────────────────
-const MOCK_ORDERS: OrderSummary[] = [
-  {
-    id: "mock-a1b2c3d4-shipped",
-    status: "shipped",
-    payment_method: "upi",
-    payment_status: "paid",
-    total_paise: 59000,
-    items: [
-      { productName: "Drumstick Pickle", variantLabel: "500g", quantity: 1, lineTotal: 32000 },
-      { productName: "Lemon Pickle", variantLabel: "250g", quantity: 1, lineTotal: 15000 },
-      { productName: "Pulihora Gongura", variantLabel: "250g", quantity: 1, lineTotal: 20000 },
-    ],
-    coupon_code: null,
-    tracking_id: "DTDC123456789",
-    courier_name: "DTDC",
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "mock-e5f6g7h8-delivered",
-    status: "delivered",
-    payment_method: "cod",
-    payment_status: "paid",
-    total_paise: 35000,
-    items: [
-      { productName: "Amla Pickle", variantLabel: "500g", quantity: 2, lineTotal: 58000 },
-    ],
-    coupon_code: "WELCOME50",
-    tracking_id: null,
-    courier_name: null,
-    created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "mock-i9j0k1l2-confirmed",
-    status: "confirmed",
-    payment_method: "card",
-    payment_status: "paid",
-    total_paise: 19000,
-    items: [
-      { productName: "Red Chilli Pickle", variantLabel: "250g", quantity: 1, lineTotal: 17000 },
-    ],
-    coupon_code: null,
-    tracking_id: null,
-    courier_name: null,
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-  },
-];
 
 function OrderCard({ order }: { order: OrderSummary }) {
-  const displayId =
-    order.id.length > 12
-      ? `MF-${order.id.slice(-8).toUpperCase()}`
-      : order.id.toUpperCase();
+  const displayId = order.order_number || `MF-${order.id.slice(-8).toUpperCase()}`;
   const totalItems = order.items?.reduce((s, i) => s + i.quantity, 0) ?? 0;
 
   return (
@@ -208,9 +159,9 @@ export default function AccountOrdersPage() {
         const res = await fetch("/api/account/orders");
         if (!res.ok) throw new Error();
         const data = await res.json();
-        setOrders(data.orders?.length ? data.orders : MOCK_ORDERS);
+        setOrders(data.orders || []);
       } catch {
-        setOrders(MOCK_ORDERS);
+        setOrders([]);
       } finally {
         setLoading(false);
       }
