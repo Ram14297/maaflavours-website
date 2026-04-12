@@ -1,0 +1,18 @@
+n8n.maaflavours.com {
+    reverse_proxy n8n:5678
+
+    # Auto HTTPS via Let's Encrypt (handled by Caddy automatically)
+    encode gzip
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+    }
+
+    log {
+        output file /data/caddy_access.log
+        format json
+    }
+}

@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+
+  # ── Caddy (reverse proxy + auto SSL) ────────────────────────────────────────
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy_data:/data
+      - ./caddy_data:/config
+    networks:
+      - n8n_net
+
+  # ── n8n ─────────────────────────────────────────────────────────────────────
+  n8n:
+    image: n8nio/n8n:latest
+    restart: unless-stopped
+    expose:
+      - "5678"
+    env_file:
+      - .env
+    environment:
+      - N8N_HOST=0.0.0.0
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://n8n.maaflavours.com
+      - N8N_EDITOR_BASE_URL=https://n8n.maaflavours.com
+      - GENERIC_TIMEZONE=Asia/Kolkata
+      - TZ=Asia/Kolkata
+      - DB_TYPE=sqlite
+      - DB_SQLITE_DATABASE_FILE=/home/node/.n8n/database.sqlite
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+    networks:
+      - n8n_net
+    depends_on:
+      - caddy
+
+networks:
+  n8n_net:
+    driver: bridge

@@ -1,0 +1,9 @@
+# Never commit real credentials
+server-setup/n8n.env
+server-setup/.env
+
+# Terraform state (contains sensitive data)
+server-setup/terraform/.terraform/
+server-setup/terraform/*.tfstate
+server-setup/terraform/*.tfstate.backup
+server-setup/terraform/.terraform.lock.hcl
