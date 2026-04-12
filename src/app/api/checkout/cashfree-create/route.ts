@@ -67,11 +67,18 @@ export async function POST(request: NextRequest) {
     });
 
     const data = await res.json();
-    console.log("[cashfree-create] response:", JSON.stringify(data));
+    console.log("[cashfree-create] CF response status:", res.status, "| body:", JSON.stringify(data));
 
     if (!res.ok || !data.payment_session_id) {
+      // Log detailed error for Vercel logs debugging
+      console.error("[cashfree-create] FAILED — env:", CF_ENV,
+        "| app_id:", CF_APP_ID ? CF_APP_ID.substring(0, 8) + "..." : "MISSING",
+        "| status:", res.status,
+        "| error:", data.message || data.error || "no payment_session_id returned",
+        "| full:", JSON.stringify(data));
+
       return NextResponse.json(
-        { error: data.message || "Failed to create payment session" },
+        { error: data.message || data.error || "Failed to create payment session" },
         { status: 400 }
       );
     }

@@ -116,17 +116,21 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
       const cfData = await cfRes.json();
       if (!cfRes.ok) throw new Error(cfData.error || "Failed to init payment");
 
-      const { paymentSessionId, cfEnv } = cfData;
+      const { paymentSessionId, cfEnv, paymentLink } = cfData;
       if (!paymentSessionId) throw new Error("Could not get payment session. Please try again.");
 
       // Step 3: Redirect to Cashfree hosted checkout page.
-      // Sandbox: payments-test.cashfree.com | Production: payments.cashfree.com
+      // ALWAYS prefer the payment_link returned by Cashfree's API — it has the
+      // correct environment URL and session format. Only fall back to constructing
+      // the URL if Cashfree didn't return a payment_link.
       const checkoutBase = cfEnv === "production"
         ? "https://payments.cashfree.com/order"
         : "https://payments-test.cashfree.com/order";
 
+      const redirectUrl = paymentLink || `${checkoutBase}/?session_id=${paymentSessionId}`;
+
       clearCart();
-      window.location.href = `${checkoutBase}/?session_id=${paymentSessionId}`;
+      window.location.href = redirectUrl;
 
     } catch (err: any) {
       setOrderError(err.message || "Something went wrong");
