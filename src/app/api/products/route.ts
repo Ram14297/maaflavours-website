@@ -93,6 +93,10 @@ export async function GET(req: NextRequest) {
       });
     } catch {
       // ── Static fallback (Supabase not configured) ──────────────────
+      // All static products are pickles — powders return empty
+      if (type === "powder") {
+        return NextResponse.json({ products: [], total: 0, page, limit, pages: 0 });
+      }
       let products = PRODUCTS.filter(p => {
         if (spice   && p.spice_level !== spice) return false;
         if (featured && !p.is_featured)         return false;
