@@ -116,21 +116,32 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
       const cfData = await cfRes.json();
       if (!cfRes.ok) throw new Error(cfData.error || "Failed to init payment");
 
-      const { paymentSessionId, cfEnv, paymentLink } = cfData;
+      const { paymentSessionId, cfEnv } = cfData;
       if (!paymentSessionId) throw new Error("Could not get payment session. Please try again.");
 
-      // Step 3: Redirect to Cashfree hosted checkout page.
-      // ALWAYS prefer the payment_link returned by Cashfree's API — it has the
-      // correct environment URL and session format. Only fall back to constructing
-      // the URL if Cashfree didn't return a payment_link.
-      const checkoutBase = cfEnv === "production"
-        ? "https://payments.cashfree.com/order"
-        : "https://payments-test.cashfree.com/order";
+      // Step 3: Use Cashfree Drop.js SDK — opens payment as modal overlay on site.
+      // This avoids redirecting to payments.cashfree.com (hosted page) which can
+      // show "client session is invalid" due to merchant account verification.
+      const { load } = await import("@cashfreepayments/cashfree-js");
+      const cashfree = await load({
+        mode: cfEnv === "production" ? "production" : "sandbox",
+      });
 
-      const redirectUrl = paymentLink || `${checkoutBase}/?session_id=${paymentSessionId}`;
-
+      // Order is placed — clear cart before opening payment modal
       clearCart();
-      window.location.href = redirectUrl;
+      setPlacingOrder(false);
+
+      const result = await cashfree.checkout({
+        paymentSessionId,
+        redirectTarget: "_modal",
+      });
+
+      if (result?.error) {
+        setOrderError(result.error.message || "Payment not completed. Please try again.");
+        toast.error(result.error.message || "Payment cancelled. Please try again.");
+      }
+      // On success, Cashfree redirects browser to return_url (set in cashfree-create)
+      // which is /checkout/confirmation?orderId=...&method=cashfree
 
     } catch (err: any) {
       setOrderError(err.message || "Something went wrong");
