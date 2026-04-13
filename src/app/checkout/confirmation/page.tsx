@@ -11,6 +11,8 @@ import { CheckCircle2, Package, Truck, MessageCircle, ShoppingBag, ArrowRight } 
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import NavbarWithCart from "@/components/layout/NavbarWithCart";
 import Footer from "@/components/layout/Footer";
+import { useCartStore } from "@/store/cartStore";
+import { useCheckoutStore } from "@/store/checkoutStore";
 
 // ─── Confetti burst animation (CSS only, no lib needed) ─────────────────────
 function ConfettiDots() {
@@ -74,6 +76,14 @@ function ConfirmationContent() {
   const isCOD = method === "COD";
 
   const [loginOpen, setLoginOpen] = useState(false);
+  const clearCart = useCartStore((s) => s.clearCart);
+  const resetCheckout = useCheckoutStore((s) => s.resetCheckout);
+
+  // Clear cart + checkout state when landing on confirmation page
+  useEffect(() => {
+    clearCart();
+    resetCheckout();
+  }, [clearCart, resetCheckout]);
 
   // Format order ID for display — show last 8 chars if long UUID
   const displayOrderId = orderId.length > 12

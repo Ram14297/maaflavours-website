@@ -127,8 +127,6 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
         mode: cfEnv === "production" ? "production" : "sandbox",
       });
 
-      // Order is placed — clear cart before opening payment modal
-      clearCart();
       setPlacingOrder(false);
 
       const result = await cashfree.checkout({
@@ -136,12 +134,12 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
         redirectTarget: "_modal",
       });
 
+      // result is only returned if user cancelled or payment failed (no redirect)
+      // On success, Cashfree redirects to return_url → confirmation page clears cart
       if (result?.error) {
         setOrderError(result.error.message || "Payment not completed. Please try again.");
         toast.error(result.error.message || "Payment cancelled. Please try again.");
       }
-      // On success, Cashfree redirects browser to return_url (set in cashfree-create)
-      // which is /checkout/confirmation?orderId=...&method=cashfree
 
     } catch (err: any) {
       setOrderError(err.message || "Something went wrong");
