@@ -28,7 +28,8 @@ export default function PincodeField({ value, onChange, error }: PincodeFieldPro
   }, [value, lookupPincode]);
 
   const showSuccess = pincodeData.isValid && value.length === 6;
-  const showError = (pincodeData.error || error) && !pincodeData.loading;
+  const showLookupHint = pincodeData.error && !pincodeData.loading && value.length === 6;
+  const showError = error && !pincodeData.loading; // only form validation errors in red
 
   return (
     <div>
@@ -58,6 +59,8 @@ export default function PincodeField({ value, onChange, error }: PincodeFieldPro
               ? "#2E7D32"
               : showError
               ? "var(--color-crimson)"
+              : showLookupHint
+              ? "rgba(200,150,12,0.4)"
               : undefined,
           }}
           aria-describedby={showError ? "pincode-error" : showSuccess ? "pincode-success" : undefined}
@@ -75,6 +78,9 @@ export default function PincodeField({ value, onChange, error }: PincodeFieldPro
           {showError && (
             <AlertCircle size={16} style={{ color: "var(--color-crimson)" }} />
           )}
+          {showLookupHint && !showError && (
+            <AlertCircle size={16} style={{ color: "var(--color-gold)" }} />
+          )}
         </div>
       </div>
 
@@ -89,7 +95,14 @@ export default function PincodeField({ value, onChange, error }: PincodeFieldPro
         </p>
       )}
 
-      {/* Error */}
+      {/* Lookup hint — neutral, non-blocking */}
+      {showLookupHint && !showError && (
+        <p className="font-dm-sans text-xs mt-1" style={{ color: "var(--color-grey)" }}>
+          Fill city and state below
+        </p>
+      )}
+
+      {/* Form validation error — red, blocking */}
       {showError && (
         <p
           id="pincode-error"
@@ -97,7 +110,7 @@ export default function PincodeField({ value, onChange, error }: PincodeFieldPro
           style={{ color: "var(--color-crimson)" }}
           role="alert"
         >
-          {pincodeData.error || error}
+          {error}
         </p>
       )}
     </div>
