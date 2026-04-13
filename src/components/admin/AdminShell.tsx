@@ -143,8 +143,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
       {/* ── Main Content Area ── */}
       <div
-        className="flex-1 flex flex-col min-h-screen overflow-hidden"
-        style={{ marginLeft: SIDEBAR_W, background: "#f8f4ee" }}
+        className="flex-1 flex flex-col min-h-screen overflow-hidden lg:ml-[240px]"
+        style={{ background: "#f8f4ee" }}
       >
         {/* Top Bar */}
         <TopBar
