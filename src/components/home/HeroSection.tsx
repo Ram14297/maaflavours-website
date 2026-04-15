@@ -81,7 +81,7 @@ export default function HeroSection() {
                 className="block italic"
                 style={{ color: "var(--color-crimson)" }}
               >
-                Maa Bottled
+                Maa Crafted
               </span>
               Just for You
             </h1>
