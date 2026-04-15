@@ -147,7 +147,7 @@ export default function Navbar({
         }}
       >
         <div className="section-container">
-          <div className="flex items-center justify-between h-20 md:h-[88px]">
+          <div className="flex items-center justify-between h-24 md:h-[104px]">
 
             {/* ─── Logo ─────────────────────────────────────────────────── */}
             <Link
@@ -155,14 +155,14 @@ export default function Navbar({
               className="flex items-center gap-2.5 flex-shrink-0 group"
               aria-label="Maa Flavours Home"
             >
-              <div className="relative h-20 w-20 md:h-[88px] md:w-[88px] flex-shrink-0 transition-transform duration-300 group-hover:scale-105">
+              <div className="relative h-24 w-24 md:h-[112px] md:w-[112px] flex-shrink-0 transition-transform duration-300 group-hover:scale-105 drop-shadow-md">
                 <Image
                   src="/maa-flavours-logo.png"
                   alt="Maa Flavours — Authentic Andhra Pickles"
                   fill
                   className="object-contain"
                   priority
-                  sizes="88px"
+                  sizes="112px"
                 />
               </div>
             </Link>
