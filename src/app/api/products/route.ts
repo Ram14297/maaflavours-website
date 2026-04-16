@@ -28,11 +28,12 @@ export async function GET(req: NextRequest) {
     const from     = (page - 1) * limit;
 
     try {
-      // ── Supabase path ─────────────────────────────────────────────
+      // ── Supabase path — query products table directly (no view dependency) ──
       const supabase = createAdminSupabaseClient();
+
       let query = supabase
-        .from("products_with_details")
-        .select("*", { count: "exact" })
+        .from("products")
+        .select("*, product_images(url, alt, is_primary)", { count: "exact" })
         .eq("is_active", true);
 
       if (featured) query = query.eq("is_featured", true);
@@ -41,7 +42,6 @@ export async function GET(req: NextRequest) {
       if (search)   query = query.ilike("name", `%${search}%`);
 
       if (category) {
-        // Join via categories table
         const { data: cat } = await supabase
           .from("categories")
           .select("id")
@@ -52,24 +52,21 @@ export async function GET(req: NextRequest) {
 
       // Sorting
       switch (sort) {
-        case "price-asc":  query = query.order("min_effective_price", { ascending: true });  break;
-        case "price-desc": query = query.order("min_effective_price", { ascending: false }); break;
-        case "name":       query = query.order("name",       { ascending: true });  break;
-        case "newest":     query = query.order("created_at", { ascending: false }); break;
-        case "rating":     query = query.order("average_rating", { ascending: false }); break;
-        default:           query = query.order("is_featured", { ascending: false }).order("name"); break;
+        case "name":    query = query.order("name",       { ascending: true });  break;
+        case "newest":  query = query.order("created_at", { ascending: false }); break;
+        default:        query = query.order("is_featured", { ascending: false }).order("name"); break;
       }
 
-      const { data, count, error } = await query.range(from, from + limit - 1);
+      const { data: products, count, error } = await query.range(from, from + limit - 1);
       if (error) throw error;
 
-      // Fetch live variant prices for returned products
-      const productIds = (data || []).map((p: any) => p.id);
+      // Fetch active variants for returned products
+      const productIds = (products || []).map((p: any) => p.id);
       let variantsMap: Record<string, any[]> = {};
       if (productIds.length > 0) {
         const { data: variantsData } = await supabase
           .from("product_variants")
-          .select("id, product_id, label, weight_grams, price, discounted_price, stock_quantity")
+          .select("id, product_id, label, weight_grams, price, discounted_price, stock_quantity, low_stock_threshold")
           .in("product_id", productIds)
           .eq("is_active", true)
           .order("weight_grams");
@@ -79,57 +76,84 @@ export async function GET(req: NextRequest) {
         }
       }
 
-      const productsWithVariants = (data || []).map((p: any) => ({
-        ...p,
-        variants: variantsMap[p.id] || [],
-      }));
+      // Shape products — compute price/stock fields inline
+      const shaped = (products || []).map((p: any) => {
+        const variants = variantsMap[p.id] || [];
+        const prices   = variants.map((v: any) => v.discounted_price ?? v.price);
+        const stocks   = variants.map((v: any) => v.stock_quantity ?? 0);
+        const primaryImg = (p.product_images || []).find((i: any) => i.is_primary) || p.product_images?.[0];
+
+        const minPrice = prices.length ? Math.min(...prices) : 0;
+        const maxPrice = prices.length ? Math.max(...prices) : 0;
+        const totalStock = stocks.reduce((a: number, b: number) => a + b, 0);
+        const hasLowStock = variants.some((v: any) => v.stock_quantity > 0 && v.stock_quantity <= (v.low_stock_threshold ?? 5));
+        const isOutOfStock = totalStock === 0;
+
+        return {
+          ...p,
+          product_images:      undefined, // remove nested array from output
+          primary_image_url:   primaryImg?.url  ?? null,
+          primary_image_alt:   primaryImg?.alt  ?? null,
+          variants,
+          min_price:           minPrice,
+          max_price:           maxPrice,
+          min_effective_price: minPrice,
+          total_stock:         totalStock,
+          has_low_stock:       hasLowStock,
+          is_out_of_stock:     isOutOfStock,
+        };
+      });
+
+      // Client-side price sort (after variant merge)
+      if (sort === "price-asc")  shaped.sort((a: any, b: any) => a.min_effective_price - b.min_effective_price);
+      if (sort === "price-desc") shaped.sort((a: any, b: any) => b.min_effective_price - a.min_effective_price);
 
       return NextResponse.json({
-        products: productsWithVariants,
+        products: shaped,
         total:    count || 0,
         page,
         limit,
         pages: Math.ceil((count || 0) / limit),
       });
-    } catch {
-      // ── Static fallback (Supabase not configured) ──────────────────
-      // All static products are pickles — powders return empty
+
+    } catch (supabaseErr: any) {
+      console.error("[GET /api/products] Supabase error — falling back to static:", supabaseErr?.message);
+
+      // ── Static fallback (Supabase not reachable) ──────────────────────────
       if (type === "powder") {
         return NextResponse.json({ products: [], total: 0, page, limit, pages: 0 });
       }
       let products = PRODUCTS.filter(p => {
-        if (spice   && p.spice_level !== spice) return false;
-        if (featured && !p.is_featured)         return false;
-        if (search  && !p.name.toLowerCase().includes(search)) return false;
+        if (spice    && p.spice_level !== spice) return false;
+        if (featured && !p.is_featured)          return false;
+        if (search   && !p.name.toLowerCase().includes(search)) return false;
         return true;
       });
 
-      // Sort
       if (sort === "price-asc")  products.sort((a, b) => a.variants[0].price - b.variants[0].price);
       if (sort === "price-desc") products.sort((a, b) => b.variants[0].price - a.variants[0].price);
       if (sort === "name")       products.sort((a, b) => a.name.localeCompare(b.name));
 
-      const total   = products.length;
-      const sliced  = products.slice(from, from + limit);
+      const total  = products.length;
+      const sliced = products.slice(from, from + limit);
 
-      // Map to shape expected by frontend
       const shaped = sliced.map(p => ({
         ...p,
-        id:                 p.slug,
-        is_active:          true,
-        is_vegetarian:      true,
-        average_rating:     4.8,
-        review_count:       12,
-        primary_image_url:  null,  // REPLACE with actual product image
-        min_price:          p.variants[0].price,
-        max_price:          p.variants[p.variants.length - 1].price,
+        id:                  p.slug,
+        is_active:           true,
+        is_vegetarian:       true,
+        average_rating:      4.8,
+        review_count:        12,
+        primary_image_url:   null,
+        min_price:           p.variants[0].price,
+        max_price:           p.variants[p.variants.length - 1].price,
         min_effective_price: p.variants[0].price,
-        total_stock:        50,
-        is_out_of_stock:    false,
-        has_low_stock:      false,
-        category_id:        null,
-        created_at:         new Date().toISOString(),
-        updated_at:         new Date().toISOString(),
+        total_stock:         50,
+        is_out_of_stock:     false,
+        has_low_stock:       false,
+        category_id:         null,
+        created_at:          new Date().toISOString(),
+        updated_at:          new Date().toISOString(),
       }));
 
       return NextResponse.json({ products: shaped, total, page, limit, pages: Math.ceil(total / limit) });
