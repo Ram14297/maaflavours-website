@@ -303,6 +303,7 @@ function PowdersContent() {
                 onViewModeChange={setViewMode}
                 activeFilterCount={activeFilterCount}
                 onOpenMobileFilters={() => setMobileFilterOpen(true)}
+                itemLabel="powder"
               />
 
               <ActiveFilterTags

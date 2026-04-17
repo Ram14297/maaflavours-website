@@ -19,6 +19,7 @@ interface SortBarProps {
   onViewModeChange: (mode: ViewMode) => void;
   activeFilterCount: number;
   onOpenMobileFilters: () => void;
+  itemLabel?: string;   // singular label e.g. "pickle" or "powder" (default: "pickle")
 }
 
 export default function SortBar({
@@ -30,6 +31,7 @@ export default function SortBar({
   onViewModeChange,
   activeFilterCount,
   onOpenMobileFilters,
+  itemLabel = "pickle",
 }: SortBarProps) {
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -98,7 +100,7 @@ export default function SortBar({
               <span style={{ color: "var(--color-brown)" }}>{totalCount}</span>
             </>
           )}{" "}
-          {resultCount === 1 ? "pickle" : "pickles"}
+          {resultCount === 1 ? itemLabel : `${itemLabel}s`}
           {resultCount !== totalCount && " found"}
         </p>
       </div>
