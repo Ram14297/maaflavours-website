@@ -1,61 +1,68 @@
 -- supabase/migrations/004_product_descriptions.sql
--- Maa Flavours — Update product descriptions, short descriptions, and ingredients
--- Run this in the Supabase SQL Editor
--- Updates all 7 pickles: Drumstick, Amla, Pulihora Gongura, Lemon, Maamidi Allam, Red Chilli, Aavakaaya
+-- Maa Flavours — Final product content: short description, full description, ingredients
+-- Run in Supabase SQL Editor
 
 -- ─── 1. Drumstick Pickle ─────────────────────────────────────────────────────
+-- Ingredients: Drumstick Pieces, Groundnut Oil, Tamarind, Red Chilli Powder, Salt, Mustard Seeds, Asafoetida, Fenugreek Powder
 UPDATE products SET
-  short_description = 'Fresh drumstick pieces slow-cured in groundnut oil with Andhra spices. A timeless side for steamed rice and dal.',
-  description = '<p>Made from tender drumsticks hand-picked from local Andhra farms, Munagakaya Pachhadi is one of the most cherished pickles in Telugu households. Each piece is carefully cleaned and marinated in groundnut oil with freshly ground spices — the way Maa has always made it.</p><p>The subtle earthiness of drumstick meets the bold heat of Guntur red chilli to create a pickle that is complex, aromatic, and deeply satisfying. Zero preservatives. Made in small batches. Best with hot steamed rice, curd rice, or alongside a simple dal.</p>',
-  ingredients = 'Raw Drumstick, Groundnut Oil, Red Chilli Powder, Salt, Mustard Seeds, Fenugreek Seeds, Turmeric, Garlic, Curry Leaves, Asafoetida'
+  short_description = 'Tender drumstick pieces slow-cured in groundnut oil with tamarind and Andhra spices. A hearty, tangy side for hot rice.',
+  description = '<p>Our Drumstick Pickle brings together fresh, tender drumstick pieces with a bold tamarind-based Andhra spice blend. The tartness of tamarind, the heat of red chilli powder, and the earthy warmth of fenugreek and mustard come together in groundnut oil to create a deeply flavourful pickle.</p><p>Made the way Maa always made it — in small batches, with patience, and without a single preservative. Best enjoyed with hot steamed rice, a drizzle of ghee, or as a side to curd rice and dal.</p>',
+  ingredients = 'Drumstick Pieces, Groundnut Oil, Tamarind, Red Chilli Powder, Salt, Mustard Seeds, Asafoetida, Fenugreek Powder'
 WHERE slug = 'drumstick-pickle';
 
--- ─── 2. Amla Pickle ──────────────────────────────────────────────────────────
+-- ─── 2. Sun-dried Mango Pickle ───────────────────────────────────────────────
+-- Ingredients: Raw Mango, Groundnut Oil, Salt, Red Chilli Powder, Asafoetida, Turmeric
 UPDATE products SET
-  short_description = 'Sun-dried Indian gooseberry in groundnut oil — tangy, vitamin-rich, and beautifully spiced.',
-  description = '<p>Amla, the powerhouse of Vitamin C, meets Andhra''s bold pickling tradition in this classic recipe. Our Amla Pickle uses fresh Indian gooseberries preserved in groundnut oil with a fragrant blend of spices that intensifies beautifully over days.</p><p>The sour bite of amla, balanced with red chilli heat and the warmth of fenugreek, makes this a perfectly complex pickle — healthy, gut-friendly, and incredibly flavourful. A pack that belongs in every Indian kitchen.</p>',
-  ingredients = 'Indian Gooseberry (Amla), Groundnut Oil, Red Chilli Powder, Salt, Mustard Seeds, Fenugreek Seeds, Turmeric, Curry Leaves, Asafoetida'
+  name = 'Sun-dried Mango Pickle',
+  short_description = 'Sun-dried raw mango pieces preserved in groundnut oil with red chilli and turmeric. Bold, tangy and made with just 6 pure ingredients.',
+  description = '<p>Sun-drying raw mango is a tradition as old as Andhra kitchens themselves. The process concentrates the mango''s natural sourness, creating an intense tangy base that no fresh mango can match. We slow-cure these sun-dried pieces in groundnut oil with red chilli, turmeric, and a pinch of asafoetida — nothing more, nothing less.</p><p>The result is a pickle that is sharp, bold, and unmistakably honest. Just six simple ingredients, prepared with the patience that only home-style recipes allow. Pairs perfectly with curd rice, chapati, or a simple dal-rice meal.</p>',
+  ingredients = 'Raw Mango, Groundnut Oil, Salt, Red Chilli Powder, Asafoetida, Turmeric'
 WHERE slug = 'amla-pickle';
 
--- ─── 3. Pulihora Gongura ─────────────────────────────────────────────────────
+-- ─── 3. Mango Ginger Pickle ──────────────────────────────────────────────────
+-- Ingredients: Mango Ginger, Groundnut Oil, Jaggery, Tamarind, Red Chilli Powder, Salt
 UPDATE products SET
-  short_description = 'The iconic Andhra sorrel paste — sour, spiced, and deeply aromatic. The soul of every Telugu meal.',
-  description = '<p>Gongura is to Andhra what butter is to France — irreplaceable. Our Pulihora Gongura is made from fresh sorrel leaves sourced from farms in Andhra Pradesh, slowly cooked down with garlic, red chillies, and sesame into a thick, intensely flavourful paste.</p><p>Mix it into hot rice with a spoonful of ghee and you will understand why Andhraites across the world carry it in their hearts. Rare to find outside the region, unmistakably authentic from within it. Handmade in small batches with zero preservatives.</p>',
-  ingredients = 'Gongura (Sorrel Leaves), Groundnut Oil, Red Chilli Powder, Garlic, Sesame Seeds, Mustard Seeds, Salt, Dry Red Chillies, Turmeric, Curry Leaves, Asafoetida'
-WHERE slug = 'pulihora-gongura';
-
--- ─── 4. Lemon Pickle ─────────────────────────────────────────────────────────
-UPDATE products SET
-  short_description = 'Sun-kissed lemon quarters cured in spiced groundnut oil. The timeless Andhra staple that completes every thali.',
-  description = '<p>There is a reason Lemon Pickle has been on every Andhra dining table for generations — it is the one condiment that works with everything. Our Nimmakaya Urugai is made from thick-skinned, juicy lemons quarter-cut and slow-marinated in groundnut oil with a blend of bold Andhra spices.</p><p>Over time, the lemon softens and the flavours deepen into something truly special — bright, tangy, and beautifully fragrant. A jar of this pickle elevates a simple papad lunch, completes a dal-rice thali, and brings the taste of Andhra home wherever you are. Shelf life of 6 months — it only gets better with age.</p>',
-  ingredients = 'Lemon, Groundnut Oil, Red Chilli Powder, Rock Salt, Mustard Seeds, Fenugreek Seeds, Turmeric, Asafoetida'
-WHERE slug = 'lemon-pickle';
-
--- ─── 5. Maamidi Allam ────────────────────────────────────────────────────────
-UPDATE products SET
-  short_description = 'Raw mango and fresh ginger pickle — sweet, tangy, and warmly spiced. A Maa Flavours signature.',
-  description = '<p>Maamidi Allam is the pickle that surprises everyone the first time — the bold tang of raw green mango meets the earthy warmth of fresh ginger in a perfectly balanced Andhra spice blend. A touch of jaggery rounds out the flavours into something sweet, sour, and beautifully complex.</p><p>This is one of Maa''s most celebrated recipes — the one people request again and again. Pairs brilliantly with dosa, idli, upma, or simply spooned over hot rice. Handmade in small batches with no preservatives. No shortcuts.</p>',
-  ingredients = 'Raw Mango, Fresh Ginger, Groundnut Oil, Red Chilli Powder, Jaggery, Mustard Seeds, Salt, Fenugreek Seeds, Turmeric, Curry Leaves, Asafoetida'
+  name = 'Mango Ginger Pickle',
+  short_description = 'Mango ginger slow-cooked with jaggery and tamarind — a beautifully balanced sweet, sour and spicy pickle unlike any other.',
+  description = '<p>Mango Ginger (Curcuma amada) is one of the most unique rhizomes in Indian cooking — it looks like ginger but carries a natural mango-like fragrance that is impossible to replicate. We combine it with jaggery for sweetness, tamarind for sourness, and red chilli for heat to create a pickle that hits every note at once.</p><p>Sweet, sour, spicy, and aromatic — this is the pickle that people reach for again and again without knowing exactly why. It pairs brilliantly with dosa, idli, curd rice, or hot rice with ghee. A truly special recipe from Maa''s kitchen.</p>',
+  ingredients = 'Mango Ginger, Groundnut Oil, Jaggery, Tamarind, Red Chilli Powder, Salt'
 WHERE slug = 'maamidi-allam';
 
--- ─── 6. Red Chilli Pickle ────────────────────────────────────────────────────
+-- ─── 4. Lemon Pickle ─────────────────────────────────────────────────────────
+-- Ingredients: Lemon, Red Chilli Powder, Salt, Lemon Juice, Turmeric, Fenugreek Powder
 UPDATE products SET
-  short_description = 'Whole Guntur red chillies preserved in golden groundnut oil — fiery, fragrant, and unmistakably Andhra.',
-  description = '<p>The Guntur red chilli is legendary in the spice world — known for its intense heat, deep red colour, and smoky fragrance. Our Mirapakaya Urugai celebrates this extraordinary ingredient in its purest form. Whole chillies are packed in groundnut oil with mustard seeds, fenugreek, and asafoetida.</p><p>This is a pickle for the bold. One piece added to hot rice with a drizzle of ghee creates an experience that lingers. Spicy, aromatic, honest — made exactly the way it has been made in Andhra homes for generations. Handle with love. Serve with respect.</p>',
-  ingredients = 'Red Chilli (Guntur Variety), Groundnut Oil, Mustard Seeds, Salt, Fenugreek Seeds, Turmeric, Sesame Seeds, Asafoetida',
+  short_description = 'Lemon quarters marinated in their own juice with red chilli, turmeric and fenugreek. Pure, tangy and completely oil-free.',
+  description = '<p>Our Lemon Pickle is made the traditional way — no oil, no shortcuts. Fresh lemon quarters are packed in their own lemon juice with red chilli, salt, turmeric, and fenugreek powder, then left to slowly cure until the skin softens and the flavours deepen into something truly special.</p><p>The absence of oil makes this pickle lighter and brighter than most — sharp, tangy, and clean on the palate. It cuts through heavy food, lifts a plain rice meal, and keeps well for months. A staple that belongs in every kitchen.</p>',
+  ingredients = 'Lemon, Red Chilli Powder, Salt, Lemon Juice, Turmeric, Fenugreek Powder'
+WHERE slug = 'lemon-pickle';
+
+-- ─── 5. Red Chilli Pickle ────────────────────────────────────────────────────
+-- Ingredients: Red Chilli, Groundnut Oil, Salt, Tamarind
+UPDATE products SET
+  short_description = 'Whole red chillies preserved in groundnut oil and tamarind. Just four ingredients — bold, fiery and unapologetically Andhra.',
+  description = '<p>Four ingredients. That is all. Whole red chillies, groundnut oil, salt, and tamarind — preserved together until the chilli softens and the tamarind adds a subtle sour depth that balances the fire. This is minimalist Andhra pickling at its finest.</p><p>There are no distractions here — just the pure, raw power of red chilli elevated by tamarind''s gentle tang. A small piece on the side of your rice plate is all it takes to transform an ordinary meal into something unforgettable. Not for the faint-hearted.</p>',
+  ingredients = 'Red Chilli, Groundnut Oil, Salt, Tamarind',
   spice_level = 'extra-hot'
 WHERE slug = 'red-chilli-pickle';
 
--- ─── 7. Aavakaaya (admin-added) ──────────────────────────────────────────────
+-- ─── 6. Pulihora Gongura Pickle ──────────────────────────────────────────────
+-- Ingredients: Gongura (Sorrel Leaves), Groundnut Oil, Salt, Tamarind, Red Chilli Powder, Garlic, Fenugreek Powder, Mustard Seeds
 UPDATE products SET
-  short_description = 'The pride of Andhra — raw mango pieces in bold mustard-chilli masala. Every Telugu household''s most beloved pickle.',
-  description = '<p>Aavakaaya is not just a pickle — it is the very identity of Andhra cuisine. Made from raw unripe mango pieces cut with the seed intact, marinated in freshly ground mustard powder, fiery Guntur red chilli, rock salt, and groundnut oil. This is the recipe passed down through generations in Telugu households.</p><p>There is a reason every Telugu person lights up when they hear the word "Aavakaaya." It is comfort, it is home, it is tradition in a jar. Serve it with hot rice and ghee, or with a simple curd rice — and watch an ordinary meal become extraordinary.</p>',
-  ingredients = 'Raw Mango, Groundnut Oil, Red Chilli Powder (Guntur), Mustard Powder, Rock Salt, Fenugreek Seeds, Turmeric, Asafoetida'
+  short_description = 'Fresh sorrel leaves cooked down with tamarind, garlic and red chilli in groundnut oil. The soul of Andhra cuisine in a jar.',
+  description = '<p>Gongura is the heart of Andhra cooking — its sharp, natural sourness is unlike anything else. We take fresh sorrel leaves and slow-cook them in groundnut oil with tamarind, garlic, red chilli, fenugreek, and mustard seeds until they form a thick, deeply aromatic paste. The double sourness of gongura and tamarind, tempered by garlic''s warmth, creates a condiment of extraordinary depth.</p><p>Mix a spoonful into hot rice with ghee and you will understand immediately why this pickle is an emotion for every Telugu household. Rare to find outside Andhra. Unmistakably authentic from within it.</p>',
+  ingredients = 'Gongura (Sorrel Leaves), Groundnut Oil, Salt, Tamarind, Red Chilli Powder, Garlic, Fenugreek Powder, Mustard Seeds'
+WHERE slug = 'pulihora-gongura';
+
+-- ─── 7. Aavakaaya ────────────────────────────────────────────────────────────
+-- Ingredients: Raw Mango, Groundnut Oil, Salt, Red Chilli Powder, Mustard Powder, Fenugreek Seeds
+UPDATE products SET
+  short_description = 'Raw mango pieces marinated in mustard powder and red chilli — the most iconic pickle of Andhra Pradesh.',
+  description = '<p>Aavakaaya is the pickle that defines Andhra cuisine. Raw unripe mango pieces — cut thick, with the seed intact — are packed in groundnut oil with freshly ground mustard powder, Guntur red chilli, rock salt, and fenugreek seeds. It is a recipe that has not changed in generations, because it does not need to.</p><p>The sharp bite of raw mango, the pungency of mustard, the heat of red chilli — all preserved in groundnut oil until they become one. Serve it with hot rice and ghee, or with curd rice on a simple afternoon, and you will understand why every Telugu person calls it home.</p>',
+  ingredients = 'Raw Mango, Groundnut Oil, Salt, Red Chilli Powder, Mustard Powder, Fenugreek Seeds'
 WHERE slug = 'aavakaaya';
 
--- Verify updates
-SELECT slug, LEFT(short_description, 60) AS short_desc_preview,
-       LEFT(ingredients, 80) AS ingredients_preview
+-- Verify all updates
+SELECT slug, name, LEFT(short_description, 70) AS short_desc, LEFT(ingredients, 70) AS ingredients
 FROM products
 WHERE slug IN ('drumstick-pickle','amla-pickle','pulihora-gongura','lemon-pickle','maamidi-allam','red-chilli-pickle','aavakaaya')
-ORDER BY slug;
+ORDER BY name;
