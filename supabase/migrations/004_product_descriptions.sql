@@ -10,16 +10,7 @@ UPDATE products SET
   ingredients = 'Drumstick Pieces, Groundnut Oil, Tamarind, Red Chilli Powder, Salt, Mustard Seeds, Asafoetida, Fenugreek Powder'
 WHERE slug = 'drumstick-pickle';
 
--- ─── 2. Sun-dried Mango Pickle ───────────────────────────────────────────────
--- Ingredients: Raw Mango, Groundnut Oil, Salt, Red Chilli Powder, Asafoetida, Turmeric
-UPDATE products SET
-  name = 'Sun-dried Mango Pickle',
-  short_description = 'Sun-dried raw mango pieces preserved in groundnut oil with red chilli and turmeric. Bold, tangy and made with just 6 pure ingredients.',
-  description = '<p>Sun-drying raw mango is a tradition as old as Andhra kitchens themselves. The process concentrates the mango''s natural sourness, creating an intense tangy base that no fresh mango can match. We slow-cure these sun-dried pieces in groundnut oil with red chilli, turmeric, and a pinch of asafoetida — nothing more, nothing less.</p><p>The result is a pickle that is sharp, bold, and unmistakably honest. Just six simple ingredients, prepared with the patience that only home-style recipes allow. Pairs perfectly with curd rice, chapati, or a simple dal-rice meal.</p>',
-  ingredients = 'Raw Mango, Groundnut Oil, Salt, Red Chilli Powder, Asafoetida, Turmeric'
-WHERE slug = 'amla-pickle';
-
--- ─── 3. Mango Ginger Pickle ──────────────────────────────────────────────────
+-- ─── 2. Mango Ginger Pickle ──────────────────────────────────────────────────
 -- Ingredients: Mango Ginger, Groundnut Oil, Jaggery, Tamarind, Red Chilli Powder, Salt
 UPDATE products SET
   name = 'Mango Ginger Pickle',
@@ -64,5 +55,5 @@ WHERE slug = 'aavakaaya';
 -- Verify all updates
 SELECT slug, name, LEFT(short_description, 70) AS short_desc, LEFT(ingredients, 70) AS ingredients
 FROM products
-WHERE slug IN ('drumstick-pickle','amla-pickle','pulihora-gongura','lemon-pickle','maamidi-allam','red-chilli-pickle','aavakaaya')
+WHERE slug IN ('drumstick-pickle','pulihora-gongura','lemon-pickle','maamidi-allam','red-chilli-pickle','aavakaaya')
 ORDER BY name;
