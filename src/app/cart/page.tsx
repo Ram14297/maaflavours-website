@@ -306,7 +306,7 @@ export default function CartPage() {
                   }}
                 >
                   <Zap size={16} fill="var(--color-brown)" />
-                  Express Pay — UPI / Razorpay
+                  Express Pay — UPI / Cashfree
                 </Link>
 
                 {/* Trust badges */}

@@ -42,10 +42,9 @@ const PRODUCT_COLS = [
 ];
 
 const PAYMENT_COLS: Record<string,string> = {
-  razorpay_upi:      "#C8960C",
-  cod:               "#4A2C0A",
-  razorpay_card:     "#B8750A",
-  razorpay_netbanking:"#C0272D",
+  cashfree:   "#C8960C",
+  phonepe_qr: "#B8750A",
+  cod:        "#4A2C0A",
 };
 
 const PERIOD_OPTIONS = [
@@ -99,7 +98,7 @@ export default function AnalyticsPage() {
   const paymentPieData = Object.entries(pm)
     .filter(([, v]) => (v as number) > 0)
     .map(([k, v]) => ({
-      name:  k === "razorpay_upi" ? "UPI" : k === "cod" ? "COD" : k === "razorpay_card" ? "Card" : "NetBanking",
+      name:  k === "cashfree" ? "Cashfree" : k === "cod" ? "COD" : k === "phonepe_qr" ? "PhonePe QR" : k,
       value: v as number,
       fill:  PAYMENT_COLS[k] || CHART.amber,
     }));

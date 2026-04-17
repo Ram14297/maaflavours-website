@@ -308,22 +308,22 @@ export default function SettingsPage() {
 
           {/* ============ PAYMENTS ============ */}
           {tab==="payments" && (
-            <SCard title="Payment Configuration" sub="Razorpay gateway and payment method toggles">
+            <SCard title="Payment Configuration" sub="Cashfree gateway and payment method toggles">
               {saved==="payments"   && <Alert type="success">Payment settings saved!</Alert>}
               {saveErr==="payments" && <Alert type="error">Failed to save. Try again.</Alert>}
               <div className="space-y-4 mt-3">
-                <MaskedInput label="Razorpay Key ID"
-                  value={s.payments?.razorpay_key_id||""}
-                  onChange={v => patch("payments","razorpay_key_id",v)}
-                  placeholder="rzp_live_..."
-                  hint="Public key only. Never enter your Key Secret here — set it as RAZORPAY_KEY_SECRET env var in Vercel."/>
-                <Input label="Razorpay Webhook URL"
+                <MaskedInput label="Cashfree App ID"
+                  value={s.payments?.cashfree_app_id||""}
+                  onChange={v => patch("payments","cashfree_app_id",v)}
+                  placeholder="CF_APP_ID..."
+                  hint="Public App ID only. Never enter your Secret Key here — set it as CASHFREE_SECRET_KEY env var in Vercel."/>
+                <Input label="Cashfree Webhook URL"
                   value={s.payments?.webhook_url||""}
-                  placeholder="https://maaflavours.com/api/checkout/webhook"
+                  placeholder="https://maaflavours.com/api/checkout/cashfree-webhook"
                   onChange={e => patch("payments","webhook_url",e.target.value)}/>
                 <div className="px-4 py-3 rounded-xl" style={{ background:"rgba(200,150,12,0.06)", border:"1px solid rgba(200,150,12,0.2)" }}>
                   <p style={{ fontSize:12, color:A.brown }}>
-                    &#9888;&#65039; <strong>Security reminder:</strong> RAZORPAY_KEY_SECRET, TWILIO_AUTH_TOKEN, and SUPABASE_SERVICE_ROLE_KEY
+                    &#9888;&#65039; <strong>Security reminder:</strong> CASHFREE_SECRET_KEY, TWILIO_AUTH_TOKEN, and SUPABASE_SERVICE_ROLE_KEY
                     must remain in Vercel environment variables only. They are never stored in the database.
                   </p>
                 </div>

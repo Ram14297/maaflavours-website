@@ -44,8 +44,8 @@ interface Order {
   status: string;
   payment_method: string;
   payment_status: string;
-  razorpay_payment_id?: string | null;
-  razorpay_order_id?: string | null;
+  cashfree_payment_id?: string | null;
+  razorpay_payment_id?: string | null;  // legacy — kept for old orders
   subtotal_paise: number;
   discount_paise: number;
   coupon_code?: string | null;
@@ -248,7 +248,7 @@ function ConfirmationPageContent() {
   const searchParams = useSearchParams();
   const orderId = (params.orderId as string) || "";
 
-  // Get payment ID from URL (passed from Razorpay callback in checkout)
+  // Get payment ID from URL (passed from Cashfree return_url redirect)
   const paymentIdFromUrl = searchParams.get("paymentId") || "";
   const methodFromUrl = searchParams.get("method") || "";
 
@@ -564,7 +564,7 @@ function ConfirmationPageContent() {
                       couponCode: order.coupon_code,
                       paymentMethod: order.payment_method,
                       paymentStatus: order.payment_status,
-                      razorpayPaymentId: order.razorpay_payment_id || paymentIdFromUrl,
+                      paymentId: order.cashfree_payment_id || order.razorpay_payment_id || paymentIdFromUrl,
                     }}
                   />
                 </div>

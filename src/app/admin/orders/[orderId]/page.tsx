@@ -626,8 +626,10 @@ export default function OrderDetailPage() {
                   </span>
                 )],
                 ["Payment Status", <StatusBadge key="ps" status={order.payment_status || "pending"}/>],
-                order.razorpay_payment_id ? ["Razorpay ID", (
-                  <span key="rpid" className="font-mono text-xs" style={{ color:A.grey }}>{order.razorpay_payment_id}</span>
+                (order.cashfree_payment_id || order.razorpay_payment_id) ? ["Payment ID", (
+                  <span key="payid" className="font-mono text-xs" style={{ color:A.grey }}>
+                    {order.cashfree_payment_id || order.razorpay_payment_id}
+                  </span>
                 )] : null,
                 ["Order Placed",  fmtDateTime(order.created_at)],
                 order.dispatched_at ? ["Dispatched",   fmtDate(order.dispatched_at)] : null,

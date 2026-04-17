@@ -101,7 +101,7 @@ export default function PrivacyPolicyPage() {
         <div className="flex flex-col gap-3 mt-3">
           {[
             { title: "Delivery Partners", desc: "We share your name, address, and mobile number with our courier partners (DTDC, BlueDart, India Post) solely for the purpose of delivering your order." },
-            { title: "Payment Processors", desc: "Payments are processed by Razorpay. We do not store your card or bank details. Razorpay's privacy policy governs how they handle your payment information." },
+            { title: "Payment Processors", desc: "Payments are processed by Cashfree Payments. We do not store your card or bank details. Cashfree's privacy policy governs how they handle your payment information." },
             { title: "SMS / OTP Service", desc: "We use Twilio to send OTP messages and delivery notifications. Your mobile number is shared with Twilio for this purpose." },
             { title: "Legal Requirements", desc: "We may disclose information if required by law, court order, or to protect the rights and safety of our users or business." },
           ].map((item) => (

@@ -24,8 +24,8 @@ interface OrderDetail {
   status: string;
   payment_method: string;
   payment_status: string;
-  razorpay_payment_id?: string | null;
-  razorpay_order_id?: string | null;
+  cashfree_payment_id?: string | null;
+  razorpay_payment_id?: string | null;  // legacy — kept for old orders
   subtotal_paise: number;
   discount_paise: number;
   coupon_code?: string | null;
@@ -239,7 +239,7 @@ export default function OrderDetailPage() {
                   couponCode: order.coupon_code,
                   paymentMethod: order.payment_method,
                   paymentStatus: order.payment_status,
-                  razorpayPaymentId: order.razorpay_payment_id,
+                  paymentId: order.cashfree_payment_id || order.razorpay_payment_id,
                 }}
               />
             </div>

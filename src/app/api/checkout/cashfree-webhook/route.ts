@@ -92,6 +92,12 @@ export async function POST(request: NextRequest) {
           console.error("[cashfree-webhook] Update failed:", updateErr.message);
         } else {
           console.log(`[cashfree-webhook] Order ${matchedOrder.id} → ${orderStatus} / ${paymentStatusDb}`);
+
+          // On successful payment: deduct stock + notify admin
+          if (orderStatus === "confirmed") {
+            await decrementOrderStock(adminSupa, matchedOrder.id).catch(() => {});
+            await notifyAdmin(adminSupa, matchedOrder.id, cfPaymentId, "cashfree").catch(() => {});
+          }
         }
       } else {
         console.warn("[cashfree-webhook] No matching order found for cf_order_id:", cfOrderId);
@@ -105,5 +111,62 @@ export async function POST(request: NextRequest) {
     console.error("[cashfree-webhook] Error:", err.message);
     // Still return 200 to prevent Cashfree from retrying indefinitely
     return NextResponse.json({ ok: true, error: err.message });
+  }
+}
+
+// ─── Stock decrement ───────────────────────────────────────────────────────────
+async function decrementOrderStock(
+  supabase: ReturnType<typeof createAdminSupabaseClient>,
+  orderId: string
+) {
+  const { data: items } = await supabase
+    .from("order_items")
+    .select("variant_id, quantity")
+    .eq("order_id", orderId);
+
+  for (const item of items || []) {
+    if (!item.variant_id) continue;
+    try {
+      const { data: v } = await supabase
+        .from("product_variants")
+        .select("stock_quantity")
+        .eq("id", item.variant_id)
+        .single();
+      if (v && typeof v.stock_quantity === "number") {
+        await supabase
+          .from("product_variants")
+          .update({ stock_quantity: Math.max(0, v.stock_quantity - item.quantity) })
+          .eq("id", item.variant_id);
+      }
+    } catch { /* non-fatal per variant */ }
+  }
+}
+
+// ─── Admin notification ────────────────────────────────────────────────────────
+async function notifyAdmin(
+  supabase: ReturnType<typeof createAdminSupabaseClient>,
+  orderId: string,
+  cfPaymentId: string,
+  method: string
+) {
+  const message = `✅ Payment confirmed via ${method.toUpperCase()} (${cfPaymentId}). Order: ${orderId}`;
+
+  try {
+    await supabase.from("admin_notifications").insert({
+      type: "order_paid", message,
+      data: { order_id: orderId, cf_payment_id: cfPaymentId, method },
+      is_read: false,
+    });
+  } catch { /* table may not exist yet */ }
+
+  const waNumber = process.env.ADMIN_WHATSAPP_NUMBER;
+  const waKey    = process.env.CALLMEBOT_API_KEY;
+  if (waNumber && waKey) {
+    try {
+      await fetch(
+        `https://api.callmebot.com/whatsapp.php?phone=${waNumber}&text=${encodeURIComponent(message)}&apikey=${waKey}`,
+        { method: "GET" }
+      );
+    } catch { /* non-fatal */ }
   }
 }

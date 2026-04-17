@@ -27,7 +27,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Is it safe to pay online on your website?",
-        a: "Absolutely. All payments are processed through Razorpay, one of India's most trusted payment gateways. We never store your card details. All transactions are encrypted with industry-standard SSL.",
+        a: "Absolutely. All payments are processed through Cashfree, one of India's most trusted payment gateways. We never store your card details. All transactions are encrypted with industry-standard SSL.",
       },
       {
         q: "Can I apply a coupon code at checkout?",

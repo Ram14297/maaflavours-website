@@ -93,7 +93,7 @@ export default function TermsPage() {
           "Net banking",
           "Cash on Delivery (COD) — subject to ₹50 convenience charge",
         ]} />
-        <p>All online payments are processed securely through Razorpay. We do not store any card or banking information on our servers.</p>
+        <p>All online payments are processed securely through Cashfree Payments. We do not store any card or banking information on our servers.</p>
         <p>We reserve the right to refuse or cancel orders at our discretion, including in cases of suspected fraud, incorrect pricing, or product unavailability. In such cases, a full refund will be issued.</p>
       </PolicySection>
 

@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Checkout — Maa Flavours",
-  description: "Complete your order of authentic Andhra homemade pickles. Secure checkout powered by Razorpay.",
+  description: "Complete your order of authentic Andhra homemade pickles. Secure checkout powered by Cashfree.",
   robots: {
     index: false,   // Don't index checkout pages
     follow: false,

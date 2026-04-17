@@ -38,11 +38,10 @@ const STATUS_LABELS: Record<string,string> = {
 };
 
 const PAYMENT_METHODS = [
-  { value:"",                  label:"All Methods"      },
-  { value:"razorpay_upi",      label:"Razorpay UPI"     },
-  { value:"razorpay_card",     label:"Razorpay Card"    },
-  { value:"razorpay_netbanking",label:"Netbanking"      },
-  { value:"cod",               label:"Cash on Delivery" },
+  { value:"",           label:"All Methods"      },
+  { value:"cashfree",   label:"Cashfree (UPI / Card)" },
+  { value:"phonepe_qr", label:"PhonePe QR"        },
+  { value:"cod",        label:"Cash on Delivery"  },
 ];
 
 // ─── Status step flow — for quick next-action hints ───────────────────────────
@@ -359,10 +358,9 @@ export default function OrdersPage() {
 // ─── Payment Method Badge ─────────────────────────────────────────────────────
 function MethodBadge({ method }: { method?: string }) {
   const MAP: Record<string, { icon:string; label:string; bg:string; color:string }> = {
-    razorpay_upi:       { icon:"🔵", label:"UPI",        bg:"rgba(200,150,12,0.08)",  color:"#B8750A" },
-    razorpay_card:      { icon:"💳", label:"Card",       bg:"rgba(74,44,10,0.08)",    color:"#4A2C0A" },
-    razorpay_netbanking:{ icon:"🏦", label:"Netbanking",  bg:"rgba(74,44,10,0.08)",    color:"#4A2C0A" },
-    cod:                { icon:"💵", label:"COD",         bg:"rgba(46,125,50,0.08)",   color:"#2E7D32" },
+    cashfree:   { icon:"🔵", label:"Cashfree",    bg:"rgba(200,150,12,0.08)",  color:"#B8750A" },
+    phonepe_qr: { icon:"🟣", label:"PhonePe QR",  bg:"rgba(74,44,10,0.08)",    color:"#4A2C0A" },
+    cod:        { icon:"💵", label:"COD",          bg:"rgba(46,125,50,0.08)",   color:"#2E7D32" },
   };
   const m = MAP[method || ""] || { icon:"💳", label:method?.replace(/_/g," ") || "—", bg:"rgba(107,107,107,0.08)", color:"#6B6B6B" };
   return (

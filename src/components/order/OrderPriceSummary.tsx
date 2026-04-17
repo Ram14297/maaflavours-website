@@ -15,7 +15,7 @@ export interface OrderPriceData {
   couponCode?: string | null;
   paymentMethod?: string;
   paymentStatus?: string;
-  razorpayPaymentId?: string | null;
+  paymentId?: string | null;  // Cashfree cf_payment_id or legacy razorpay_payment_id
 }
 
 interface OrderPriceSummaryProps {
@@ -36,7 +36,7 @@ export default function OrderPriceSummary({
     couponCode,
     paymentMethod,
     paymentStatus,
-    razorpayPaymentId,
+    paymentId,
   } = data;
 
   const isPaid = paymentStatus === "paid" || paymentMethod === "cod";
@@ -160,12 +160,12 @@ export default function OrderPriceSummary({
                 ? "Payment Confirmed"
                 : "Payment Pending"}
             </p>
-            {razorpayPaymentId && (
+            {paymentId && (
               <p
                 className="font-dm-sans text-xs mt-0.5"
                 style={{ color: "var(--color-grey)" }}
               >
-                Payment ID: {razorpayPaymentId}
+                Payment ID: {paymentId}
               </p>
             )}
             {isCOD && (

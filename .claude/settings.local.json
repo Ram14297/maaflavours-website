@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(grep:*)",
+      "Bash(sed:*)",
+      "Bash(vercel:*)",
+      "Bash(npx supabase:*)",
+      "Bash(curl:*)",
+      "Bash(node:*)",
+      "Bash(supabase:*)",
+      "Read(//c/Users/Ram/.supabase/**)",
+      "Read(//c/Users/Ram/**)",
+      "Bash(npm install:*)",
+      "Bash(/tmp/supabase.exe:*)",
+      "Bash(psql:*)",
+      "Bash(rm:*)",
+      "Bash(echo EXIT:$?:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Read(//e/Pickle photos/**)",
+      "Bash(ls *.zip)",
+      "Bash(unzip -l \"WhatsApp Image 2026-04-12 at 11.55.40 PM \\(2\\).zip\")",
+      "Bash(unzip -o \"WhatsApp Image 2026-04-12 at 11.55.40 PM \\(2\\).zip\" -d extracted_pickles)",
+      "mcp__Claude_in_Chrome__resize_window",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(npx tsc *)",
+      "Bash(npx rimraf *)",
+      "Bash(rm -rf \".next/types/app/api/checkout/verify-payment\" \".next/types/app/api/checkout/webhook\")"
+    ]
+  }
+}

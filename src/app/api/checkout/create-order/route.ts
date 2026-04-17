@@ -2,37 +2,29 @@
 // Maa Flavours — Create Order API Route
 // POST /api/checkout/create-order
 //
+// Payment gateways: cashfree (primary), phonepe_qr (manual scan), cod
+//
 // Flow:
 //   1. Validate cart items against server-side prices (prevents price tampering)
 //   2. Validate & apply coupon (DB then static fallback)
 //   3. Calculate final total (subtotal - coupon + delivery + COD charge)
 //   4. Create order row in Supabase (schema-accurate column names)
 //   5. Create order_items rows
-//   6. Create Razorpay order (skip for COD)
-//   7. Store razorpay_order_id back in orders row
+//   6. Return orderId — frontend calls /api/checkout/cashfree-create for online payments
 //
 // Schema reference: supabase/schema.sql
 //   orders: customer_id, shipping_address, subtotal, discount, coupon_discount,
 //           delivery_charge, cod_charge, total, payment_method, coupon_code,
-//           razorpay_order_id, cgst_amount, sgst_amount, igst_amount
+//           cashfree_order_id, cashfree_payment_id, cgst_amount, sgst_amount, igst_amount
 //   order_items: order_id, product_id, variant_id, product_name, variant_label,
 //                product_slug, quantity, unit_price, total_price
 //
-// Returns: { razorpayOrderId, orderId, amount, currency, key } | { orderId, paymentMethod, total }
+// Returns: { orderId, paymentMethod, total, ... }
 
 import { NextRequest, NextResponse } from "next/server";
-import Razorpay from "razorpay";
 import { z } from "zod";
 import { PRODUCTS } from "@/lib/constants/products";
 import { createServerClient, createAdminSupabaseClient } from "@/lib/supabase/server";
-
-// ─── Razorpay client (lazy — initialized inside handler so env vars are available at runtime) ──
-function getRazorpay() {
-  return new Razorpay({
-    key_id:     process.env.RAZORPAY_KEY_ID!,
-    key_secret: process.env.RAZORPAY_KEY_SECRET!,
-  });
-}
 
 // ─── Validation schemas ──────────────────────────────────────────────────────
 const CartItemSchema = z.object({
@@ -61,7 +53,7 @@ const RequestSchema = z.object({
   items:           z.array(CartItemSchema).min(1).max(20),
   couponCode:      z.string().optional(),
   deliveryAddress: AddressSchema,
-  paymentMethod:   z.enum(["razorpay_upi", "razorpay_card", "razorpay_netbanking", "cod", "phonepe", "phonepe_qr", "cashfree"]),
+  paymentMethod:   z.enum(["cashfree", "phonepe_qr", "cod"]),
   customerNotes:   z.string().max(500).optional(),
 });
 
@@ -78,11 +70,9 @@ const IGST_RATE  = 12;  // percent — for inter-state
 // ─── Map payment method display name to DB enum ──────────────────────────────
 function mapPaymentMethodLabel(pm: string): string {
   const map: Record<string, string> = {
-    razorpay_upi:        "UPI",
-    razorpay_card:       "Card",
-    razorpay_netbanking: "Net Banking",
-    cod:                 "Cash on Delivery",
-    phonepe:             "PhonePe",
+    cashfree:   "Cashfree (UPI / Card / NetBanking)",
+    phonepe_qr: "PhonePe QR",
+    cod:        "Cash on Delivery",
   };
   return map[pm] || pm;
 }
@@ -345,7 +335,7 @@ export async function POST(request: NextRequest) {
           shipping_address: deliveryAddress,        // JSONB snapshot
           status:           "pending",
           payment_status:   "pending",
-          payment_method:   paymentMethod,          // razorpay_upi | razorpay_card | razorpay_netbanking | cod
+          payment_method:   paymentMethod,          // cashfree | phonepe_qr | cod
           subtotal,
           discount:         0,                      // Product-level discounts (future)
           coupon_discount:  couponDiscount,
@@ -451,20 +441,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // ─── 7a. PhonePe order — return orderId for client to call phonepe-initiate ─
-    if (paymentMethod === "phonepe") {
-      return NextResponse.json({
-        orderId:       supabaseOrderId,
-        paymentMethod: "phonepe",
-        total,
-        subtotal,
-        couponDiscount,
-        deliveryCharge,
-        // Client should POST to /api/checkout/phonepe-initiate with { orderId, amount: total }
-      });
-    }
-
-    // ─── 7b. PhonePe QR — manual scan, no gateway needed ─────────────────
+    // ─── 7. PhonePe QR — manual scan, no gateway processing needed ──────────
     if (paymentMethod === "phonepe_qr") {
       return NextResponse.json({
         orderId:       supabaseOrderId,
@@ -476,52 +453,15 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // ─── 7c. Cashfree — DB order created; caller will hit /api/checkout/cashfree-create ─
-    if (paymentMethod === "cashfree") {
-      return NextResponse.json({
-        orderId: supabaseOrderId,
-        amount:  total,          // paise — passed to cashfree-create
-        paymentMethod: "cashfree",
-        subtotal,
-        couponDiscount,
-        deliveryCharge,
-      });
-    }
-
-    // ─── 7. Create Razorpay order ─────────────────────────────────────────
-    const rzpOrder = await getRazorpay().orders.create({
-      amount:   total,                                // Already in paise
-      currency: "INR",
-      receipt:  (supabaseOrderId || `mf-${Date.now()}`).slice(0, 40),
-      notes: {
-        mf_order_id:     supabaseOrderId || "",
-        customer_name:   deliveryAddress.name,
-        customer_mobile: deliveryAddress.mobile,
-        city:            deliveryAddress.city,
-        state:           deliveryAddress.state,
-      },
-    });
-
-    // Store razorpay_order_id back in Supabase
-    if (supabaseOrderId && !supabaseOrderId.startsWith("DEV-")) {
-      try {
-        await adminSupa.from("orders")
-          .update({ razorpay_order_id: rzpOrder.id })
-          .eq("id", supabaseOrderId);
-      } catch { /* non-fatal */ }
-    }
-
+    // ─── 8. Cashfree — DB order created; frontend calls /api/checkout/cashfree-create ─
+    // (Cashfree payment session is created separately to keep this endpoint fast)
     return NextResponse.json({
-      razorpayOrderId: rzpOrder.id,
-      orderId:         supabaseOrderId,
-      amount:          total,
-      currency:        "INR",
-      key:             process.env.RAZORPAY_KEY_ID,
-      // Pre-fill customer details for Razorpay modal
-      prefill: {
-        name:    deliveryAddress.name,
-        contact: `+91${deliveryAddress.mobile}`,
-      },
+      orderId:       supabaseOrderId,
+      amount:        total,          // paise — passed to cashfree-create
+      paymentMethod: "cashfree",
+      subtotal,
+      couponDiscount,
+      deliveryCharge,
     });
 
   } catch (err: any) {
@@ -534,7 +474,7 @@ export async function POST(request: NextRequest) {
 }
 
 // ─── Stock decrement helper ────────────────────────────────────────────────────
-// Called after COD confirm (here) and after Razorpay verify-payment
+// Called after COD confirm (here) and after Cashfree webhook confirms payment
 async function decrementStock(
   supabase: ReturnType<typeof createAdminSupabaseClient>,
   items: { variantId: string | null; quantity: number }[]

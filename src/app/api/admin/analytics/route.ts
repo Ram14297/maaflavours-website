@@ -205,7 +205,7 @@ function buildMockAnalytics(period: string) {
       { name:"Red Chilli Pickle", revenue:6120000,  units:38 },
       { name:"Lemon Pickle",      revenue:3600000,  units:25 },
     ],
-    paymentMix: { razorpay_upi:68, cod:42, razorpay_card:22, razorpay_netbanking:10 },
+    paymentMix: { cashfree:68, cod:42, phonepe_qr:12 },
     topCities: [
       { city:"Hyderabad",  orders:38 }, { city:"Bangalore",  orders:24 },
       { city:"Chennai",    orders:18 }, { city:"Vijayawada", orders:14 },

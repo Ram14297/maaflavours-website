@@ -133,7 +133,7 @@ export type OrderStatus =
 
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 
-export type PaymentMethod = "razorpay_upi" | "razorpay_card" | "razorpay_netbanking" | "cod";
+export type PaymentMethod = "cashfree" | "phonepe_qr" | "cod";
 
 export interface OrderItem {
   id: string;

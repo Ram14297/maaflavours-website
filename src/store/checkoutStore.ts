@@ -37,7 +37,6 @@ interface CheckoutStore {
   address: DeliveryAddress;
   pincodeData: PincodeData;
   paymentMethod: PaymentMethod;
-  razorpayOrderId: string;
   isPlacingOrder: boolean;
   orderError: string;
   savedAddresses: DeliveryAddress[];
@@ -48,7 +47,6 @@ interface CheckoutStore {
   setPincodeData: (data: Partial<PincodeData>) => void;
   lookupPincode: (pincode: string) => Promise<void>;
   setPaymentMethod: (method: PaymentMethod) => void;
-  setRazorpayOrderId: (id: string) => void;
   setPlacingOrder: (val: boolean) => void;
   setOrderError: (msg: string) => void;
   resetCheckout: () => void;
@@ -71,7 +69,6 @@ export const useCheckoutStore = create<CheckoutStore>((set, get) => ({
   address: EMPTY_ADDRESS,
   pincodeData: { city: "", state: "", isValid: false, loading: false, error: "" },
   paymentMethod: "cashfree",
-  razorpayOrderId: "",
   isPlacingOrder: false,
   orderError: "",
   savedAddresses: [],
@@ -138,7 +135,6 @@ export const useCheckoutStore = create<CheckoutStore>((set, get) => ({
   },
 
   setPaymentMethod: (method) => set({ paymentMethod: method }),
-  setRazorpayOrderId: (id) => set({ razorpayOrderId: id }),
   setPlacingOrder: (val) => set({ isPlacingOrder: val }),
   setOrderError: (msg) => set({ orderError: msg }),
 
@@ -148,7 +144,6 @@ export const useCheckoutStore = create<CheckoutStore>((set, get) => ({
       address: EMPTY_ADDRESS,
       pincodeData: { city: "", state: "", isValid: false, loading: false, error: "" },
       paymentMethod: "cashfree",
-      razorpayOrderId: "",
       isPlacingOrder: false,
       orderError: "",
     }),
