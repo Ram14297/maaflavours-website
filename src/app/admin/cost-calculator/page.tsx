@@ -159,7 +159,7 @@ export default function CostCalculatorPage() {
   }
 
   function resetPickle() {
-    if (!confirm(`Reset all costs for ${PICKLES.find(p => p.slug === selected)?.name}?`)) return;
+    if (!confirm(`Reset all costs for ${products.find(p => p.slug === selected)?.name}?`)) return;
     setAllCosts(prev => ({ ...prev, [selected]: blankPickleCosts() }));
     setSaved(false);
   }
@@ -173,7 +173,7 @@ export default function CostCalculatorPage() {
       "",
     ];
 
-    PICKLES.forEach(pickle => {
+    products.forEach(pickle => {
       const pc = pickleCosts(pickle.slug);
       lines.push(`=== ${pickle.name} ===`);
       lines.push("Cost Head,250g (₹),500g (₹)");
@@ -253,7 +253,7 @@ export default function CostCalculatorPage() {
             onChange={e => setSelected(e.target.value)}
             className="font-dm-sans text-sm px-3 py-2 rounded-xl border outline-none"
             style={{ borderColor: "rgba(200,150,12,0.3)", color: "var(--color-brown)", minWidth: 200 }}>
-            {PICKLES.map(p => (
+            {products.map(p => (
               <option key={p.slug} value={p.slug}>{p.name}</option>
             ))}
           </select>
