@@ -130,19 +130,31 @@ function ProductsContent() {
         const mapped: ProductSeed[] = data.products
           .map((p: any) => {
             if (!p?.slug || !Array.isArray(p.variants) || p.variants.length === 0) return null;
-            // Merge live API data with static metadata (description, ingredients, etc.)
+            // Try to find static metadata — but don't require it.
+            // New products added via admin won't be in the static list and must still show.
             const base = PRODUCTS.find((sp) => sp.slug === p.slug);
-            if (!base) return null;
             return {
-              ...base,
-              name:       p.name       || base.name,
-              subtitle:   p.subtitle   || base.subtitle,
-              spice_level: p.spice_level || base.spice_level,
-              is_featured: p.is_featured ?? base.is_featured,
+              // Fallback fields for products not in static constants
+              tag:               p.tag              || "",
+              short_description: p.short_description || p.description || "",
+              description:       p.description       || "",
+              ingredients:       p.ingredients       || "",
+              shelf_life_days:   p.shelf_life_days   || 180,
+              is_vegetarian:     p.is_vegetarian     ?? true,
+              image_placeholder: p.slug,
+              // Overlay static base if it exists (richer content)
+              ...( base || {} ),
+              // Always use live Supabase values
+              slug:        p.slug,
+              name:        p.name        || base?.name        || p.slug,
+              subtitle:    p.subtitle    || base?.subtitle    || "",
+              spice_level: p.spice_level || base?.spice_level || "medium",
+              is_featured: p.is_featured ?? base?.is_featured ?? false,
+              primary_image_url: p.primary_image_url || null,
               variants: p.variants.map((v: any) => ({
                 weight_grams: v.weight_grams,
                 label:        v.label,
-                price:        v.price,   // ← live price from Supabase
+                price:        v.price,
               })),
             } as ProductSeed;
           })
