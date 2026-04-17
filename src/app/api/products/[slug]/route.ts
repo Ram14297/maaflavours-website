@@ -50,21 +50,50 @@ export async function GET(
       .order("created_at", { ascending: false })
       .limit(10);
 
-    // Fetch related products (same category, limit 4)
-    const { data: related } = await supabase
-      .from("products_with_details")
-      .select("id, slug, name, spice_level, tag, primary_image_url, min_price, min_effective_price")
-      .eq("is_active", true)
-      .eq("category_id", product.category_id)
-      .neq("id", product.id)
-      .limit(4);
+    // Fetch related products (same category — direct table query, no view dependency)
+    let related: any[] = [];
+    try {
+      const { data: relatedRows } = await supabase
+        .from("products")
+        .select("id, slug, name, spice_level, tag")
+        .eq("is_active", true)
+        .eq("category_id", product.category_id)
+        .neq("id", product.id)
+        .limit(4);
+
+      if (relatedRows && relatedRows.length > 0) {
+        const rIds = relatedRows.map((p: any) => p.id);
+        const { data: rVariants } = await supabase
+          .from("product_variants")
+          .select("product_id, price, discounted_price")
+          .in("product_id", rIds)
+          .eq("is_active", true)
+          .order("price");
+
+        const rMap: Record<string, any[]> = {};
+        for (const v of rVariants || []) {
+          if (!rMap[v.product_id]) rMap[v.product_id] = [];
+          rMap[v.product_id].push(v);
+        }
+
+        related = relatedRows.map((p: any) => {
+          const vv = rMap[p.id] || [];
+          const minPrice = vv.length
+            ? Math.min(...vv.map((v: any) => v.discounted_price ?? v.price))
+            : 0;
+          return { ...p, primary_image_url: null, min_price: minPrice, min_effective_price: minPrice };
+        });
+      }
+    } catch {
+      // related products are non-critical — fail silently
+    }
 
     return NextResponse.json({
       product,
       variants:   variants   || [],
       images:     images     || [],
       reviews:    reviews    || [],
-      related:    related    || [],
+      related,
     });
 
   } catch (err: any) {

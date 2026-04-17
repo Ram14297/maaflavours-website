@@ -6,9 +6,8 @@
 // Fully responsive — mobile sticky bottom bar + desktop inline CTAs
 
 import { useState, useCallback, useEffect } from "react";
-import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Star, ChevronRight, MessageCircle } from "lucide-react";
+import { Star, ChevronRight, MessageCircle, ShoppingBag } from "lucide-react";
 import { PRODUCTS, SITE } from "@/lib/constants/products";
 import { formatPrice, getSpiceLevelConfig, calculateDeliveryCharge, amountForFreeShipping } from "@/lib/utils";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
@@ -27,13 +26,39 @@ import toast from "react-hot-toast";
 
 // ─── Emoji map for product placeholders ────────────────────────────────────
 const PRODUCT_EMOJIS: Record<string, string> = {
-  "drumstick-pickle": "🥢",
-  "amla-pickle": "🫙",
-  "pulihora-gongura": "🍃",
-  "lemon-pickle": "🍋",
-  "maamidi-allam": "🥭",
+  "drumstick-pickle":  "🥢",
+  "amla-pickle":       "🫙",
+  "pulihora-gongura":  "🍃",
+  "lemon-pickle":      "🍋",
+  "maamidi-allam":     "🥭",
   "red-chilli-pickle": "🌶️",
+  "aavakaaya":         "🥭",
 };
+
+// ─── Live product type (matches API response shape) ────────────────────────
+interface LiveVariant {
+  id?: string;
+  weight_grams: number;
+  label: string;
+  price: number;
+  discounted_price?: number | null;
+  stock_quantity?: number;
+}
+
+interface LiveProduct {
+  id: string;
+  slug: string;
+  name: string;
+  subtitle: string;
+  tag: string;
+  spice_level: "mild" | "medium" | "spicy" | "extra-hot";
+  short_description: string;
+  description: string;
+  ingredients: string;
+  shelf_life_days: number;
+  is_vegetarian: boolean;
+  variants: LiveVariant[];
+}
 
 // ─── Breadcrumb ────────────────────────────────────────────────────────────
 function Breadcrumb({ productName }: { productName: string }) {
@@ -117,6 +142,77 @@ function FreeShippingProgress({ currentTotal }: { currentTotal: number }) {
   );
 }
 
+// ─── Loading skeleton ──────────────────────────────────────────────────────
+function LoadingState() {
+  return (
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ background: "var(--color-warm-white)" }}
+    >
+      <AnnouncementBar />
+      <NavbarWithCart />
+      <main className="flex-1 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div
+            className="w-14 h-14 rounded-full flex items-center justify-center"
+            style={{
+              background: "linear-gradient(135deg, var(--color-cream), var(--color-cream-dark))",
+              border: "2px solid rgba(200,150,12,0.2)",
+              animation: "pulseGold 1.5s ease-in-out infinite",
+            }}
+          >
+            <ShoppingBag size={24} style={{ color: "var(--color-gold)" }} />
+          </div>
+          <p
+            className="font-cormorant italic text-xl"
+            style={{ color: "var(--color-brown)" }}
+          >
+            Loading pickle details…
+          </p>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+// ─── Not found state ───────────────────────────────────────────────────────
+function NotFoundState() {
+  return (
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ background: "var(--color-warm-white)" }}
+    >
+      <AnnouncementBar />
+      <NavbarWithCart />
+      <main className="flex-1 flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
+          <div className="text-6xl mb-4">🫙</div>
+          <h1
+            className="font-playfair font-bold text-3xl mb-2"
+            style={{ color: "var(--color-brown)" }}
+          >
+            Pickle Not Found
+          </h1>
+          <p
+            className="font-cormorant italic text-xl mb-6"
+            style={{ color: "var(--color-grey)" }}
+          >
+            This pack seems to have run out — or it never existed.
+          </p>
+          <Link
+            href="/products"
+            className="btn-primary inline-flex items-center gap-2 px-6 py-3"
+          >
+            Browse All Pickles
+          </Link>
+        </div>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
 // ─── Main Page Component ────────────────────────────────────────────────────
 interface ProductDetailPageProps {
   params: { slug: string };
@@ -125,22 +221,84 @@ interface ProductDetailPageProps {
 export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { slug } = params;
 
-  // Find product from constants — will be replaced with Supabase fetch
-  const product = PRODUCTS.find((p) => p.slug === slug);
-  if (!product) notFound();
+  // ─── Live product state ────────────────────────────────────────────────
+  const [liveProduct, setLiveProduct] = useState<LiveProduct | null>(null);
+  const [isLoading, setIsLoading]     = useState(true);
+  const [is404, setIs404]             = useState(false);
 
-  const emoji = PRODUCT_EMOJIS[slug] || "🫙";
-  const spiceConfig = getSpiceLevelConfig(product.spice_level);
-
-  // ─── State ─────────────────────────────────────────────────────────────
+  // ─── UI state — must be declared before any conditional return ─────────
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity]   = useState(1);
   const [loginOpen, setLoginOpen] = useState(false);
 
   const addItem = useCartStore((s) => s.addItem);
 
+  // ─── Fetch product from live API ───────────────────────────────────────
+  useEffect(() => {
+    setIsLoading(true);
+    setIs404(false);
+
+    fetch(`/api/products/${slug}`)
+      .then((r) => {
+        if (r.status === 404) {
+          setIs404(true);
+          setIsLoading(false);
+          return null;
+        }
+        return r.json();
+      })
+      .then((data) => {
+        if (!data) return;
+        const { product: p, variants } = data;
+        // Enrich with static content (richer descriptions, ingredients) if available
+        const base = PRODUCTS.find((sp) => sp.slug === slug);
+
+        setLiveProduct({
+          id:                p.id                || slug,
+          slug:              p.slug              || slug,
+          name:              p.name              || base?.name              || slug,
+          subtitle:          p.subtitle          || base?.subtitle          || "",
+          tag:               p.tag               || base?.tag               || "",
+          spice_level:       p.spice_level       || base?.spice_level       || "medium",
+          short_description: p.short_description || base?.short_description || p.description || "",
+          description:       p.description       || base?.description       || "",
+          ingredients:       p.ingredients       || base?.ingredients       || "",
+          shelf_life_days:   p.shelf_life_days   || base?.shelf_life_days   || 180,
+          is_vegetarian:     p.is_vegetarian     ?? base?.is_vegetarian     ?? true,
+          variants: (variants && variants.length > 0)
+            ? variants
+            : (base?.variants || []),
+        });
+        setIsLoading(false);
+      })
+      .catch(() => {
+        // Supabase unreachable — try static fallback
+        const base = PRODUCTS.find((sp) => sp.slug === slug);
+        if (base) {
+          setLiveProduct({
+            id:                base.slug,
+            slug:              base.slug,
+            name:              base.name,
+            subtitle:          base.subtitle,
+            tag:               base.tag,
+            spice_level:       base.spice_level,
+            short_description: base.short_description,
+            description:       base.description,
+            ingredients:       base.ingredients,
+            shelf_life_days:   base.shelf_life_days,
+            is_vegetarian:     base.is_vegetarian,
+            variants:          base.variants,
+          });
+        } else {
+          setIs404(true);
+        }
+        setIsLoading(false);
+      });
+  }, [slug]);
+
   // ─── Reveal animation observer ─────────────────────────────────────────
   useEffect(() => {
+    if (!liveProduct) return;
     const observer = new IntersectionObserver(
       (entries) => entries.forEach((e) => {
         if (e.isIntersecting) e.target.classList.add("revealed");
@@ -149,30 +307,40 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     );
     document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, []);
+  }, [liveProduct]);
 
-  const selectedVariant = product.variants[selectedVariantIndex] as typeof product.variants[0] & { discounted_price?: number; stock_quantity?: number };
-  const totalPrice = selectedVariant.price * quantity;
-  const deliveryCharge = calculateDeliveryCharge(totalPrice);
+  // ─── Derived values (safe with null guard below) ───────────────────────
+  const selectedVariant = liveProduct?.variants[selectedVariantIndex] ?? liveProduct?.variants[0] ?? null;
+  const totalPrice      = (selectedVariant?.price ?? 0) * quantity;
+  const deliveryCharge  = calculateDeliveryCharge(totalPrice);
 
   // ─── Handlers ──────────────────────────────────────────────────────────
   const handleAddToCart = useCallback(async () => {
+    if (!liveProduct || !selectedVariant) return;
     try {
-      await addItem(product.slug, selectedVariantIndex, quantity);
+      await addItem(liveProduct.slug, selectedVariantIndex, quantity);
       toast.success(
-        `${product.name} (${selectedVariant.label} × ${quantity}) added to cart!`,
+        `${liveProduct.name} (${selectedVariant.label} × ${quantity}) added to cart!`,
         { duration: 3000 }
       );
     } catch {
       toast.error("Could not add to cart. Please try again.");
     }
-  }, [addItem, product.slug, product.name, selectedVariantIndex, selectedVariant.label, quantity]);
+  }, [addItem, liveProduct, selectedVariantIndex, selectedVariant, quantity]);
 
   const handleBuyNow = useCallback(async () => {
     await handleAddToCart();
     toast("Redirecting to checkout…", { icon: "⚡" });
     setTimeout(() => { window.location.href = "/checkout"; }, 500);
   }, [handleAddToCart]);
+
+  // ─── Early returns (after all hooks) ──────────────────────────────────
+  if (isLoading) return <LoadingState />;
+  if (is404 || !liveProduct || !selectedVariant) return <NotFoundState />;
+
+  // Aliases — all guaranteed non-null from here
+  const product = liveProduct;
+  const emoji   = PRODUCT_EMOJIS[slug] || "🫙";
 
   return (
     <div
@@ -255,7 +423,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   {product.subtitle}
                 </p>
               </div>
-
 
               {/* Gold ornament */}
               <div className="ornament-line" />
