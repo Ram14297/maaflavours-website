@@ -41,7 +41,7 @@ interface LiveVariant {
   weight_grams: number;
   label: string;
   price: number;
-  discounted_price?: number | null;
+  discounted_price?: number;
   stock_quantity?: number;
 }
 
@@ -266,7 +266,10 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           shelf_life_days:   p.shelf_life_days   || base?.shelf_life_days   || 180,
           is_vegetarian:     p.is_vegetarian     ?? base?.is_vegetarian     ?? true,
           variants: (variants && variants.length > 0)
-            ? variants
+            ? variants.map((v: any) => ({
+                ...v,
+                discounted_price: v.discounted_price ?? undefined,
+              }))
             : (base?.variants || []),
         });
         setIsLoading(false);
