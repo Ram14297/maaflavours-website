@@ -38,7 +38,8 @@ const NAV_SECTIONS = [
   {
     label: "Finance",
     items: [
-      { href: "/admin/expenses",  label: "Expenses",   icon: IconExpenses   },
+      { href: "/admin/expenses",        label: "Expenses",        icon: IconExpenses        },
+      { href: "/admin/cost-calculator", label: "Cost Calculator", icon: IconCostCalculator  },
     ],
   },
   {
@@ -483,8 +484,9 @@ function getPageTitle(pathname: string): string {
     "/admin/inventory": "Inventory",
     "/admin/customers": "Customers",
     "/admin/coupons":   "Coupons",
-    "/admin/expenses":  "Expense Tracker",
-    "/admin/settings":  "Settings",
+    "/admin/expenses":        "Expense Tracker",
+    "/admin/cost-calculator": "Cost Calculator",
+    "/admin/settings":        "Settings",
   };
   // Exact match or prefix match
   const exact = map[pathname];
@@ -554,6 +556,13 @@ function IconExpenses({ size = 15, style }: { size?: number; style?: React.CSSPr
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" style={style}>
       <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+    </svg>
+  );
+}
+function IconCostCalculator({ size = 15, style }: { size?: number; style?: React.CSSProperties }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" style={style}>
+      <rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/><line x1="8" y1="18" x2="10" y2="18"/>
     </svg>
   );
 }
