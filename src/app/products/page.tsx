@@ -13,6 +13,7 @@ import FilterSidebar from "@/components/product/FilterSidebar";
 import MobileFilterDrawer from "@/components/product/MobileFilterDrawer";
 import SortBar from "@/components/product/SortBar";
 import ProductGrid from "@/components/product/ProductGrid";
+import ProductCard from "@/components/product/ProductCard";
 import ActiveFilterTags from "@/components/product/ActiveFilterTags";
 import SearchBar from "@/components/product/SearchBar";
 import { useProductFilters } from "@/hooks/useProductFilters";
@@ -120,46 +121,49 @@ function PageHeader() {
 // ─── Inner content (needs useSearchParams — wrapped in Suspense) ────────────
 function ProductsContent() {
   // ─── Live products from Supabase via API ────────────────────────────────
-  const [liveProducts, setLiveProducts] = useState<ProductSeed[]>(PRODUCTS);
+  const [liveProducts, setLiveProducts]   = useState<ProductSeed[]>(PRODUCTS);
+  const [powderProducts, setPowderProducts] = useState<ProductSeed[]>([]);
 
   useEffect(() => {
-    fetch("/api/products?limit=50&type=pickle")
+    // Fetch ALL active products (pickles + powders)
+    fetch("/api/products?limit=100")
       .then((r) => r.json())
       .then((data) => {
         if (!Array.isArray(data.products) || data.products.length === 0) return;
-        const mapped: ProductSeed[] = data.products
-          .map((p: any) => {
-            if (!p?.slug || !Array.isArray(p.variants) || p.variants.length === 0) return null;
-            // Try to find static metadata — but don't require it.
-            // New products added via admin won't be in the static list and must still show.
-            const base = PRODUCTS.find((sp) => sp.slug === p.slug);
-            return {
-              // Fallback fields for products not in static constants
-              tag:               p.tag              || "",
-              short_description: p.short_description || p.description || "",
-              description:       p.description       || "",
-              ingredients:       p.ingredients       || "",
-              shelf_life_days:   p.shelf_life_days   || 180,
-              is_vegetarian:     p.is_vegetarian     ?? true,
-              image_placeholder: p.slug,
-              // Overlay static base if it exists (richer content)
-              ...( base || {} ),
-              // Always use live Supabase values
-              slug:        p.slug,
-              name:        p.name        || base?.name        || p.slug,
-              subtitle:    p.subtitle    || base?.subtitle    || "",
-              spice_level: p.spice_level || base?.spice_level || "medium",
-              is_featured: p.is_featured ?? base?.is_featured ?? false,
-              primary_image_url: p.primary_image_url || null,
-              variants: p.variants.map((v: any) => ({
-                weight_grams: v.weight_grams,
-                label:        v.label,
-                price:        v.price,
-              })),
-            } as ProductSeed;
-          })
-          .filter(Boolean) as ProductSeed[];
-        if (mapped.length > 0) setLiveProducts(mapped);
+
+        function mapProduct(p: any): ProductSeed | null {
+          if (!p?.slug || !Array.isArray(p.variants) || p.variants.length === 0) return null;
+          const base = PRODUCTS.find((sp) => sp.slug === p.slug);
+          return {
+            tag:               p.tag              || "",
+            short_description: p.short_description || p.description || "",
+            description:       p.description       || "",
+            ingredients:       p.ingredients       || "",
+            shelf_life_days:   p.shelf_life_days   || 180,
+            is_vegetarian:     p.is_vegetarian     ?? true,
+            image_placeholder: p.slug,
+            ...( base || {} ),
+            slug:        p.slug,
+            name:        p.name        || base?.name        || p.slug,
+            subtitle:    p.subtitle    || base?.subtitle    || "",
+            spice_level: p.spice_level || base?.spice_level || "medium",
+            is_featured: p.is_featured ?? base?.is_featured ?? false,
+            primary_image_url: p.primary_image_url || null,
+            product_type: p.product_type || "pickle",
+            variants: p.variants.map((v: any) => ({
+              weight_grams: v.weight_grams,
+              label:        v.label,
+              price:        v.price,
+            })),
+          } as ProductSeed;
+        }
+
+        const all     = data.products.map(mapProduct).filter(Boolean) as ProductSeed[];
+        const pickles = all.filter(p => (p as any).product_type !== "powder");
+        const powders = all.filter(p => (p as any).product_type === "powder");
+
+        if (pickles.length > 0) setLiveProducts(pickles);
+        setPowderProducts(powders);
       })
       .catch(() => {/* silent — keep static fallback */});
   }, []);
@@ -292,6 +296,35 @@ function ProductsContent() {
             )}
           </div>
         </div>
+
+        {/* ─── Spice Powders Section ──────────────────────────────────── */}
+        {powderProducts.length > 0 && (
+          <div className="mt-16 pb-16">
+            {/* Section header */}
+            <div className="flex items-center gap-4 mb-8">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-lg">🌶️</span>
+                  <span className="font-dm-sans text-xs font-bold uppercase tracking-widest" style={{ color: "var(--color-gold)" }}>
+                    New
+                  </span>
+                </div>
+                <h2 className="font-playfair font-bold text-2xl sm:text-3xl" style={{ color: "var(--color-brown)" }}>
+                  Spice Powders
+                </h2>
+                <p className="font-dm-sans text-sm mt-1" style={{ color: "var(--color-grey)" }}>
+                  Freshly ground Andhra podis — made in small batches, no preservatives
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {powderProducts.map((product) => (
+                <ProductCard key={product.slug} product={product} />
+              ))}
+            </div>
+          </div>
+        )}
       </main>
 
       <Footer />

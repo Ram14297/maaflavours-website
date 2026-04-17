@@ -8,15 +8,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-// ─── Pickles ──────────────────────────────────────────────────────────────────
-const PICKLES = [
-  { slug: "drumstick-pickle",  name: "Drumstick Pickle"    },
-  { slug: "aavakaaya",         name: "Aavakaaya"           },
-  { slug: "maamidi-allam",     name: "Mango Ginger Pickle" },
-  { slug: "lemon-pickle",      name: "Lemon Pickle"        },
-  { slug: "red-chilli-pickle", name: "Red Chilli Pickle"   },
-  { slug: "pulihora-gongura",  name: "Pulihora Gongura"    },
-];
+// Products are fetched live from Supabase via API
+interface ProductOption { slug: string; name: string; }
 
 // ─── Cost rows ────────────────────────────────────────────────────────────────
 const GROUPS = [
@@ -103,12 +96,34 @@ function fmt(n: number): string {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function CostCalculatorPage() {
-  const [allCosts, setAllCosts] = useState<AllCosts>({});
-  const [selected, setSelected]  = useState(PICKLES[0].slug);
+  const [products, setProducts]   = useState<ProductOption[]>([]);
+  const [loadingP, setLoadingP]   = useState(true);
+  const [allCosts, setAllCosts]   = useState<AllCosts>({});
+  const [selected, setSelected]   = useState("");
   const [margin, setMargin]       = useState(40);
   const [saved, setSaved]         = useState(false);
 
-  // Load from localStorage on mount
+  // Fetch live products from Supabase
+  useEffect(() => {
+    async function load() {
+      try {
+        const res  = await fetch("/api/admin/products?limit=100");
+        const data = await res.json();
+        const list: ProductOption[] = (data.products || [])
+          .filter((p: any) => p.is_active)
+          .map((p: any) => ({ slug: p.slug, name: p.name }));
+        setProducts(list);
+        if (list.length > 0) setSelected(prev => prev || list[0].slug);
+      } catch {
+        // fallback empty
+      } finally {
+        setLoadingP(false);
+      }
+    }
+    load();
+  }, []);
+
+  // Load saved costs from localStorage on mount
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);

@@ -58,8 +58,8 @@ function toSlug(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 }
 function autoSku(name: string, label: string): string {
-  const base = name.split(" ").map(w => w[0]?.toUpperCase() || "").join("").slice(0,3) || "MF";
-  return `MF-${base}-${label}`;
+  const slug = toSlug(name) || "product";
+  return `${slug}-${label}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
