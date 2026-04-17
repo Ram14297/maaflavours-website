@@ -13,7 +13,7 @@ import { formatPrice, getSpiceLevelConfig, calculateDeliveryCharge, amountForFre
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import NavbarWithCart from "@/components/layout/NavbarWithCart";
 import Footer from "@/components/layout/Footer";
-import { useCartStore } from "@/store/cartStore";
+import { useCartStore, AddItemMeta } from "@/store/cartStore";
 import ProductImageGallery from "@/components/product/ProductImageGallery";
 import VariantSelector from "@/components/product/VariantSelector";
 import QuantityPicker from "@/components/product/QuantityPicker";
@@ -321,7 +321,16 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const handleAddToCart = useCallback(async () => {
     if (!liveProduct || !selectedVariant) return;
     try {
-      await addItem(liveProduct.slug, selectedVariantIndex, quantity);
+      // Pass full meta so admin-added products (not in static constants) work correctly
+      const meta: AddItemMeta = {
+        productName:     liveProduct.name,
+        productSubtitle: liveProduct.subtitle,
+        variantLabel:    selectedVariant.label,
+        unitPrice:       selectedVariant.price,
+        emoji:           PRODUCT_EMOJIS[liveProduct.slug] || "🫙",
+        maxQuantity:     selectedVariant.stock_quantity ?? 10,
+      };
+      await addItem(liveProduct.slug, selectedVariantIndex, quantity, meta);
       toast.success(
         `${liveProduct.name} (${selectedVariant.label} × ${quantity}) added to cart!`,
         { duration: 3000 }

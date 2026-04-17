@@ -33,6 +33,16 @@ export interface AppliedCoupon {
   description: string;
 }
 
+// Optional metadata for products not in the static PRODUCTS list (e.g. admin-added)
+export interface AddItemMeta {
+  productName: string;
+  productSubtitle: string;
+  variantLabel: string;
+  unitPrice: number;    // paise
+  emoji?: string;
+  maxQuantity?: number;
+}
+
 interface CartStore {
   items: CartLineItem[];
   coupon: AppliedCoupon | null;
@@ -49,7 +59,8 @@ interface CartStore {
   openCart: () => void;
   closeCart: () => void;
   toggleCart: () => void;
-  addItem: (productSlug: string, variantIndex: number, quantity?: number) => void;
+  // meta is required for products not in the static PRODUCTS constants list
+  addItem: (productSlug: string, variantIndex: number, quantity?: number, meta?: AddItemMeta) => void;
   removeItem: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   clearCart: () => void;
@@ -101,15 +112,20 @@ export const useCartStore = create<CartStore>()(
       closeCart: () => set({ isOpen: false }),
       toggleCart: () => set((s) => ({ isOpen: !s.isOpen })),
 
-      addItem: (productSlug, variantIndex, quantity = 1) => {
-        const product = PRODUCTS.find((p) => p.slug === productSlug);
-        if (!product) {
-          console.error(`[CartStore] Product not found: "${productSlug}"`);
-          return;
-        }
-        const variant = product.variants[variantIndex];
-        if (!variant) {
-          console.error(`[CartStore] Variant ${variantIndex} not found for "${productSlug}"`);
+      addItem: (productSlug, variantIndex, quantity = 1, meta) => {
+        // Resolve product data: meta param wins (live products), fallback to static list
+        const staticProduct = PRODUCTS.find((p) => p.slug === productSlug);
+        const staticVariant = staticProduct?.variants[variantIndex];
+
+        const productName     = meta?.productName     ?? staticProduct?.name     ?? productSlug;
+        const productSubtitle = meta?.productSubtitle ?? staticProduct?.subtitle ?? "";
+        const variantLabel    = meta?.variantLabel    ?? staticVariant?.label    ?? `Variant ${variantIndex + 1}`;
+        const unitPrice       = meta?.unitPrice       ?? staticVariant?.price    ?? 0;
+        const emoji           = meta?.emoji           ?? PRODUCT_EMOJIS[productSlug] ?? "🫙";
+        const maxQty          = Math.min(meta?.maxQuantity ?? (staticVariant as any)?.stock_quantity ?? 10, 10);
+
+        if (!unitPrice) {
+          console.error(`[CartStore] Cannot resolve price for "${productSlug}/${variantIndex}" — pass meta for admin-added products`);
           return;
         }
 
@@ -136,17 +152,14 @@ export const useCartStore = create<CartStore>()(
               {
                 id,
                 productSlug,
-                productName: product.name,
-                productSubtitle: product.subtitle,
+                productName,
+                productSubtitle,
                 variantIndex,
-                variantLabel: variant.label,
-                unitPrice: variant.price,
+                variantLabel,
+                unitPrice,
                 quantity,
-                maxQuantity: Math.min(
-                  (variant as { stock_quantity?: number }).stock_quantity || 10,
-                  10
-                ),
-                emoji: PRODUCT_EMOJIS[productSlug] || "🫙",
+                maxQuantity: maxQty,
+                emoji,
                 imageUrl: "",
               },
             ],

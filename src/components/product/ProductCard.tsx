@@ -9,7 +9,7 @@ import Link from "next/link";
 import { ShoppingBag, Star, Heart, Eye } from "lucide-react";
 import { formatPrice, getSpiceLevelConfig } from "@/lib/utils";
 import { PRODUCTS } from "@/lib/constants/products";
-import { useCartStore } from "@/store/cartStore";
+import { useCartStore, AddItemMeta } from "@/store/cartStore";
 import toast from "react-hot-toast";
 
 type ProductSeed = (typeof PRODUCTS)[0];
@@ -39,7 +39,13 @@ export default function ProductCard({
     e.preventDefault();
     setAdding(true);
     try {
-      addItem(product.slug, selectedVariantIndex, 1);
+      const meta: AddItemMeta = {
+        productName:     product.name,
+        productSubtitle: product.subtitle,
+        variantLabel:    selectedVariant.label,
+        unitPrice:       selectedVariant.price,
+      };
+      addItem(product.slug, selectedVariantIndex, 1, meta);
       onAddToCart?.(product, selectedVariantIndex);
       toast.success(`${product.name} (${selectedVariant.label}) added to cart!`);
     } catch {

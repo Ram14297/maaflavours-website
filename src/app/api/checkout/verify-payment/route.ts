@@ -14,6 +14,8 @@ import crypto from "crypto";
 import { z } from "zod";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 
+type SupabaseClient = ReturnType<typeof createAdminSupabaseClient>;
+
 const VerifySchema = z.object({
   razorpay_order_id:   z.string().startsWith("order_"),
   razorpay_payment_id: z.string().startsWith("pay_"),
@@ -76,6 +78,17 @@ export async function POST(request: NextRequest) {
         note:       `Payment ${razorpay_payment_id} verified successfully`,
       });
 
+      // Deduct stock for each ordered item
+      if (orderId) await decrementOrderStock(supabase, orderId).catch(() => {});
+
+      // Notify admin of confirmed online payment
+      if (orderId) await notifyAdmin(
+        supabase, orderId,
+        updatedOrder.customer_id ?? "unknown",
+        updatedOrder.total ?? 0,
+        "razorpay"
+      ).catch(() => {});
+
     } catch (dbErr: any) {
       console.warn("[verify-payment] DB update skipped:", dbErr.message);
       orderId = razorpay_order_id;  // Fallback for dev
@@ -93,5 +106,62 @@ export async function POST(request: NextRequest) {
       { success: false, error: "Verification failed. Please contact support." },
       { status: 500 }
     );
+  }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+async function decrementOrderStock(supabase: SupabaseClient, orderId: string) {
+  const { data: items } = await supabase
+    .from("order_items")
+    .select("variant_id, quantity")
+    .eq("order_id", orderId);
+
+  for (const item of items || []) {
+    if (!item.variant_id) continue;
+    try {
+      const { data: v } = await supabase
+        .from("product_variants")
+        .select("stock_quantity")
+        .eq("id", item.variant_id)
+        .single();
+      if (v && typeof v.stock_quantity === "number") {
+        await supabase
+          .from("product_variants")
+          .update({ stock_quantity: Math.max(0, v.stock_quantity - item.quantity) })
+          .eq("id", item.variant_id);
+      }
+    } catch { /* non-fatal per variant */ }
+  }
+}
+
+async function notifyAdmin(
+  supabase: SupabaseClient,
+  orderId: string,
+  customerId: string,
+  totalPaise: number,
+  method: string
+) {
+  const totalRupees = (totalPaise / 100).toFixed(2);
+  const message = `✅ Payment confirmed — ₹${totalRupees} via ${method.toUpperCase()}. Order: ${orderId}`;
+
+  try {
+    await supabase.from("admin_notifications").insert({
+      type:    "order_paid",
+      message,
+      data:    { order_id: orderId, total: totalPaise, method, customer_id: customerId },
+      is_read: false,
+    });
+  } catch { /* table may not exist */ }
+
+  const waNumber = process.env.ADMIN_WHATSAPP_NUMBER;
+  const waKey    = process.env.CALLMEBOT_API_KEY;
+  if (waNumber && waKey) {
+    try {
+      await fetch(
+        `https://api.callmebot.com/whatsapp.php?phone=${waNumber}&text=${encodeURIComponent(message)}&apikey=${waKey}`,
+        { method: "GET" }
+      );
+    } catch { /* non-fatal */ }
   }
 }

@@ -11,7 +11,7 @@ import { ShoppingBag, Star } from "lucide-react";
 import { PRODUCTS } from "@/lib/constants/products";
 import { formatPrice, getSpiceLevelConfig } from "@/lib/utils";
 import toast from "react-hot-toast";
-import { useCartStore } from "@/store/cartStore";
+import { useCartStore, AddItemMeta } from "@/store/cartStore";
 
 type ProductEntry = (typeof PRODUCTS)[0];
 
@@ -32,7 +32,13 @@ function ProductCard({ product }: ProductCardProps) {
     e.stopPropagation();
     setAdding(true);
     try {
-      await addItem(product.slug, selectedVariantIndex, 1);
+      const meta: AddItemMeta = {
+        productName:     product.name,
+        productSubtitle: product.subtitle,
+        variantLabel:    selectedVariant.label,
+        unitPrice:       selectedVariant.price,
+      };
+      await addItem(product.slug, selectedVariantIndex, 1, meta);
       toast.success(`${product.name} added to cart!`);
     } catch {
       toast.error("Could not add to cart. Please try again.");

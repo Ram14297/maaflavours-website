@@ -37,7 +37,7 @@ function getRazorpay() {
 // ─── Validation schemas ──────────────────────────────────────────────────────
 const CartItemSchema = z.object({
   productSlug:  z.string().min(1),
-  variantIndex: z.number().int().min(0).max(1),  // 0 = 250g, 1 = 500g
+  variantIndex: z.number().int().min(0).max(10),  // up to 11 weight options
   quantity:     z.number().int().min(1).max(20),
 });
 
@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
     const { items, couponCode, deliveryAddress, paymentMethod, customerNotes } = parsed.data;
 
     // ─── 1. Validate items against server catalog & calculate subtotal ─────
+    // Priority: static constants (fast) → Supabase live query (admin-added products)
     let subtotal = 0;
     const validatedItems: {
       productSlug: string;
@@ -115,47 +116,86 @@ export async function POST(request: NextRequest) {
       totalPrice:  number;          // paise
     }[] = [];
 
+    const adminSupa = createAdminSupabaseClient();
+
     for (const item of items) {
-      const product = PRODUCTS.find(p => p.slug === item.productSlug);
-      if (!product) {
-        return NextResponse.json({ error: `Product not found: ${item.productSlug}` }, { status: 400 });
-      }
-      const variant = product.variants[item.variantIndex];
-      if (!variant) {
-        return NextResponse.json({ error: `Invalid variant for ${item.productSlug}` }, { status: 400 });
+      let productName: string;
+      let variantLabel: string;
+      let unitPrice: number;
+      let productId: string | null  = null;
+      let variantId: string | null  = null;
+
+      const staticProduct = PRODUCTS.find(p => p.slug === item.productSlug);
+      const staticVariant = staticProduct?.variants[item.variantIndex];
+
+      if (staticProduct && staticVariant) {
+        // Fast path — static constants
+        productName  = staticProduct.name;
+        variantLabel = staticVariant.label;
+        unitPrice    = staticVariant.price;  // Always use server price (security)
+
+        // Resolve UUIDs from Supabase (non-fatal)
+        try {
+          const { data: dbP } = await adminSupa.from("products")
+            .select("id").eq("slug", item.productSlug).single();
+          if (dbP) {
+            productId = dbP.id;
+            const { data: dbV } = await adminSupa.from("product_variants")
+              .select("id").eq("product_id", dbP.id).eq("label", staticVariant.label).single();
+            if (dbV) variantId = dbV.id;
+          }
+        } catch { /* non-fatal */ }
+
+      } else {
+        // Admin-added product not in static constants — query Supabase
+        try {
+          const { data: dbProduct, error: pe } = await adminSupa
+            .from("products")
+            .select("id, name")
+            .eq("slug", item.productSlug)
+            .eq("is_active", true)
+            .single();
+
+          if (pe || !dbProduct) {
+            return NextResponse.json({ error: `Product not found: ${item.productSlug}` }, { status: 400 });
+          }
+
+          const { data: dbVariants, error: ve } = await adminSupa
+            .from("product_variants")
+            .select("id, label, price, discounted_price")
+            .eq("product_id", dbProduct.id)
+            .eq("is_active", true)
+            .order("weight_grams");
+
+          const dbVariant = dbVariants?.[item.variantIndex];
+          if (ve || !dbVariant) {
+            return NextResponse.json({ error: `Invalid variant index ${item.variantIndex} for ${item.productSlug}` }, { status: 400 });
+          }
+
+          productName  = dbProduct.name;
+          variantLabel = dbVariant.label;
+          unitPrice    = dbVariant.discounted_price ?? dbVariant.price;
+          productId    = dbProduct.id;
+          variantId    = dbVariant.id;
+        } catch {
+          return NextResponse.json({ error: `Product not found: ${item.productSlug}` }, { status: 400 });
+        }
       }
 
-      const unitPrice  = variant.price;  // Always use server price (security)
       const totalPrice = unitPrice * item.quantity;
       subtotal += totalPrice;
 
       validatedItems.push({
         productSlug:  item.productSlug,
-        productName:  product.name,
-        variantLabel: variant.label,
-        productId:    null,  // Resolved below from Supabase
-        variantId:    null,
+        productName,
+        variantLabel,
+        productId,
+        variantId,
         quantity:     item.quantity,
         unitPrice,
         totalPrice,
       });
     }
-
-    // ─── 1b. Resolve Supabase product/variant UUIDs ───────────────────────
-    try {
-      const adminSupa = createAdminSupabaseClient();
-      for (const item of validatedItems) {
-        const { data: product } = await adminSupa.from("products")
-          .select("id").eq("slug", item.productSlug).single();
-        if (product) {
-          item.productId = product.id;
-          const { data: variant } = await adminSupa.from("product_variants")
-            .select("id").eq("product_id", product.id)
-            .eq("label", item.variantLabel).single();
-          if (variant) item.variantId = variant.id;
-        }
-      }
-    } catch { /* non-fatal — proceed with nulls in dev */ }
 
     // ─── 2. Validate coupon ───────────────────────────────────────────────
     type AppliedCoupon = {
@@ -385,14 +425,18 @@ export async function POST(request: NextRequest) {
       supabaseOrderId = `DEV-${Date.now()}`;
     }
 
-    // ─── 6. COD order — return immediately ───────────────────────────────
+    // ─── 6. COD order — confirm immediately, deduct stock, notify admin ──
     if (paymentMethod === "cod") {
-      // Mark COD order as confirmed immediately
       if (supabaseOrderId && !supabaseOrderId.startsWith("DEV-")) {
         try {
-          const adminSupa = createAdminSupabaseClient();
           await adminSupa.from("orders").update({ status: "confirmed" }).eq("id", supabaseOrderId);
         } catch { /* non-fatal */ }
+
+        // Deduct stock for each ordered variant
+        await decrementStock(adminSupa, validatedItems);
+
+        // Notify admin of new COD order
+        await notifyAdmin(adminSupa, supabaseOrderId, deliveryAddress.name, total, "cod").catch(() => {});
       }
 
       return NextResponse.json({
@@ -461,7 +505,6 @@ export async function POST(request: NextRequest) {
     // Store razorpay_order_id back in Supabase
     if (supabaseOrderId && !supabaseOrderId.startsWith("DEV-")) {
       try {
-        const adminSupa = createAdminSupabaseClient();
         await adminSupa.from("orders")
           .update({ razorpay_order_id: rzpOrder.id })
           .eq("id", supabaseOrderId);
@@ -487,5 +530,64 @@ export async function POST(request: NextRequest) {
       { error: err.message || "Failed to create order. Please try again." },
       { status: 500 }
     );
+  }
+}
+
+// ─── Stock decrement helper ────────────────────────────────────────────────────
+// Called after COD confirm (here) and after Razorpay verify-payment
+async function decrementStock(
+  supabase: ReturnType<typeof createAdminSupabaseClient>,
+  items: { variantId: string | null; quantity: number }[]
+) {
+  for (const item of items) {
+    if (!item.variantId) continue;
+    try {
+      const { data: v } = await supabase
+        .from("product_variants")
+        .select("stock_quantity")
+        .eq("id", item.variantId)
+        .single();
+      if (v && typeof v.stock_quantity === "number") {
+        await supabase
+          .from("product_variants")
+          .update({ stock_quantity: Math.max(0, v.stock_quantity - item.quantity) })
+          .eq("id", item.variantId);
+      }
+    } catch { /* non-fatal per variant */ }
+  }
+}
+
+// ─── Admin notification helper ─────────────────────────────────────────────────
+// Logs new order to Supabase notifications table and (optionally) calls WhatsApp
+async function notifyAdmin(
+  supabase: ReturnType<typeof createAdminSupabaseClient>,
+  orderId: string,
+  customerName: string,
+  totalPaise: number,
+  method: string
+) {
+  const totalRupees = (totalPaise / 100).toFixed(2);
+  const message = `🛒 New ${method.toUpperCase()} order from ${customerName} — ₹${totalRupees}. Order: ${orderId}`;
+
+  // Store in notifications table if it exists (non-fatal)
+  try {
+    await supabase.from("admin_notifications").insert({
+      type:    "new_order",
+      message,
+      data:    { order_id: orderId, total: totalPaise, method },
+      is_read: false,
+    });
+  } catch { /* table may not exist yet */ }
+
+  // WhatsApp notification via Twilio / CallMeBot (if env vars set)
+  const waNumber = process.env.ADMIN_WHATSAPP_NUMBER;
+  const waKey    = process.env.CALLMEBOT_API_KEY;
+  if (waNumber && waKey) {
+    try {
+      await fetch(
+        `https://api.callmebot.com/whatsapp.php?phone=${waNumber}&text=${encodeURIComponent(message)}&apikey=${waKey}`,
+        { method: "GET" }
+      );
+    } catch { /* non-fatal */ }
   }
 }
