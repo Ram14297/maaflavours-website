@@ -82,17 +82,11 @@ export default function ProductInfoTabs({
           aria-labelledby="tab-description"
           className="animate-fadeIn"
         >
-          <div className="prose max-w-none">
-            {description.split("\n").filter(Boolean).map((para, i) => (
-              <p
-                key={i}
-                className="font-dm-sans text-base leading-relaxed mb-4 last:mb-0"
-                style={{ color: "var(--color-grey)" }}
-              >
-                {para.trim()}
-              </p>
-            ))}
-          </div>
+          <div
+            className="font-dm-sans text-base leading-relaxed [&_p]:mb-4 [&_p:last-child]:mb-0 [&_strong]:font-semibold [&_em]:italic [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-4 [&_li]:mb-1"
+            style={{ color: "var(--color-grey)" }}
+            dangerouslySetInnerHTML={{ __html: description }}
+          />
 
           {/* Quick specs */}
           <div

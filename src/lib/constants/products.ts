@@ -34,11 +34,9 @@ export const PRODUCTS: ProductSeed[] = [
     subtitle: "Medium Spicy",
     tag: "Authentic Andhra Taste",
     spice_level: "medium",
-    short_description: "Tender drumstick pieces marinated in traditional Andhra spices. A classic side for hot rice.",
-    description: `Made with fresh drumstick pieces hand-selected for the perfect texture, our Drumstick Pickle is a celebration of authentic Andhra flavours. Each piece is marinated in a carefully balanced blend of traditional spices — mustard seeds, fenugreek, red chilli powder, turmeric, and our signature pickling oil.
-
-Made the way Maa always made it — in small batches, with patience, and without a single preservative. Best enjoyed with hot steamed rice, dal, or curd rice.`,
-    ingredients: "Drumstick, Sesame Oil, Red Chilli Powder, Mustard Seeds, Fenugreek Seeds, Turmeric, Salt, Curry Leaves, Asafoetida",
+    short_description: "Fresh drumstick pieces slow-cured in sesame oil with Andhra spices. A timeless side for steamed rice and dal.",
+    description: `<p>Made from tender drumsticks hand-picked from local Andhra farms, Munagakaya Pachhadi is one of the most cherished pickles in Telugu households. Each piece is carefully cleaned and marinated in cold-pressed sesame oil with freshly ground spices — the way Maa has always made it.</p><p>The subtle earthiness of drumstick meets the bold heat of Guntur red chilli and the nuttiness of sesame oil to create a pickle that is complex, aromatic, and deeply satisfying. Zero preservatives. Made in small batches. Best with hot steamed rice, curd rice, or alongside a simple dal.</p>`,
+    ingredients: "Raw Drumstick (Munagakaya), Sesame Oil (Nuvvula Nune), Red Chilli Powder (Mirchi Podi), Salt (Uppu), Mustard Seeds (Avalu), Fenugreek Seeds (Menthulu), Turmeric (Pasupu), Garlic (Vellulli), Curry Leaves (Karivepaku), Asafoetida (Inguva)",
     shelf_life_days: 90,
     is_vegetarian: true,
     is_featured: true,
@@ -56,11 +54,9 @@ Made the way Maa always made it — in small batches, with patience, and without
     subtitle: "Sour & Spicy",
     tag: "Rich in Vitamin C",
     spice_level: "medium",
-    short_description: "Tangy Indian gooseberry pickle, bursting with Vitamin C and authentic Andhra spice.",
-    description: `Amla, the powerhouse of Vitamin C, meets Andhra's bold pickling tradition in this classic recipe. Our Amla Pickle uses fresh Indian gooseberries, preserved in a tangy, spiced oil marinade that intensifies beautifully over days.
-
-The sour bite of amla balanced with red chilli heat and the warmth of fenugreek makes this a perfectly complex pickle — healthy and incredibly flavourful. A pack that belongs in every Indian kitchen.`,
-    ingredients: "Indian Gooseberry (Amla), Sesame Oil, Red Chilli Powder, Mustard Seeds, Fenugreek Seeds, Turmeric, Salt, Curry Leaves, Asafoetida",
+    short_description: "Sun-dried Indian gooseberry in sesame oil — tangy, vitamin-rich, and beautifully spiced.",
+    description: `<p>Amla, the powerhouse of Vitamin C, meets Andhra's bold pickling tradition in this classic recipe. Our Amla Pickle uses fresh Indian gooseberries preserved in cold-pressed sesame oil with a fragrant blend of spices that intensifies beautifully over days.</p><p>The sour bite of amla, balanced with red chilli heat and the warmth of fenugreek, makes this a perfectly complex pickle — healthy, gut-friendly, and incredibly flavourful. A pack that belongs in every Indian kitchen.</p>`,
+    ingredients: "Indian Gooseberry / Amla (Usirikaya), Sesame Oil (Nuvvula Nune), Red Chilli Powder (Mirchi Podi), Salt (Uppu), Mustard Seeds (Avalu), Fenugreek Seeds (Menthulu), Turmeric (Pasupu), Curry Leaves (Karivepaku), Asafoetida (Inguva)",
     shelf_life_days: 120,
     is_vegetarian: true,
     is_featured: true,
@@ -78,11 +74,9 @@ The sour bite of amla balanced with red chilli heat and the warmth of fenugreek 
     subtitle: "Spicy",
     tag: "Rare & Traditional",
     spice_level: "spicy",
-    short_description: "The iconic sour sorrel (gongura) of Andhra, prepared as a rich, spicy pulihora paste.",
-    description: `Gongura — the soul of Andhra cuisine. This rare preparation blends the bold sourness of sorrel leaves with red chillies, sesame, and our special pickling masala to create a deeply flavourful condiment that Andhraites everywhere yearn for.
-
-Pulihora Gongura is not just a pickle — it's an emotion. Mixed into hot rice with a spoon of ghee, it transforms an ordinary meal into something truly memorable. Made in small batches to preserve freshness.`,
-    ingredients: "Gongura (Sorrel Leaves), Sesame Oil, Red Chilli Powder, Sesame Seeds, Mustard Seeds, Garlic, Turmeric, Salt, Curry Leaves, Asafoetida",
+    short_description: "The iconic Andhra sorrel paste — sour, spiced, and deeply aromatic. The soul of every Telugu meal.",
+    description: `<p>Gongura is to Andhra what butter is to France — irreplaceable. Our Pulihora Gongura is made from fresh sorrel leaves sourced from farms in Andhra Pradesh, slowly cooked down with garlic, red chillies, and sesame into a thick, intensely flavourful paste.</p><p>Mix it into hot rice with a spoonful of ghee and you will understand why Andhraites across the world carry it in their hearts. Rare to find outside the region, unmistakably authentic from within it. Handmade in small batches with zero preservatives.</p>`,
+    ingredients: "Gongura / Sorrel Leaves (Gongura Aaku), Sesame Oil (Nuvvula Nune), Red Chilli Powder (Mirchi Podi), Garlic (Vellulli), Sesame Seeds (Nuvvulu), Mustard Seeds (Avalu), Salt (Uppu), Dry Red Chillies (Endu Mirchi), Turmeric (Pasupu), Curry Leaves (Karivepaku), Asafoetida (Inguva)",
     shelf_life_days: 60,
     is_vegetarian: true,
     is_featured: true,
@@ -100,11 +94,9 @@ Pulihora Gongura is not just a pickle — it's an emotion. Mixed into hot rice w
     subtitle: "Sour & Spicy",
     tag: "Classic Andhra Staple",
     spice_level: "medium",
-    short_description: "The timeless Andhra lemon pickle — perfectly balanced sour, spicy, and salty.",
-    description: `A pantry staple in every Andhra household — our Lemon Pickle is made with thick-skinned, juicy lemons that are cut and left to marinate in a fragrant blend of red chilli, salt, and spices.
-
-Over time, the lemon softens and the flavours deepen into something magical. This is the pickle that completes a thali, elevates a simple papad lunch, and reminds you of home no matter where you are.`,
-    ingredients: "Lemon, Rock Salt, Red Chilli Powder, Sesame Oil, Mustard Seeds, Fenugreek Seeds, Turmeric, Asafoetida",
+    short_description: "Sun-kissed lemon quarters cured in spiced sesame oil. The timeless Andhra staple that completes every thali.",
+    description: `<p>There is a reason Lemon Pickle has been on every Andhra dining table for generations — it is the one condiment that works with everything. Our Nimmakaya Urugai is made from thick-skinned, juicy lemons quarter-cut and slow-marinated in cold-pressed sesame oil with a blend of bold Andhra spices.</p><p>Over time, the lemon softens and the flavours deepen into something truly special — bright, tangy, and beautifully fragrant. A jar of this pickle elevates a simple papad lunch, completes a dal-rice thali, and brings the taste of Andhra home wherever you are. Shelf life of 6 months — it only gets better with age.</p>`,
+    ingredients: "Lemon (Nimmakaya), Sesame Oil (Nuvvula Nune), Red Chilli Powder (Mirchi Podi), Rock Salt (Nattu Uppu), Mustard Seeds (Avalu), Fenugreek Seeds (Menthulu), Turmeric (Pasupu), Asafoetida (Inguva)",
     shelf_life_days: 180,
     is_vegetarian: true,
     is_featured: true,
@@ -122,11 +114,9 @@ Over time, the lemon softens and the flavours deepen into something magical. Thi
     subtitle: "Medium Spicy & Sweet",
     tag: "Best with Rice & Dosa",
     spice_level: "medium",
-    short_description: "Raw mango and ginger pickle — a sweet, tangy, spicy blend that's perfect with dosa.",
-    description: `Maamidi Allam is a uniquely Andhra pickle that brings together the tartness of raw green mango with the warmth of fresh ginger. The result is a complex, layered condiment — sweet, sour, spicy, and aromatic all at once.
-
-This pickle has a devoted following — it pairs beautifully with dosa, idli, and hot rice alike. The ginger makes it wonderfully warming, while raw mango keeps it bright and tangy. A truly special recipe from Maa's kitchen.`,
-    ingredients: "Raw Mango, Fresh Ginger, Sesame Oil, Red Chilli Powder, Jaggery, Mustard Seeds, Fenugreek Seeds, Turmeric, Salt, Curry Leaves, Asafoetida",
+    short_description: "Raw mango and fresh ginger pickle — sweet, tangy, and warmly spiced. A Maa Flavours signature.",
+    description: `<p>Maamidi Allam is the pickle that surprises everyone the first time — the bold tang of raw green mango meets the earthy warmth of fresh ginger in a perfectly balanced Andhra spice blend. A touch of jaggery rounds out the flavours into something sweet, sour, and beautifully complex.</p><p>This is one of Maa's most celebrated recipes — the one people request again and again. Pairs brilliantly with dosa, idli, upma, or simply spooned over hot rice. Handmade in small batches with no preservatives. No shortcuts.</p>`,
+    ingredients: "Raw Mango (Maamidi Kaaya), Fresh Ginger (Allam), Sesame Oil (Nuvvula Nune), Red Chilli Powder (Mirchi Podi), Jaggery (Bellam), Mustard Seeds (Avalu), Salt (Uppu), Fenugreek Seeds (Menthulu), Turmeric (Pasupu), Curry Leaves (Karivepaku), Asafoetida (Inguva)",
     shelf_life_days: 90,
     is_vegetarian: true,
     is_featured: true,
@@ -141,14 +131,12 @@ This pickle has a devoted following — it pairs beautifully with dosa, idli, an
   {
     slug: "red-chilli-pickle",
     name: "Red Chilli Pickle",
-    subtitle: "Spicy",
+    subtitle: "Extra Hot",
     tag: "Best with Rice",
-    spice_level: "spicy",
-    short_description: "Whole red chillies preserved in spiced sesame oil — bold, fiery, and irresistible.",
-    description: `Not for the faint-hearted — our Red Chilli Pickle is a fiery celebration of Andhra's love for heat. Whole red chillies are stuffed with a fragrant spice blend and preserved in golden sesame oil to create a pickle that's as beautiful to look at as it is bold to taste.
-
-A tiny piece added to hot rice with ghee creates a transcendent experience. Made with locally sourced Guntur red chillies — known globally for their intense heat and deep flavour. Handle with love.`,
-    ingredients: "Red Chilli (Guntur variety), Sesame Oil, Mustard Seeds, Fenugreek Seeds, Turmeric, Rock Salt, Asafoetida, Sesame Seeds",
+    spice_level: "extra-hot",
+    short_description: "Whole Guntur red chillies preserved in golden sesame oil — fiery, fragrant, and unmistakably Andhra.",
+    description: `<p>The Guntur red chilli is legendary in the spice world — known for its intense heat, deep red colour, and smoky fragrance. Our Mirapakaya Urugai celebrates this extraordinary ingredient in its purest form. Whole chillies are packed in cold-pressed sesame oil with mustard seeds, fenugreek, and asafoetida.</p><p>This is a pickle for the bold. One piece added to hot rice with a drizzle of ghee creates an experience that lingers. Spicy, aromatic, honest — made exactly the way it has been made in Andhra homes for generations. Handle with love. Serve with respect.</p>`,
+    ingredients: "Red Chilli — Guntur Variety (Mirapakaya), Sesame Oil (Nuvvula Nune), Mustard Seeds (Avalu), Salt (Uppu), Fenugreek Seeds (Menthulu), Turmeric (Pasupu), Sesame Seeds (Nuvvulu), Asafoetida (Inguva)",
     shelf_life_days: 120,
     is_vegetarian: true,
     is_featured: true,
