@@ -9,6 +9,7 @@ import NavbarWithCart from "@/components/layout/NavbarWithCart";
 import Footer from "@/components/layout/Footer";
 import TestimonialsSection, { Testimonial } from "@/components/reviews/TestimonialsSection";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
+import { getGoogleReviews } from "@/lib/google-reviews";
 
 export const metadata: Metadata = {
   title: "Recipes & Stories | Maa Flavours",
@@ -35,11 +36,24 @@ async function getTestimonials(): Promise<Testimonial[]> {
   }
 }
 
-// Google review link — update once Google Business is verified
-const GOOGLE_REVIEW_LINK = ""; // e.g. https://g.page/r/CXXXXreview
+// Google review link — direct link to leave a review on Google
+const GOOGLE_REVIEW_LINK =
+  "https://search.google.com/local/writereview?placeid=ChIJd4w3OrEBSzpsBDJgL-Npmg";
 
 export default async function BlogPage() {
-  const testimonials = await getTestimonials();
+  const [testimonials, { reviews: googleReviews }] = await Promise.all([
+    getTestimonials(),
+    getGoogleReviews(),
+  ]);
+
+  // Merge: Google reviews first (they're verified), then Supabase ones
+  // Deduplicate by filtering Supabase google-sourced ones if we have real API data
+  const hasGoogleApiReviews = googleReviews.length > 0;
+  const supabaseReviews = hasGoogleApiReviews
+    ? testimonials.filter((t) => t.source !== "google") // avoid duplicates
+    : testimonials;
+
+  const allReviews: Testimonial[] = [...googleReviews, ...supabaseReviews];
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "var(--color-warm-white)" }}>
@@ -147,10 +161,10 @@ export default async function BlogPage() {
         </section>
 
         {/* ── Customer Reviews ─────────────────────────────────────────── */}
-        {testimonials.length > 0 && (
+        {allReviews.length > 0 && (
           <TestimonialsSection
-            testimonials={testimonials}
-            googleReviewLink={GOOGLE_REVIEW_LINK || undefined}
+            testimonials={allReviews}
+            googleReviewLink={GOOGLE_REVIEW_LINK}
           />
         )}
 
