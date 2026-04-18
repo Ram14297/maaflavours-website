@@ -4,7 +4,7 @@
 
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { AdminPage, Btn, Input, Textarea, Alert, A, Spinner } from "@/components/admin/AdminUI";
+import { AdminPage, Btn, Input, Textarea, Alert, A, Spinner, Modal } from "@/components/admin/AdminUI";
 
 // Tab config
 const TABS = [
@@ -85,6 +85,9 @@ export default function SettingsPage() {
   const [saved,   setSaved]  = useState<string|null>(null);
   const [saveErr, setSaveErr]= useState<string|null>(null);
   const [health,  setHealth] = useState<"idle"|"ok"|"error"|"loading">("idle");
+  const [clearModal,  setClearModal]  = useState(false);
+  const [clearing,    setClearing]    = useState(false);
+  const [clearResult, setClearResult] = useState<string|null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -131,6 +134,24 @@ export default function SettingsPage() {
       const r = await fetch("/api/admin/dashboard");
       setHealth(r.ok ? "ok" : "error");
     } catch { setHealth("error"); }
+  }
+
+  async function clearTestOrders() {
+    setClearing(true);
+    setClearResult(null);
+    try {
+      const r = await fetch("/api/admin/clear-test-data", { method: "POST" });
+      const d = await r.json();
+      if (d.success) {
+        setClearResult(`✅ Done — ${d.deleted} order${d.deleted !== 1 ? "s" : ""} deleted. Dashboard is now clean.`);
+      } else {
+        setClearResult(`❌ Error: ${d.error}`);
+      }
+    } catch {
+      setClearResult("❌ Network error. Try again.");
+    }
+    setClearing(false);
+    setClearModal(false);
   }
 
   if (loading) return (
@@ -532,7 +553,7 @@ export default function SettingsPage() {
               <div className="space-y-2 mt-2">
                 {[
                   "NEXT_PUBLIC_SUPABASE_URL","NEXT_PUBLIC_SUPABASE_ANON_KEY","SUPABASE_SERVICE_ROLE_KEY",
-                  "RAZORPAY_KEY_ID","RAZORPAY_KEY_SECRET","RAZORPAY_WEBHOOK_SECRET",
+                  "CASHFREE_APP_ID","CASHFREE_SECRET_KEY","CASHFREE_WEBHOOK_SECRET",
                   "TWILIO_ACCOUNT_SID","TWILIO_AUTH_TOKEN","TWILIO_VERIFY_SERVICE_SID",
                   "ADMIN_EMAIL","ADMIN_PASSWORD_HASH","NEXT_PUBLIC_SITE_URL",
                 ].map(k => (
@@ -556,6 +577,76 @@ export default function SettingsPage() {
                 <Btn variant="ghost" size="sm" onClick={() => window.open("/api/admin/settings","_blank")}>&#9881;&#65039; Inspect Settings API</Btn>
               </div>
             </SCard>
+
+            {/* ── Danger Zone ── */}
+            <div className="rounded-2xl overflow-hidden"
+              style={{ background:"#fff", border:"1.5px solid rgba(192,39,45,0.35)", boxShadow:"0 1px 4px rgba(192,39,45,0.06)" }}>
+              <div className="px-6 py-4 border-b" style={{ borderColor:"rgba(192,39,45,0.2)", background:"rgba(192,39,45,0.03)" }}>
+                <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:15, fontWeight:700, color:"#C0272D" }}>
+                  ⚠️ Danger Zone
+                </h3>
+                <p style={{ color:"#9B1F24", fontSize:11, marginTop:2 }}>
+                  Irreversible actions — use only during testing / setup phase
+                </p>
+              </div>
+              <div className="px-6 py-5 space-y-4">
+                {clearResult && (
+                  <div className="px-4 py-3 rounded-xl text-sm font-medium"
+                    style={{
+                      background: clearResult.startsWith("✅") ? "rgba(46,125,50,0.08)" : "rgba(192,39,45,0.08)",
+                      border: `1px solid ${clearResult.startsWith("✅") ? "rgba(46,125,50,0.25)" : "rgba(192,39,45,0.25)"}`,
+                      color: clearResult.startsWith("✅") ? "#2E7D32" : "#C0272D",
+                    }}>
+                    {clearResult}
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p style={{ fontWeight:600, fontSize:13, color:"#C0272D" }}>Clear All Test Orders</p>
+                    <p style={{ fontSize:11, color:"#9B1F24", marginTop:2 }}>
+                      Permanently deletes all orders and order items. Use to reset dashboard before going live.
+                    </p>
+                  </div>
+                  <Btn
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setClearResult(null); setClearModal(true); }}
+                    style={{ color:"#C0272D", borderColor:"rgba(192,39,45,0.4)", whiteSpace:"nowrap" } as any}
+                  >
+                    🗑 Clear Orders
+                  </Btn>
+                </div>
+              </div>
+            </div>
+
+            {/* Clear orders confirmation modal */}
+            <Modal open={clearModal} onClose={() => setClearModal(false)} title="Clear All Test Orders" width={440}>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-4 rounded-xl"
+                  style={{ background:"rgba(192,39,45,0.05)", border:"1px solid rgba(192,39,45,0.2)" }}>
+                  <span className="text-3xl shrink-0">⚠️</span>
+                  <div>
+                    <p style={{ fontWeight:700, color:"#C0272D" }}>This cannot be undone</p>
+                    <p style={{ fontSize:12, color:"#9B1F24", marginTop:2 }}>
+                      All orders and order items will be permanently deleted from the database.
+                    </p>
+                  </div>
+                </div>
+                <p style={{ fontSize:13, color:A.grey }}>
+                  Use this only to reset your dashboard before going live. Real customer orders will be lost forever.
+                </p>
+                <div className="flex gap-3 justify-end">
+                  <Btn variant="ghost" onClick={() => setClearModal(false)}>Cancel</Btn>
+                  <Btn
+                    loading={clearing}
+                    onClick={clearTestOrders}
+                    style={{ background:"#C0272D", color:"#fff", borderColor:"#C0272D" } as any}
+                  >
+                    Yes, Delete All Orders
+                  </Btn>
+                </div>
+              </div>
+            </Modal>
           </>)}
 
           {/* Unsaved changes bar */}

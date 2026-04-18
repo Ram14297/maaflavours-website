@@ -76,8 +76,8 @@ export default function ProductsPage() {
     searchRef.current = setTimeout(() => { setPage(1); }, 350);
   }
 
-  async function toggleActive(id: string, isActive: boolean, e: React.MouseEvent) {
-    e.preventDefault(); e.stopPropagation();
+  async function toggleActive(id: string, isActive: boolean, e?: React.MouseEvent) {
+    if (e) { e.preventDefault(); e.stopPropagation(); }
     await fetch(`/api/admin/products/${id}`, {
       method: "PATCH",
       headers: { "Content-Type":"application/json" },
@@ -317,7 +317,7 @@ export default function ProductsPage() {
                   <Btn
                     variant={p.is_active ? "ghost" : "secondary"}
                     size="sm"
-                    onClick={() => toggleActive(p.id, p.is_active, {} as React.MouseEvent)}
+                    onClick={(e) => toggleActive(p.id, p.is_active, e)}
                   >
                     {p.is_active ? "Disable" : "Enable"}
                   </Btn>
@@ -383,7 +383,7 @@ function ProductCard({
   onDelete,
 }: {
   product:  any;
-  onToggle: (id: string, active: boolean, e: React.MouseEvent) => void;
+  onToggle: (id: string, active: boolean, e?: React.MouseEvent) => void;
   onDelete: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -490,7 +490,7 @@ function ProductCard({
           <Btn
             variant={p.is_active ? "ghost" : "secondary"}
             size="sm"
-            onClick={() => onToggle(p.id, p.is_active, {} as React.MouseEvent)}
+            onClick={(e) => onToggle(p.id, p.is_active, e)}
             title={p.is_active ? "Hide from store" : "Make live"}
             style={p.is_active
               ? { color: "#B8750A", borderColor: "rgba(184,117,10,0.4)" } as any
