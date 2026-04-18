@@ -41,8 +41,8 @@ export const PRODUCTS: ProductSeed[] = [
     is_vegetarian: true,
     is_featured: true,
     variants: [
-      { weight_grams: 250, label: "250g", price: 18000 },   // ₹180
-      { weight_grams: 500, label: "500g", price: 32000 },   // ₹320
+      { weight_grams: 250, label: "250g", price: 18900 },   // ₹189
+      { weight_grams: 500, label: "500g", price: 35900 },   // ₹359
     ],
     image_placeholder: "drumstick-pickle", // REPLACE with actual image
   },
@@ -61,8 +61,8 @@ export const PRODUCTS: ProductSeed[] = [
     is_vegetarian: true,
     is_featured: true,
     variants: [
-      { weight_grams: 250, label: "250g", price: 16000 },   // ₹160
-      { weight_grams: 500, label: "500g", price: 29000 },   // ₹290
+      { weight_grams: 250, label: "250g", price: 17900 },   // ₹179 (disabled/seasonal)
+      { weight_grams: 500, label: "500g", price: 33900 },   // ₹339 (disabled/seasonal)
     ],
     image_placeholder: "amla-pickle", // REPLACE with actual image
   },
@@ -81,8 +81,8 @@ export const PRODUCTS: ProductSeed[] = [
     is_vegetarian: true,
     is_featured: true,
     variants: [
-      { weight_grams: 250, label: "250g", price: 20000 },   // ₹200
-      { weight_grams: 500, label: "500g", price: 37000 },   // ₹370
+      { weight_grams: 250, label: "250g", price: 22900 },   // ₹229 ⭐ fan fav
+      { weight_grams: 500, label: "500g", price: 42900 },   // ₹429 ⭐ fan fav
     ],
     image_placeholder: "pulihora-gongura", // REPLACE with actual image
   },
@@ -101,8 +101,8 @@ export const PRODUCTS: ProductSeed[] = [
     is_vegetarian: true,
     is_featured: true,
     variants: [
-      { weight_grams: 250, label: "250g", price: 15000 },   // ₹150
-      { weight_grams: 500, label: "500g", price: 27000 },   // ₹270
+      { weight_grams: 250, label: "250g", price: 17900 },   // ₹179
+      { weight_grams: 500, label: "500g", price: 33900 },   // ₹339
     ],
     image_placeholder: "lemon-pickle", // REPLACE with actual image
   },
@@ -121,8 +121,8 @@ export const PRODUCTS: ProductSeed[] = [
     is_vegetarian: true,
     is_featured: true,
     variants: [
-      { weight_grams: 250, label: "250g", price: 19000 },   // ₹190
-      { weight_grams: 500, label: "500g", price: 35000 },   // ₹350
+      { weight_grams: 250, label: "250g", price: 23900 },   // ₹239 ⭐ fan fav
+      { weight_grams: 500, label: "500g", price: 44900 },   // ₹449 ⭐ fan fav
     ],
     image_placeholder: "maamidi-allam", // REPLACE with actual image
   },
@@ -141,8 +141,8 @@ export const PRODUCTS: ProductSeed[] = [
     is_vegetarian: true,
     is_featured: true,
     variants: [
-      { weight_grams: 250, label: "250g", price: 17000 },   // ₹170
-      { weight_grams: 500, label: "500g", price: 31000 },   // ₹310
+      { weight_grams: 250, label: "250g", price: 19900 },   // ₹199
+      { weight_grams: 500, label: "500g", price: 37900 },   // ₹379
     ],
     image_placeholder: "red-chilli-pickle", // REPLACE with actual image
   },
