@@ -144,6 +144,39 @@ export async function PUT(
   }
 }
 
+// PATCH — lightweight partial update (e.g. toggle is_active without clobbering other fields)
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { productId: string } }
+) {
+  const admin = await requireAdmin(req);
+  if (!admin) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+
+  try {
+    const body = await req.json();
+    const supabase = createAdminSupabaseClient();
+
+    // Only allow safe partial fields via PATCH
+    const allowed: Record<string, unknown> = {};
+    if (typeof body.is_active   === "boolean") allowed.is_active   = body.is_active;
+    if (typeof body.is_featured === "boolean") allowed.is_featured = body.is_featured;
+
+    if (Object.keys(allowed).length === 0) {
+      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
+    }
+
+    const { error } = await supabase
+      .from("products")
+      .update(allowed)
+      .eq("id", params.productId);
+
+    if (error) throw error;
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
 export async function DELETE(
   req: NextRequest,
   { params }: { params: { productId: string } }

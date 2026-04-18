@@ -79,11 +79,11 @@ export default function ProductsPage() {
   async function toggleActive(id: string, isActive: boolean, e: React.MouseEvent) {
     e.preventDefault(); e.stopPropagation();
     await fetch(`/api/admin/products/${id}`, {
-      method: "PUT",
+      method: "PATCH",
       headers: { "Content-Type":"application/json" },
       body: JSON.stringify({ is_active: !isActive }),
     });
-    showToast(isActive ? "Product disabled" : "Product enabled");
+    showToast(isActive ? "Product hidden from store" : "Product is now live");
     load(page);
   }
 
@@ -491,9 +491,13 @@ function ProductCard({
             variant={p.is_active ? "ghost" : "secondary"}
             size="sm"
             onClick={() => onToggle(p.id, p.is_active, {} as React.MouseEvent)}
-            title={p.is_active ? "Disable product" : "Enable product"}
+            title={p.is_active ? "Hide from store" : "Make live"}
+            style={p.is_active
+              ? { color: "#B8750A", borderColor: "rgba(184,117,10,0.4)" } as any
+              : { color: "#2E7D32", borderColor: "rgba(46,125,50,0.4)" } as any
+            }
           >
-            {p.is_active ? "●" : "○"}
+            {p.is_active ? "Disable" : "Enable"}
           </Btn>
           <Btn
             variant="ghost"
