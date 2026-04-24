@@ -9,7 +9,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   ArrowLeft, Package, MapPin, Phone,
-  MessageCircle, Copy, Check, ExternalLink, RefreshCw,
+  MessageCircle, Copy, Check, ExternalLink, RefreshCw, XCircle,
 } from "lucide-react";
 import OrderStatusBadge from "@/components/order/OrderStatusBadge";
 import DeliveryTimeline from "@/components/order/DeliveryTimeline";
@@ -86,6 +86,10 @@ export default function OrderDetailPage() {
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [trackingCopied, setTrackingCopied] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  const [cancelDone, setCancelDone] = useState<{ refundNote: string | null } | null>(null);
 
   useEffect(() => {
     async function fetchOrder() {
@@ -102,6 +106,35 @@ export default function OrderDetailPage() {
     }
     if (orderId) fetchOrder();
   }, [orderId]);
+
+  // ── Cancel helpers ────────────────────────────────────────────────────
+  const canCancel = order &&
+    ["pending", "confirmed"].includes(order.status) &&
+    (Date.now() - new Date(order.created_at).getTime()) < 2 * 60 * 60 * 1000;
+
+  const minutesLeft = order
+    ? Math.max(0, Math.round((120 - (Date.now() - new Date(order.created_at).getTime()) / 60000)))
+    : 0;
+
+  async function handleCancel() {
+    if (!order) return;
+    setCancelling(true);
+    setCancelError(null);
+    try {
+      const res = await fetch(`/api/orders/${order.id}/cancel`, { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setCancelError(data.error || "Something went wrong. Please try again.");
+      } else {
+        setCancelDone({ refundNote: data.refundNote });
+        setOrder(prev => prev ? { ...prev, status: "cancelled" } : prev);
+        setShowCancelModal(false);
+      }
+    } catch {
+      setCancelError("Network error. Please try again.");
+    }
+    setCancelling(false);
+  }
 
   const copyTracking = async () => {
     if (order?.tracking_id) {
@@ -179,6 +212,47 @@ export default function OrderDetailPage() {
           <OrderStatusBadge status={order.status} size="md" />
         </div>
       </div>
+
+      {/* ─── Cancel success banner ─────────────────────────────────── */}
+      {cancelDone && (
+        <div className="rounded-2xl px-5 py-4"
+          style={{ background: "rgba(192,39,45,0.05)", border: "1.5px solid rgba(192,39,45,0.2)" }}>
+          <p className="font-dm-sans font-bold text-sm" style={{ color: "#C0272D" }}>
+            ✅ Order cancelled successfully
+          </p>
+          {cancelDone.refundNote && (
+            <p className="font-dm-sans text-xs mt-1" style={{ color: "var(--color-grey)" }}>
+              {cancelDone.refundNote}
+            </p>
+          )}
+          {!cancelDone.refundNote && (
+            <p className="font-dm-sans text-xs mt-1" style={{ color: "var(--color-grey)" }}>
+              Your COD order has been cancelled. No payment was charged.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* ─── Cancel button (shown only if within 2-hour window) ────── */}
+      {canCancel && !cancelDone && (
+        <div className="rounded-2xl px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+          style={{ background: "rgba(192,39,45,0.04)", border: "1px solid rgba(192,39,45,0.15)" }}>
+          <div>
+            <p className="font-dm-sans text-sm font-semibold" style={{ color: "var(--color-brown)" }}>
+              Want to cancel this order?
+            </p>
+            <p className="font-dm-sans text-xs mt-0.5" style={{ color: "var(--color-grey)" }}>
+              Cancellation window closes in <strong style={{ color: "#C0272D" }}>{minutesLeft} min</strong>
+            </p>
+          </div>
+          <button
+            onClick={() => { setCancelError(null); setShowCancelModal(true); }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl font-dm-sans text-sm font-semibold transition-opacity hover:opacity-80"
+            style={{ background: "rgba(192,39,45,0.1)", color: "#C0272D", border: "1.5px solid rgba(192,39,45,0.3)" }}>
+            <XCircle size={15} />Cancel Order
+          </button>
+        </div>
+      )}
 
       {/* ─── Tracking banner (if tracking exists) ──────────────────── */}
       {order.tracking_id && (
@@ -360,6 +434,77 @@ export default function OrderDetailPage() {
           </a>
         </div>
       </div>
+
+      {/* ─── Cancel confirmation modal ──────────────────────────────── */}
+      {showCancelModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ background: "rgba(0,0,0,0.5)" }}
+          onClick={() => !cancelling && setShowCancelModal(false)}>
+          <div className="w-full max-w-sm rounded-2xl overflow-hidden"
+            style={{ background: "white", boxShadow: "0 24px 64px rgba(0,0,0,0.2)" }}
+            onClick={e => e.stopPropagation()}>
+            <div className="h-[3px]" style={{
+              background: "linear-gradient(90deg,transparent,#C0272D 20%,#C0272D 80%,transparent)"
+            }} />
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(192,39,45,0.1)" }}>
+                  <XCircle size={22} style={{ color: "#C0272D" }} />
+                </div>
+                <div>
+                  <h3 className="font-playfair font-bold text-lg" style={{ color: "var(--color-brown)" }}>
+                    Cancel Order?
+                  </h3>
+                  <p className="font-dm-sans text-xs" style={{ color: "var(--color-grey)" }}>{displayId}</p>
+                </div>
+              </div>
+
+              {order?.payment_method !== "cod" ? (
+                <div className="rounded-xl px-4 py-3 mb-4"
+                  style={{ background: "rgba(46,125,50,0.06)", border: "1px solid rgba(46,125,50,0.2)" }}>
+                  <p className="font-dm-sans text-sm font-semibold" style={{ color: "#2E7D32" }}>
+                    💳 Prepaid order — refund included
+                  </p>
+                  <p className="font-dm-sans text-xs mt-1" style={{ color: "var(--color-grey)" }}>
+                    Your full payment will be refunded within 2–3 working days to your original payment method.
+                  </p>
+                </div>
+              ) : (
+                <div className="rounded-xl px-4 py-3 mb-4"
+                  style={{ background: "rgba(200,150,12,0.06)", border: "1px solid rgba(200,150,12,0.2)" }}>
+                  <p className="font-dm-sans text-sm font-semibold" style={{ color: "var(--color-brown)" }}>
+                    🤝 COD order — no payment was made
+                  </p>
+                  <p className="font-dm-sans text-xs mt-1" style={{ color: "var(--color-grey)" }}>
+                    Since this was a cash on delivery order, no refund is needed.
+                  </p>
+                </div>
+              )}
+
+              {cancelError && (
+                <div className="rounded-xl px-4 py-3 mb-4"
+                  style={{ background: "rgba(192,39,45,0.06)", border: "1px solid rgba(192,39,45,0.2)" }}>
+                  <p className="font-dm-sans text-sm" style={{ color: "#C0272D" }}>{cancelError}</p>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button onClick={() => setShowCancelModal(false)} disabled={cancelling}
+                  className="flex-1 py-2.5 rounded-xl font-dm-sans text-sm font-semibold transition-opacity hover:opacity-80"
+                  style={{ border: "1.5px solid rgba(200,150,12,0.25)", color: "var(--color-brown)" }}>
+                  Keep Order
+                </button>
+                <button onClick={handleCancel} disabled={cancelling}
+                  className="flex-1 py-2.5 rounded-xl font-dm-sans text-sm font-semibold text-white transition-opacity hover:opacity-80"
+                  style={{ background: cancelling ? "#aaa" : "#C0272D" }}>
+                  {cancelling ? "Cancelling…" : "Yes, Cancel"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
