@@ -7,6 +7,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin-auth";
+import {
+  notifyCustomerSMS, shortOrderId,
+  msgOrderPacked, msgOrderShipped,
+  msgOrderOutForDelivery, msgOrderDelivered, msgOrderCancelled,
+} from "@/lib/notify-customer";
 
 export async function GET(
   req: NextRequest,
@@ -87,10 +92,69 @@ export async function PATCH(
         changed_by: `admin:${admin.email}`,
         note:       body.note || null,
       });
+
+      // ── Notify customer via SMS on every status change ─────────────────
+      await notifyCustomerOnStatusChange(
+        supabase,
+        params.orderId,
+        body.status,
+        body.trackingId   || updated?.tracking_id   || "",
+        body.courierName  || updated?.courier_name  || "",
+      ).catch(() => {});
     }
 
     return NextResponse.json({ success: true, order: updated });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
+}
+
+// ─── Customer SMS on status change ────────────────────────────────────────────
+async function notifyCustomerOnStatusChange(
+  supabase:   ReturnType<typeof createAdminSupabaseClient>,
+  orderId:    string,
+  newStatus:  string,
+  trackingId: string,
+  courier:    string,
+) {
+  const { data: order } = await supabase
+    .from("orders")
+    .select("shipping_address, payment_method, payment_status, total")
+    .eq("id", orderId)
+    .single();
+
+  if (!order?.shipping_address) return;
+
+  const addr     = order.shipping_address as any;
+  const mobile   = addr.mobile || addr.phone || "";
+  const name     = addr.full_name || addr.name || "Customer";
+  const sid      = shortOrderId(orderId);
+  const totalRs  = Math.round((order.total ?? 0) / 100);
+  const isPrepaid = order.payment_method !== "cod" && order.payment_status === "paid";
+
+  if (!mobile) return;
+
+  let message: string | null = null;
+
+  switch (newStatus) {
+    case "packed":
+      message = msgOrderPacked(name, sid);
+      break;
+    case "shipped":
+      message = msgOrderShipped(name, sid, courier || "Courier", trackingId || "—");
+      break;
+    case "out_for_delivery":
+      message = msgOrderOutForDelivery(name, sid);
+      break;
+    case "delivered":
+      message = msgOrderDelivered(name, sid);
+      break;
+    case "cancelled":
+      message = msgOrderCancelled(name, sid, isPrepaid, totalRs);
+      break;
+    default:
+      return; // No SMS for pending/confirmed — already sent on order placement
+  }
+
+  if (message) await notifyCustomerSMS(mobile, message);
 }

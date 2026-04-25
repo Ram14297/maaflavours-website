@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
+import { notifyCustomerSMS, msgOrderConfirmed, shortOrderId } from "@/lib/notify-customer";
 
 // Cashfree sends a signature header we can verify for security
 // (optional but recommended in production)
@@ -93,10 +94,11 @@ export async function POST(request: NextRequest) {
         } else {
           console.log(`[cashfree-webhook] Order ${matchedOrder.id} → ${orderStatus} / ${paymentStatusDb}`);
 
-          // On successful payment: deduct stock + notify admin
+          // On successful payment: deduct stock + notify admin + notify customer
           if (orderStatus === "confirmed") {
             await decrementOrderStock(adminSupa, matchedOrder.id).catch(() => {});
             await notifyAdmin(adminSupa, matchedOrder.id, cfPaymentId, "cashfree").catch(() => {});
+            await notifyCustomerOnPayment(adminSupa, matchedOrder.id).catch(() => {});
           }
         }
       } else {
@@ -140,6 +142,32 @@ async function decrementOrderStock(
       }
     } catch { /* non-fatal per variant */ }
   }
+}
+
+// ─── Customer notification on payment success ──────────────────────────────────
+async function notifyCustomerOnPayment(
+  supabase: ReturnType<typeof createAdminSupabaseClient>,
+  orderId: string
+) {
+  const { data: order } = await supabase
+    .from("orders")
+    .select("total, shipping_address, payment_method")
+    .eq("id", orderId)
+    .single();
+
+  if (!order?.shipping_address) return;
+
+  const addr    = order.shipping_address as any;
+  const mobile  = addr.mobile || addr.phone || "";
+  const name    = addr.full_name || addr.name || "Customer";
+  const totalRs = Math.round((order.total ?? 0) / 100);
+
+  if (!mobile) return;
+
+  await notifyCustomerSMS(
+    mobile,
+    msgOrderConfirmed(name, shortOrderId(orderId), totalRs, order.payment_method)
+  );
 }
 
 // ─── Admin notification ────────────────────────────────────────────────────────

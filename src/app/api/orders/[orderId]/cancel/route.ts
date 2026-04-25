@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
+import { notifyCustomerSMS, msgOrderCancelled, shortOrderId } from "@/lib/notify-customer";
 
 const CANCELLABLE_STATUSES = ["pending", "confirmed"];
 
@@ -26,7 +27,7 @@ export async function POST(
     // ── Fetch order ───────────────────────────────────────────────────────
     const { data: order, error } = await supabase
       .from("orders")
-      .select("id, status, payment_method, payment_status, customer_id, created_at, total")
+      .select("id, status, payment_method, payment_status, customer_id, created_at, total, shipping_address")
       .eq("id", orderId)
       .single();
 
@@ -82,6 +83,17 @@ export async function POST(
     const refundNote = isPrepaid
       ? `Your refund of ₹${(order.total / 100).toLocaleString("en-IN")} will be processed within 2–3 working days to your original payment method.`
       : null;
+
+    // ── Notify customer via SMS ────────────────────────────────────────────
+    const addr    = order.shipping_address as any;
+    const mobile  = addr?.mobile || addr?.phone || "";
+    const name    = addr?.full_name || addr?.name || "Customer";
+    if (mobile) {
+      await notifyCustomerSMS(
+        mobile,
+        msgOrderCancelled(name, shortOrderId(orderId), isPrepaid, Math.round((order.total ?? 0) / 100))
+      ).catch(() => {});
+    }
 
     return NextResponse.json({
       success:    true,

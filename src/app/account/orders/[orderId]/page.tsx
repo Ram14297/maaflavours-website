@@ -6,11 +6,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft, Package, MapPin, Phone,
-  MessageCircle, Copy, Check, ExternalLink, RefreshCw, XCircle,
+  MessageCircle, Copy, Check, ExternalLink, RefreshCw, XCircle, ShoppingBag,
 } from "lucide-react";
+import { useCartStore } from "@/store/cartStore";
 import OrderStatusBadge from "@/components/order/OrderStatusBadge";
 import DeliveryTimeline from "@/components/order/DeliveryTimeline";
 import OrderItemsTable from "@/components/order/OrderItemsTable";
@@ -80,8 +81,10 @@ function SectionCard({ title, icon, children }: { title: string; icon: React.Rea
 }
 
 export default function OrderDetailPage() {
-  const params = useParams();
+  const params  = useParams();
+  const router  = useRouter();
   const orderId = params.orderId as string;
+  const addItem = useCartStore(s => s.addItem);
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -89,6 +92,8 @@ export default function OrderDetailPage() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
+  const [reordering, setReordering] = useState(false);
+  const [reorderDone, setReorderDone] = useState(false);
   const [cancelDone, setCancelDone] = useState<{ refundNote: string | null } | null>(null);
 
   useEffect(() => {
@@ -129,6 +134,23 @@ export default function OrderDetailPage() {
       setCancelError("Network error. Please try again.");
     }
     setCancelling(false);
+  }
+
+  async function handleReorder() {
+    if (!order || reordering) return;
+    setReordering(true);
+    try {
+      // Add every item from this order back into the cart
+      for (const item of order.items) {
+        addItem(item.productSlug, item.variantIndex, item.quantity);
+      }
+      setReorderDone(true);
+      // Brief pause so user sees confirmation, then go to cart
+      setTimeout(() => router.push("/cart"), 1200);
+    } catch {
+      // Silently fail — cart store is client-side, errors are rare
+    }
+    setReordering(false);
   }
 
   const copyTracking = async () => {
@@ -396,11 +418,18 @@ export default function OrderDetailPage() {
           </div>
 
           {/* Reorder */}
-          <Link href="/products"
-            className="flex items-center justify-center gap-2 py-3 rounded-xl font-dm-sans font-semibold text-sm transition-all duration-200 hover:-translate-y-0.5"
+          <button
+            onClick={handleReorder}
+            disabled={reordering || reorderDone}
+            className="flex items-center justify-center gap-2 py-3 rounded-xl font-dm-sans font-semibold text-sm transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-60"
             style={{ border: "2px solid var(--color-brown)", color: "var(--color-brown)" }}>
-            <RefreshCw size={15} />Order Again
-          </Link>
+            {reorderDone
+              ? <><Check size={15} />Added to Cart! Going to cart…</>
+              : reordering
+              ? <><RefreshCw size={15} className="animate-spin" />Adding…</>
+              : <><ShoppingBag size={15} />Order Again</>
+            }
+          </button>
         </div>
       </div>
 

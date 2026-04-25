@@ -25,6 +25,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { PRODUCTS } from "@/lib/constants/products";
 import { createServerClient, createAdminSupabaseClient } from "@/lib/supabase/server";
+import { notifyCustomerSMS, msgOrderConfirmed, shortOrderId } from "@/lib/notify-customer";
 
 // ─── Validation schemas ──────────────────────────────────────────────────────
 const CartItemSchema = z.object({
@@ -427,6 +428,17 @@ export async function POST(request: NextRequest) {
 
         // Notify admin of new COD order
         await notifyAdmin(adminSupa, supabaseOrderId, deliveryAddress.name, total, "cod").catch(() => {});
+
+        // ── Notify customer via SMS ────────────────────────────────────────
+        await notifyCustomerSMS(
+          deliveryAddress.mobile,
+          msgOrderConfirmed(
+            deliveryAddress.name,
+            shortOrderId(supabaseOrderId),
+            Math.round(total / 100),
+            "cod"
+          )
+        );
       }
 
       return NextResponse.json({
