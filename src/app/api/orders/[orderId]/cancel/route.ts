@@ -4,14 +4,12 @@
 // Rules:
 //   • Order must belong to this customer (mf_session cookie)
 //   • Status must be 'pending' or 'confirmed'
-//   • Must be within 2 hours of order creation
 //   • DB triggers auto-restore stock on cancellation
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 
 const CANCELLABLE_STATUSES = ["pending", "confirmed"];
-const TWO_HOURS_MS = 2 * 60 * 60 * 1000;
 
 export async function POST(
   req: NextRequest,
@@ -56,14 +54,6 @@ export async function POST(
           ? "Your order has already been shipped and cannot be cancelled. Please contact us on WhatsApp."
           : "This order cannot be cancelled at this stage. Please contact us on WhatsApp.";
       return NextResponse.json({ error: msg }, { status: 400 });
-    }
-
-    // ── Check 2-hour window ───────────────────────────────────────────────
-    const orderAge = Date.now() - new Date(order.created_at).getTime();
-    if (orderAge > TWO_HOURS_MS) {
-      return NextResponse.json({
-        error: "Cancellation window has passed (2 hours from order time). Please contact us on WhatsApp at +91 97014 52929.",
-      }, { status: 400 });
     }
 
     // ── Cancel the order ──────────────────────────────────────────────────

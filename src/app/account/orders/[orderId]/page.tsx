@@ -109,12 +109,7 @@ export default function OrderDetailPage() {
 
   // ── Cancel helpers ────────────────────────────────────────────────────
   const canCancel = order &&
-    ["pending", "confirmed"].includes(order.status) &&
-    (Date.now() - new Date(order.created_at).getTime()) < 2 * 60 * 60 * 1000;
-
-  const minutesLeft = order
-    ? Math.max(0, Math.round((120 - (Date.now() - new Date(order.created_at).getTime()) / 60000)))
-    : 0;
+    ["pending", "confirmed"].includes(order.status);
 
   async function handleCancel() {
     if (!order) return;
@@ -233,7 +228,7 @@ export default function OrderDetailPage() {
         </div>
       )}
 
-      {/* ─── Cancel button (shown only if within 2-hour window) ────── */}
+      {/* ─── Cancel button ──────────────────────────────────────────── */}
       {canCancel && !cancelDone && (
         <div className="rounded-2xl px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
           style={{ background: "rgba(192,39,45,0.04)", border: "1px solid rgba(192,39,45,0.15)" }}>
@@ -242,7 +237,7 @@ export default function OrderDetailPage() {
               Want to cancel this order?
             </p>
             <p className="font-dm-sans text-xs mt-0.5" style={{ color: "var(--color-grey)" }}>
-              Cancellation window closes in <strong style={{ color: "#C0272D" }}>{minutesLeft} min</strong>
+              You can cancel anytime before your order is shipped.
             </p>
           </div>
           <button
