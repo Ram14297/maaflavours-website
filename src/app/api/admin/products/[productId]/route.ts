@@ -171,6 +171,18 @@ export async function PATCH(
       .eq("id", params.productId);
 
     if (error) throw error;
+
+    // ── Sync variants when toggling is_active ─────────────────────────────
+    // Products API filters variants by is_active=true, so if the product
+    // is enabled but variants are still inactive → product shows with 0
+    // variants (no price, no stock) and is invisible on the website.
+    if (typeof body.is_active === "boolean") {
+      await supabase
+        .from("product_variants")
+        .update({ is_active: body.is_active })
+        .eq("product_id", params.productId);
+    }
+
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
