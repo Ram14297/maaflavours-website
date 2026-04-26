@@ -14,12 +14,13 @@ export const metadata: Metadata = {
     "drumstick pickle online",
     "Maa Flavours pickles",
     "no preservatives pickle",
-    "Ongole pickles",
+    
+
   ],
   openGraph: {
     title: "Shop All Andhra Pickles — Maa Flavours",
     description:
-      "6 authentic Andhra pickle varieties, handcrafted in Ongole. No preservatives. Pan-India delivery.",
+      "6 authentic Andhra pickle varieties, handcrafted with traditional Andhra recipes. No preservatives. Pan-India delivery.",
     images: ["/images/brand/og-products.jpg"], // REPLACE with actual OG image
   },
 };

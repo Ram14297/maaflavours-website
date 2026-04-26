@@ -48,7 +48,7 @@ function PageHeader() {
       <Breadcrumb />
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <span className="section-eyebrow block mb-1.5">Handcrafted in Ongole</span>
+          <span className="section-eyebrow block mb-1.5">Authentically Handcrafted</span>
           <h1
             className="font-playfair font-bold leading-tight"
             style={{
@@ -156,7 +156,7 @@ function GrindingSoon() {
         className="font-cormorant italic text-lg mb-8"
         style={{ color: "var(--color-gold)" }}
       >
-        Fresh-ground, no fillers, straight from Ongole.
+        Fresh-ground, no fillers, purely traditional.
       </p>
 
       {/* CTA */}
@@ -226,7 +226,6 @@ function PowdersContent() {
     sortBy,
     activeFilterCount,
     filteredProducts,
-    toggleSpice,
     toggleWeight,
     setPriceRange,
     setSearch,
@@ -277,7 +276,7 @@ function PowdersContent() {
               <FilterSidebar
                 filters={filters}
                 activeFilterCount={activeFilterCount}
-                onToggleSpice={toggleSpice}
+                
                 onToggleWeight={toggleWeight}
                 onSetPriceRange={setPriceRange}
                 onClearAll={clearAllFilters}
@@ -308,7 +307,7 @@ function PowdersContent() {
 
               <ActiveFilterTags
                 filters={filters}
-                onToggleSpice={toggleSpice}
+                
                 onToggleWeight={toggleWeight}
                 onSetPriceRange={setPriceRange}
                 onClearAll={clearAllFilters}
@@ -326,7 +325,7 @@ function PowdersContent() {
                     className="font-dancing text-xl mb-1"
                     style={{ color: "var(--color-gold)" }}
                   >
-                    All powders are ground fresh in small batches in Ongole
+                    All powders are ground fresh in small batches
                   </p>
                   <p
                     className="font-dm-sans text-sm"
@@ -356,7 +355,7 @@ function PowdersContent() {
         filters={filters}
         sortBy={sortBy}
         activeFilterCount={activeFilterCount}
-        onToggleSpice={toggleSpice}
+        
         onToggleWeight={toggleWeight}
         onSetPriceRange={setPriceRange}
         onUpdateSort={updateSort}

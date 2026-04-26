@@ -7,12 +7,10 @@
 import { useEffect } from "react";
 import { X, Check } from "lucide-react";
 import {
-  SPICE_FILTER_OPTIONS,
   WEIGHT_OPTIONS,
   PRICE_RANGES,
   SORT_OPTIONS,
   ProductFilters,
-  SpiceFilterValue,
   WeightValue,
   PriceRangeValue,
   SortValue,
@@ -24,7 +22,6 @@ interface MobileFilterDrawerProps {
   filters: ProductFilters;
   sortBy: SortValue;
   activeFilterCount: number;
-  onToggleSpice: (value: SpiceFilterValue) => void;
   onToggleWeight: (value: WeightValue) => void;
   onSetPriceRange: (value: PriceRangeValue) => void;
   onUpdateSort: (value: SortValue) => void;
@@ -59,7 +56,6 @@ export default function MobileFilterDrawer({
   filters,
   sortBy,
   activeFilterCount,
-  onToggleSpice,
   onToggleWeight,
   onSetPriceRange,
   onUpdateSort,
@@ -176,35 +172,6 @@ export default function MobileFilterDrawer({
                       />
                     )}
                     {option.label}
-                  </button>
-                );
-              })}
-            </div>
-          </DrawerSection>
-
-          {/* Spice Level */}
-          <DrawerSection title="Spice Level">
-            <div className="grid grid-cols-2 gap-2.5">
-              {SPICE_FILTER_OPTIONS.map((option) => {
-                const isActive = filters.spice.includes(option.value);
-                return (
-                  <button
-                    key={option.value}
-                    onClick={() => onToggleSpice(option.value)}
-                    className="flex items-center gap-2.5 py-3 px-4 rounded-xl font-dm-sans text-sm transition-all duration-200"
-                    style={{
-                      background: isActive ? "rgba(192,39,45,0.08)" : "var(--color-cream)",
-                      color: isActive ? "var(--color-crimson)" : "var(--color-brown)",
-                      border: `1.5px solid ${isActive ? "var(--color-crimson)" : "rgba(200,150,12,0.15)"}`,
-                      fontWeight: isActive ? 600 : 400,
-                    }}
-                    aria-pressed={isActive}
-                  >
-                    <span className="text-base flex-shrink-0">{option.emoji}</span>
-                    <span className="leading-tight">{option.label}</span>
-                    {isActive && (
-                      <Check size={14} className="ml-auto flex-shrink-0" style={{ color: "var(--color-crimson)" }} />
-                    )}
                   </button>
                 );
               })}

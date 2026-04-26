@@ -25,7 +25,31 @@
       "mcp__Claude_in_Chrome__tabs_context_mcp",
       "Bash(npx tsc *)",
       "Bash(npx rimraf *)",
-      "Bash(rm -rf \".next/types/app/api/checkout/verify-payment\" \".next/types/app/api/checkout/webhook\")"
+      "Bash(rm -rf \".next/types/app/api/checkout/verify-payment\" \".next/types/app/api/checkout/webhook\")",
+      "WebSearch",
+      "WebFetch(domain:sitarafoods.com)",
+      "WebFetch(domain:jandhyalafoods.in)",
+      "WebFetch(domain:vellankifoods.com)",
+      "WebFetch(domain:www.godavarivantillu.com)",
+      "WebFetch(domain:bullockkart.online)",
+      "WebFetch(domain:mirchibites.com)",
+      "WebFetch(domain:kiyomart.in)",
+      "WebFetch(domain:www.oorla.com)",
+      "WebFetch(domain:thepickls.com)",
+      "WebFetch(domain:frombharat.com)",
+      "WebFetch(domain:sweetkaramcoffee.in)",
+      "WebFetch(domain:priyafoods.com)",
+      "WebFetch(domain:www.prakruthivanamrootsorganicsstore.in)",
+      "WebFetch(domain:pinkpeppersimplifycooking.com)",
+      "WebFetch(domain:packaging.shiprocket.in)",
+      "WebFetch(domain:www.dpackshop.com)",
+      "Bash(xargs ls *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(cat .env.local)",
+      "Bash(cat .env)",
+      "WebFetch(domain:maaflavours.com)"
     ]
   }
 }

@@ -491,7 +491,7 @@ export default function Navbar({
           className="absolute bottom-6 left-0 right-0 text-center text-xs font-dm-sans px-5"
           style={{ color: "var(--color-grey)" }}
         >
-          Authentic Andhra Pickles · Ongole
+          Authentic Andhra Pickles
         </p>
       </div>
     </>

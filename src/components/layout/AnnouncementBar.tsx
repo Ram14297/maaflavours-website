@@ -9,7 +9,7 @@ import { X } from "lucide-react";
 const MESSAGES = [
   "🚚 Free Shipping on orders above ₹499 — Pan-India Delivery",
   "🌿 No Preservatives. No Shortcuts. Just Pure Andhra Flavour.",
-  "✅ 100% Homemade & Vegetarian — Handcrafted in Ongole",
+  "✅ 100% Homemade & Vegetarian — Small Batch, Pure Flavour",
 ];
 
 export default function AnnouncementBar() {

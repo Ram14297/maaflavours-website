@@ -9,7 +9,7 @@ import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { Star, ChevronRight, MessageCircle, ShoppingBag } from "lucide-react";
 import { PRODUCTS, SITE } from "@/lib/constants/products";
-import { formatPrice, getSpiceLevelConfig, calculateDeliveryCharge, amountForFreeShipping } from "@/lib/utils";
+import { formatPrice, calculateDeliveryCharge, amountForFreeShipping } from "@/lib/utils";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import NavbarWithCart from "@/components/layout/NavbarWithCart";
 import Footer from "@/components/layout/Footer";
@@ -17,7 +17,6 @@ import { useCartStore, AddItemMeta } from "@/store/cartStore";
 import ProductImageGallery from "@/components/product/ProductImageGallery";
 import VariantSelector from "@/components/product/VariantSelector";
 import QuantityPicker from "@/components/product/QuantityPicker";
-import SpiceLevelIndicator from "@/components/product/SpiceLevelIndicator";
 import ProductInfoTabs from "@/components/product/ProductInfoTabs";
 import ProductReviewsSection from "@/components/product/ProductReviewsSection";
 import RelatedProducts from "@/components/product/RelatedProducts";
@@ -496,22 +495,6 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 </span>
               </div>
 
-              {/* Spice level */}
-              <div
-                className="flex flex-col gap-2 p-4 rounded-xl"
-                style={{
-                  background: "var(--color-cream)",
-                  border: "1px solid rgba(200,150,12,0.12)",
-                }}
-              >
-                <span
-                  className="font-dm-sans text-xs font-semibold tracking-wide uppercase"
-                  style={{ color: "var(--color-brown)", letterSpacing: "0.08em" }}
-                >
-                  Spice Level
-                </span>
-                <SpiceLevelIndicator level={product.spice_level} />
-              </div>
 
               {/* Variant selector */}
               <VariantSelector

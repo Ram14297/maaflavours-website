@@ -6,11 +6,9 @@ import React from "react";
 
 import { X } from "lucide-react";
 import {
-  SPICE_FILTER_OPTIONS,
   WEIGHT_OPTIONS,
   PRICE_RANGES,
   ProductFilters,
-  SpiceFilterValue,
   WeightValue,
   PriceRangeValue,
 } from "@/lib/constants/filters";
@@ -19,7 +17,6 @@ import { cn } from "@/lib/utils";
 interface FilterSidebarProps {
   filters: ProductFilters;
   activeFilterCount: number;
-  onToggleSpice: (value: SpiceFilterValue) => void;
   onToggleWeight: (value: WeightValue) => void;
   onSetPriceRange: (value: PriceRangeValue) => void;
   onClearAll: () => void;
@@ -49,7 +46,6 @@ function FilterSection({
 export default function FilterSidebar({
   filters,
   activeFilterCount,
-  onToggleSpice,
   onToggleWeight,
   onSetPriceRange,
   onClearAll,
@@ -115,66 +111,6 @@ export default function FilterSidebar({
         </div>
 
         <div className="px-5 divide-y" style={{ "--tw-divide-color": "rgba(200,150,12,0.08)" } as React.CSSProperties}>
-
-          {/* ─── Spice Level ──────────────────────────────────────────── */}
-          <FilterSection title="Spice Level">
-            <div className="flex flex-col gap-2">
-              {SPICE_FILTER_OPTIONS.map((option) => {
-                const isActive = filters.spice.includes(option.value);
-                return (
-                  <label
-                    key={option.value}
-                    className="flex items-center gap-3 cursor-pointer group"
-                  >
-                    {/* Custom checkbox */}
-                    <div
-                      className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 transition-all duration-200 border-2"
-                      style={{
-                        background: isActive ? "var(--color-crimson)" : "transparent",
-                        borderColor: isActive
-                          ? "var(--color-crimson)"
-                          : "rgba(200,150,12,0.3)",
-                      }}
-                      onClick={() => onToggleSpice(option.value)}
-                      role="checkbox"
-                      aria-checked={isActive}
-                      tabIndex={0}
-                      onKeyDown={(e) => e.key === "Enter" && onToggleSpice(option.value)}
-                    >
-                      {isActive && (
-                        <svg
-                          width="10"
-                          height="8"
-                          viewBox="0 0 10 8"
-                          fill="none"
-                        >
-                          <path
-                            d="M1 4L3.5 6.5L9 1"
-                            stroke="white"
-                            strokeWidth="1.8"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      )}
-                    </div>
-
-                    <span
-                      className="flex items-center gap-2 font-dm-sans text-sm flex-1 py-1"
-                      onClick={() => onToggleSpice(option.value)}
-                      style={{
-                        color: isActive ? "var(--color-brown)" : "var(--color-grey)",
-                        fontWeight: isActive ? 600 : 400,
-                      }}
-                    >
-                      <span className="text-xs">{option.emoji}</span>
-                      {option.label}
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-          </FilterSection>
 
           {/* ─── Weight / Size ────────────────────────────────────────── */}
           <FilterSection title="Pack Size">

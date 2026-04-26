@@ -7,7 +7,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ShoppingBag, Star, Heart, Eye } from "lucide-react";
-import { formatPrice, getSpiceLevelConfig } from "@/lib/utils";
+import { formatPrice } from "@/lib/utils";
 import { PRODUCTS } from "@/lib/constants/products";
 import { useCartStore, AddItemMeta } from "@/store/cartStore";
 import toast from "react-hot-toast";
@@ -31,7 +31,6 @@ export default function ProductCard({
   const [imageHovered, setImageHovered] = useState(false);
 
   const selectedVariant = product.variants[selectedVariantIndex];
-  const spiceConfig = getSpiceLevelConfig(product.spice_level);
   const addItem = useCartStore((s) => s.addItem);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
@@ -107,11 +106,6 @@ export default function ProductCard({
         <div className="flex flex-col flex-1 py-4 pr-4 gap-2">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <span
-                className={`badge-spice text-[0.6875rem] font-semibold ${spiceConfig.className}`}
-              >
-                {spiceConfig.emoji} {spiceConfig.label}
-              </span>
               <h3
                 className="font-playfair font-bold text-lg mt-1.5 leading-tight"
                 style={{ color: "var(--color-brown)" }}
@@ -307,13 +301,6 @@ export default function ProductCard({
 
       {/* ─── Card Content ────────────────────────────────────────────────── */}
       <div className="flex flex-col flex-1 p-3.5 sm:p-4">
-        {/* Top: Spice + Rating */}
-        <div className="flex items-center justify-between mb-2">
-          <span className={`badge-spice text-[0.65rem] font-semibold ${spiceConfig.className}`}>
-            {spiceConfig.emoji} {spiceConfig.label}
-          </span>
-        </div>
-
         {/* Name */}
         <h3
           className="font-playfair font-bold text-[0.9375rem] leading-tight mb-0.5"

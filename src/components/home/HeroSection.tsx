@@ -59,7 +59,7 @@ export default function HeroSection() {
                 style={{ background: "var(--color-gold)" }}
               />
               <span className="section-eyebrow">
-                From Ongole, With Love
+                Authentic Andhra Taste
               </span>
               <div
                 className="h-px w-8"

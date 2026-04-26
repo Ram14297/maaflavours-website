@@ -9,7 +9,7 @@ const STEPS = [
     icon: "👐",
     title: "We Handcraft",
     description:
-      "Every batch is made by hand in our home kitchen in Ongole, using traditional Andhra recipes and the finest local ingredients.",
+      "Every batch is made by hand in our home kitchen using traditional Andhra recipes and the finest local ingredients.",
     accent: "var(--color-crimson)",
   },
   {

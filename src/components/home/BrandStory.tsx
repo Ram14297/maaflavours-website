@@ -129,7 +129,7 @@ export default function BrandStory() {
               <ul className="flex flex-col gap-3 mb-8">
                 {[
                   "Traditional Andhra recipes, unchanged",
-                  "Handcrafted in small batches in Ongole",
+                  "Handcrafted in small batches with care",
                   "Zero artificial preservatives or chemicals",
                   "Sun-dried and slow-pickled the old way",
                 ].map((point) => (
@@ -276,7 +276,7 @@ export default function BrandStory() {
                     className="font-dm-sans text-xs mt-1"
                     style={{ color: "var(--color-grey)" }}
                   >
-                    Every pack made by hand in Ongole
+                    Every pack made by hand with love
                   </p>
                 </div>
               </div>

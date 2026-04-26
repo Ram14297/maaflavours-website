@@ -51,7 +51,7 @@ function PageHeader() {
       <Breadcrumb />
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <span className="section-eyebrow block mb-1.5">Handcrafted in Ongole</span>
+          <span className="section-eyebrow block mb-1.5">Authentically Handcrafted</span>
           <h1
             className="font-playfair font-bold leading-tight"
             style={{
@@ -173,7 +173,6 @@ function ProductsContent() {
     sortBy,
     activeFilterCount,
     filteredProducts,
-    toggleSpice,
     toggleWeight,
     setPriceRange,
     setSearch,
@@ -224,7 +223,7 @@ function ProductsContent() {
             <FilterSidebar
               filters={filters}
               activeFilterCount={activeFilterCount}
-              onToggleSpice={toggleSpice}
+              
               onToggleWeight={toggleWeight}
               onSetPriceRange={setPriceRange}
               onClearAll={clearAllFilters}
@@ -257,7 +256,7 @@ function ProductsContent() {
             {/* Active filter tags */}
             <ActiveFilterTags
               filters={filters}
-              onToggleSpice={toggleSpice}
+              
               onToggleWeight={toggleWeight}
               onSetPriceRange={setPriceRange}
               onClearAll={clearAllFilters}
@@ -277,7 +276,7 @@ function ProductsContent() {
                   className="font-dancing text-xl mb-1"
                   style={{ color: "var(--color-gold)" }}
                 >
-                  All pickles are made in small batches in Ongole
+                  All pickles are made in small batches with love
                 </p>
                 <p
                   className="font-dm-sans text-sm"
@@ -336,7 +335,7 @@ function ProductsContent() {
         filters={filters}
         sortBy={sortBy}
         activeFilterCount={activeFilterCount}
-        onToggleSpice={toggleSpice}
+        
         onToggleWeight={toggleWeight}
         onSetPriceRange={setPriceRange}
         onUpdateSort={updateSort}
