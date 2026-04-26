@@ -396,21 +396,28 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
 
                 {/* Veg badge */}
                 <div
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full"
                   style={{
-                    background: "rgba(46,125,50,0.08)",
-                    border: "1px solid rgba(46,125,50,0.2)",
+                    background: "rgba(46,125,50,0.09)",
+                    border: "1.5px solid rgba(46,125,50,0.3)",
+                    boxShadow: "0 1px 6px rgba(46,125,50,0.12)",
                   }}
                 >
-                  <span
-                    className="block w-3 h-3 rounded-full"
-                    style={{ background: "#2E7D32" }}
-                  />
-                  <span
-                    className="font-dm-sans text-xs font-semibold"
-                    style={{ color: "#2E7D32" }}
+                  {/* FSSAI-style symbol */}
+                  <div
+                    className="w-4 h-4 rounded-sm flex items-center justify-center flex-shrink-0"
+                    style={{ border: "1.5px solid #2E7D32" }}
                   >
-                    100% Vegetarian
+                    <span
+                      className="block rounded-full"
+                      style={{ width: "7px", height: "7px", background: "#2E7D32" }}
+                    />
+                  </div>
+                  <span
+                    className="font-dm-sans text-xs font-bold"
+                    style={{ color: "#1B5E20" }}
+                  >
+                    100% Pure Vegetarian
                   </span>
                 </div>
               </div>

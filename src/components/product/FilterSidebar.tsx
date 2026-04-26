@@ -171,29 +171,35 @@ export default function FilterSidebar({
             <div
               className="rounded-xl p-3 text-center"
               style={{
-                background: "rgba(200,150,12,0.06)",
-                border: "1px solid rgba(200,150,12,0.15)",
+                background: "rgba(46,125,50,0.06)",
+                border: "1.5px solid rgba(46,125,50,0.2)",
               }}
             >
               <p
-                className="font-dancing text-base mb-1"
-                style={{ color: "var(--color-gold)" }}
+                className="font-dancing text-base mb-2"
+                style={{ color: "#388E3C" }}
               >
                 All pickles are
               </p>
-              <div className="flex items-center justify-center gap-1.5">
-                <span
-                  className="block w-3 h-3 rounded-full"
+              <div className="flex items-center justify-center gap-2">
+                {/* FSSAI-style symbol */}
+                <div
+                  className="w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0"
                   style={{
                     border: "1.5px solid #2E7D32",
-                    background: "#2E7D32",
+                    background: "rgba(46,125,50,0.08)",
                   }}
-                />
-                <span
-                  className="font-dm-sans text-xs font-semibold"
-                  style={{ color: "#2E7D32" }}
                 >
-                  100% Vegetarian
+                  <span
+                    className="block rounded-full"
+                    style={{ width: "9px", height: "9px", background: "#2E7D32" }}
+                  />
+                </div>
+                <span
+                  className="font-dm-sans text-xs font-bold"
+                  style={{ color: "#1B5E20" }}
+                >
+                  100% Pure Vegetarian
                 </span>
               </div>
             </div>
