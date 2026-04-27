@@ -5,11 +5,19 @@
 // Used at checkout and in address forms for auto-fill
 
 import { NextRequest, NextResponse } from "next/server";
+import { isAllowedOrigin } from "@/lib/origin-check";
 
 // In-memory cache to avoid redundant calls to India Post API
 const CACHE = new Map<string, { city: string; state: string } | null>();
 
 export async function GET(req: NextRequest) {
+  // Reject requests from other sites — this endpoint exists only to serve
+  // our own checkout/address-form. Without this, the route is a free
+  // pincode-lookup proxy for any third party.
+  if (!isAllowedOrigin(req)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const pincode = req.nextUrl.searchParams.get("pin");
 
   if (!pincode || !/^\d{6}$/.test(pincode)) {

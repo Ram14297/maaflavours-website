@@ -8,18 +8,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServerClient, createAdminSupabaseClient } from "@/lib/supabase/server";
+import { signCustomerSession, setCustomerSessionCookie } from "@/lib/customer-auth";
+import { isAllowedOrigin } from "@/lib/origin-check";
 
 const RequestSchema = z.object({
   email: z.string().email("Invalid email address"),
   otp: z.string().regex(/^\d{6,8}$/, "OTP must be 6 or 8 digits"),
 });
 
-const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 days in seconds
-
 export async function POST(request: NextRequest) {
   console.log("[verify-otp] Request received");
 
   try {
+    if (!isAllowedOrigin(request)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const body = await request.json();
     const parsed = RequestSchema.safeParse(body);
 
@@ -75,13 +79,13 @@ export async function POST(request: NextRequest) {
     // mobile correctly). Do not insert here — mobile NOT NULL would fail for
     // email-auth users who haven't provided a mobile yet.
 
-    // ─── 3. Set session cookie ─────────────────────────────────────────────
-    const sessionPayload = JSON.stringify({
+    // ─── 3. Set signed session cookie (JWT — NOT raw JSON) ────────────────
+    const token = await signCustomerSession({
       userId: authUserId,
       email,
       name: existingCustomer?.name || "",
+      mobile: existingCustomer?.mobile || null,
       isNewUser,
-      exp: Math.floor(Date.now() / 1000) + SESSION_MAX_AGE,
     });
 
     const response = NextResponse.json({
@@ -95,13 +99,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    response.cookies.set("mf_session", sessionPayload, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: SESSION_MAX_AGE,
-      path: "/",
-    });
+    setCustomerSessionCookie(response, token);
 
     console.log("[verify-otp] Session cookie set. isNewUser:", isNewUser);
     return response;

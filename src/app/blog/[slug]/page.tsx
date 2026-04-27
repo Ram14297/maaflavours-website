@@ -23,6 +23,7 @@ import {
   type ContentBlock,
 } from "@/lib/constants/blog";
 import { PRODUCTS } from "@/lib/constants/products";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 import { formatPrice } from "@/lib/utils";
 import AddToCartClient from "@/app/blog/[slug]/AddToCartClient";
 
@@ -280,7 +281,7 @@ function BodyRenderer({ blocks }: { blocks: ContentBlock[] }) {
                 key={i}
                 className="font-dm-sans text-base sm:text-lg leading-loose mb-5"
                 style={{ color: "var(--color-grey)" }}
-                dangerouslySetInnerHTML={{ __html: block.text }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(block.text) }}
               />
             );
 

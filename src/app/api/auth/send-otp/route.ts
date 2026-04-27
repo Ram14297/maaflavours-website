@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createServerClient } from "@/lib/supabase/server";
+import { isAllowedOrigin } from "@/lib/origin-check";
 
 const RequestSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -20,6 +21,10 @@ function maskEmail(email: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    if (!isAllowedOrigin(request)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const body = await request.json();
     const parsed = RequestSchema.safeParse(body);
 

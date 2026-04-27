@@ -7,7 +7,9 @@
 //   Submits a new review (requires auth)
 
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminSupabaseClient, createServerClient } from "@/lib/supabase/server";
+import { createAdminSupabaseClient } from "@/lib/supabase/server";
+import { verifyCustomerSession } from "@/lib/customer-auth";
+import { isAllowedOrigin } from "@/lib/origin-check";
 
 export async function GET(
   req: NextRequest,
@@ -81,6 +83,9 @@ export async function POST(
   { params }: { params: { productId: string } }
 ) {
   try {
+    if (!isAllowedOrigin(req)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const { productId } = params;
     const body = await req.json();
     const { rating, title, body: reviewBody, orderId } = body;
@@ -93,10 +98,9 @@ export async function POST(
       return NextResponse.json({ error: "Review must be at least 10 characters" }, { status: 400 });
     }
 
-    // Require auth
-    const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    // Require auth — read signed mf_session cookie (system does NOT use Supabase auth)
+    const session = await verifyCustomerSession(req);
+    if (!session) {
       return NextResponse.json({ error: "Login required to submit a review" }, { status: 401 });
     }
 
@@ -105,7 +109,7 @@ export async function POST(
     const { data: customer } = await adminClient
       .from("customers")
       .select("name, email")
-      .eq("id", user.id)
+      .eq("id", session.userId)
       .single();
 
     // Resolve product UUID from slug if needed
@@ -120,7 +124,7 @@ export async function POST(
     const { data: existing } = await adminClient
       .from("product_reviews")
       .select("id")
-      .eq("customer_id", user.id)
+      .eq("customer_id", session.userId)
       .eq("product_id", resolvedProductId)
       .single();
 
@@ -135,7 +139,7 @@ export async function POST(
         .from("orders")
         .select("id, status")
         .eq("id", orderId)
-        .eq("customer_id", user.id)
+        .eq("customer_id", session.userId)
         .eq("status", "delivered")
         .single();
       isVerified = !!order;
@@ -145,7 +149,7 @@ export async function POST(
       .from("product_reviews")
       .insert({
         product_id:           resolvedProductId,
-        customer_id:          user.id,
+        customer_id:          session.userId,
         order_id:             orderId || null,
         rating:               Number(rating),
         title:                title?.trim() || null,

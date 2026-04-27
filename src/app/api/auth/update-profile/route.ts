@@ -10,6 +10,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
+import {
+  verifyCustomerSession,
+  signCustomerSession,
+  setCustomerSessionCookie,
+} from "@/lib/customer-auth";
+import { isAllowedOrigin } from "@/lib/origin-check";
 
 const RequestSchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
@@ -17,10 +23,12 @@ const RequestSchema = z.object({
   mobile: z.string().regex(/^\+91[6-9]\d{9}$/).optional().nullable().or(z.literal("")),
 });
 
-const SESSION_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
-
 export async function POST(request: NextRequest) {
   console.log("[update-profile] Request received");
+
+  if (!isAllowedOrigin(request)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const body = await request.json().catch(() => ({}));
   const parsed = RequestSchema.safeParse(body);
@@ -35,18 +43,16 @@ export async function POST(request: NextRequest) {
 
   const { email, name, mobile } = parsed.data;
 
-  // ── Get userId from session cookie (set by verify-otp) ────────────────
-  let userId: string | null = null;
-  let existingSession: any = null;
-  try {
-    const sessionCookieVal = request.cookies.get("mf_session")?.value;
-    console.log("[update-profile] mf_session cookie present:", !!sessionCookieVal);
-    if (sessionCookieVal) {
-      existingSession = JSON.parse(sessionCookieVal);
-      userId = existingSession.userId || null;
-      console.log("[update-profile] userId from cookie:", userId);
-    }
-  } catch { /* ignore */ }
+  // ── Get userId from signed session cookie (set by verify-otp) ─────────
+  const existingSession = await verifyCustomerSession(request);
+  if (!existingSession) {
+    return NextResponse.json(
+      { error: "Session expired. Please log in again." },
+      { status: 401 }
+    );
+  }
+  const userId = existingSession.userId;
+  console.log("[update-profile] userId from cookie:", userId);
 
   // ── Try to update/insert customer in DB ───────────────────────────────
   try {
@@ -115,28 +121,19 @@ export async function POST(request: NextRequest) {
     console.error("[update-profile] DB error (non-fatal, proceeding):", err?.message || err);
   }
 
-  // ── Re-set mf_session cookie with updated name ────────────────────────
+  // ── Re-issue signed mf_session cookie with updated name ──────────────
   console.log("[update-profile] Updating mf_session cookie with name:", name);
 
-  const updatedSession = {
-    ...(existingSession || {}),
-    userId:    userId || existingSession?.userId || "",
-    email:     existingSession?.email || email || "",
+  const newToken = await signCustomerSession({
+    userId,
+    email:     existingSession.email || email || null,
+    mobile:    mobile || existingSession.mobile || null,
     name,
     isNewUser: false,
-    exp:       Math.floor(Date.now() / 1000) + SESSION_MAX_AGE,
-  };
+  });
 
   const response = NextResponse.json({ success: true, name });
-
-  // Set cookie directly on the response object — reliable in Next.js 14 Route Handlers
-  response.cookies.set("mf_session", JSON.stringify(updatedSession), {
-    httpOnly: true,
-    secure:   process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge:   SESSION_MAX_AGE,
-    path:     "/",
-  });
+  setCustomerSessionCookie(response, newToken);
 
   console.log("[update-profile] Cookie set on response. Returning success.");
 

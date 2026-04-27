@@ -5,6 +5,7 @@
 
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
+import { clearCustomerSessionCookie } from "@/lib/customer-auth";
 
 export async function POST() {
   try {
@@ -13,15 +14,6 @@ export async function POST() {
   } catch { /* non-fatal */ }
 
   const response = NextResponse.json({ success: true });
-
-  // Clear session cookie
-  response.cookies.set("mf_session", "", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 0,
-    path: "/",
-  });
-
+  clearCustomerSessionCookie(response);
   return response;
 }

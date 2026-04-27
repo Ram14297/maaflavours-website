@@ -24,8 +24,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { PRODUCTS } from "@/lib/constants/products";
-import { createServerClient, createAdminSupabaseClient } from "@/lib/supabase/server";
+import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { notifyCustomerSMS, msgOrderConfirmed, shortOrderId } from "@/lib/notify-customer";
+import { verifyCustomerSession } from "@/lib/customer-auth";
+import { isAllowedOrigin } from "@/lib/origin-check";
 
 // ─── Validation schemas ──────────────────────────────────────────────────────
 const CartItemSchema = z.object({
@@ -80,6 +82,9 @@ function mapPaymentMethodLabel(pm: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    if (!isAllowedOrigin(request)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const body   = await request.json();
     const parsed = RequestSchema.safeParse(body);
 
@@ -260,26 +265,10 @@ export async function POST(request: NextRequest) {
     const sgstAmount   = isIntraState ? Math.round(gstTotal / 2) : 0;
     const igstAmount   = isIntraState ? 0 : gstTotal;
 
-    // ─── 4. Authenticate customer (reads mf_session cookie) ──────────────
+    // ─── 4. Authenticate customer (reads signed mf_session cookie) ──────
     let customerId: string | null = null;
-    try {
-      const sessionCookie = request.cookies.get("mf_session")?.value;
-      if (sessionCookie) {
-        const session = JSON.parse(sessionCookie);
-        if (session.userId && (!session.exp || session.exp > Math.floor(Date.now() / 1000))) {
-          customerId = session.userId;
-        }
-      }
-    } catch { /* ignore parse errors */ }
-
-    if (!customerId) {
-      // Fallback: try Supabase auth session
-      try {
-        const supabase = createServerClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) customerId = user.id;
-      } catch { /* Not logged in */ }
-    }
+    const session = await verifyCustomerSession(request);
+    if (session?.userId) customerId = session.userId;
 
     if (!customerId) {
       customerId = `guest-${Date.now()}`;
@@ -294,20 +283,38 @@ export async function POST(request: NextRequest) {
       let resolvedCustomerId = customerId;
 
       if (customerId.startsWith("guest-")) {
-        // Create a guest customer row so customer_id NOT NULL is satisfied
-        // Must provide id — customers.id has no default (it's normally = auth.users.id)
+        // Create a fresh guest customer row. Each guest order gets its own
+        // customer_id — we do NOT merge by mobile, because that would leak
+        // a real customer's order history to anyone replaying their phone
+        // number, and would let one guest see another guest's prior orders.
+        // If the mobile is already taken by another row we use a placeholder
+        // mobile to satisfy any unique constraint.
         const guestId = crypto.randomUUID();
-        const { data: newGuest } = await adminSupa.from("customers").insert({
-          id:     guestId,
-          mobile: deliveryAddress.mobile,
-          name:   deliveryAddress.name,
-        }).select("id").single();
-        if (newGuest) resolvedCustomerId = newGuest.id;
-        else {
-          // Mobile might already exist — look it up
-          const { data: existing } = await adminSupa.from("customers")
-            .select("id").eq("mobile", deliveryAddress.mobile).single();
-          if (existing) resolvedCustomerId = existing.id;
+        const { data: newGuest, error: guestErr } = await adminSupa
+          .from("customers")
+          .insert({
+            id:     guestId,
+            mobile: deliveryAddress.mobile,
+            name:   deliveryAddress.name,
+          })
+          .select("id")
+          .single();
+
+        if (newGuest) {
+          resolvedCustomerId = newGuest.id;
+        } else if (guestErr?.code === "23505") {
+          // Unique-violation on mobile (or pk) — retry with placeholder mobile
+          const placeholderMobile = `_ph_${guestId.replace(/-/g, "").substring(0, 16)}`;
+          const { data: retry } = await adminSupa
+            .from("customers")
+            .insert({
+              id:     guestId,
+              mobile: placeholderMobile,
+              name:   deliveryAddress.name,
+            })
+            .select("id")
+            .single();
+          if (retry) resolvedCustomerId = retry.id;
         }
       } else {
         const { data: existingCustomer } = await adminSupa
@@ -376,39 +383,12 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Auto-save delivery address to customer profile (non-fatal)
-      if (customerId && !customerId.startsWith("guest-")) {
-        try {
-          const { data: existing } = await adminSupa
-            .from("customer_addresses")
-            .select("id")
-            .eq("customer_id", customerId)
-            .eq("mobile", deliveryAddress.mobile)
-            .eq("pincode", deliveryAddress.pincode)
-            .eq("address_line1", deliveryAddress.address_line1)
-            .maybeSingle();
-
-          if (!existing) {
-            const { count } = await adminSupa
-              .from("customer_addresses")
-              .select("id", { count: "exact", head: true })
-              .eq("customer_id", customerId);
-
-            await adminSupa.from("customer_addresses").insert({
-              customer_id:   customerId,
-              name:          deliveryAddress.name,
-              mobile:        deliveryAddress.mobile,
-              address_line1: deliveryAddress.address_line1,
-              address_line2: deliveryAddress.address_line2 || null,
-              landmark:      deliveryAddress.landmark || null,
-              city:          deliveryAddress.city,
-              state:         deliveryAddress.state,
-              pincode:       deliveryAddress.pincode,
-              is_default:    count === 0,
-            });
-          }
-        } catch { /* non-fatal — don't block order */ }
-      }
+      // Note: we deliberately do NOT auto-save the delivery address to the
+      // customer's saved-addresses list here. The previous version did, which
+      // — combined with the (now-fixed) forgeable session cookie — meant an
+      // attacker could plant arbitrary addresses on a victim's account.
+      // The checkout UI offers an explicit "Save this address" option for
+      // users who want to keep the address for later orders.
 
     } catch (dbErr: any) {
       // DB not configured — use timestamp ID for dev
@@ -486,25 +466,21 @@ export async function POST(request: NextRequest) {
 }
 
 // ─── Stock decrement helper ────────────────────────────────────────────────────
-// Called after COD confirm (here) and after Cashfree webhook confirms payment
+// Called after COD confirm (here) and after Cashfree webhook confirms payment.
+// Uses an atomic SQL UPDATE via the decrement_variant_stock RPC (see
+// supabase/migrations/005_atomic_stock_decrement.sql) so concurrent orders
+// for the same SKU cannot oversell.
 async function decrementStock(
   supabase: ReturnType<typeof createAdminSupabaseClient>,
   items: { variantId: string | null; quantity: number }[]
 ) {
   for (const item of items) {
-    if (!item.variantId) continue;
+    if (!item.variantId || item.quantity < 1) continue;
     try {
-      const { data: v } = await supabase
-        .from("product_variants")
-        .select("stock_quantity")
-        .eq("id", item.variantId)
-        .single();
-      if (v && typeof v.stock_quantity === "number") {
-        await supabase
-          .from("product_variants")
-          .update({ stock_quantity: Math.max(0, v.stock_quantity - item.quantity) })
-          .eq("id", item.variantId);
-      }
+      await supabase.rpc("decrement_variant_stock", {
+        p_variant_id: item.variantId,
+        p_quantity:   item.quantity,
+      });
     } catch { /* non-fatal per variant */ }
   }
 }

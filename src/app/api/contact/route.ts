@@ -3,11 +3,16 @@
 // Stores message in Supabase contact_messages table
 // Table: contact_messages (id, name, mobile, email, topic, message, created_at, is_read)
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase/server";
+import { isAllowedOrigin } from "@/lib/origin-check";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    if (!isAllowedOrigin(req)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const body = await req.json();
     const { name, mobile, email, topic, message } = body;
 

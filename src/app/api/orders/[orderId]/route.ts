@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
+import { verifyCustomerSession } from "@/lib/customer-auth";
 
 export async function GET(
   request: NextRequest,
@@ -15,6 +16,15 @@ export async function GET(
 
   if (!orderId) {
     return NextResponse.json({ error: "Order ID required" }, { status: 400 });
+  }
+
+  // ── Require a verified customer session ──────────────────────────────
+  // Previously this route returned the full order (incl. shipping address,
+  // mobile, email) to anyone who knew the order ID. Now we require auth and
+  // verify ownership.
+  const session = await verifyCustomerSession(request);
+  if (!session) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
   try {
@@ -44,15 +54,10 @@ export async function GET(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // Optional: verify the caller owns this order (if mf_session is present)
-    const sessionCookie = request.cookies.get("mf_session")?.value;
-    if (sessionCookie) {
-      try {
-        const session = JSON.parse(sessionCookie);
-        if (session.userId && session.userId !== order.customer_id) {
-          return NextResponse.json({ error: "Order not found" }, { status: 404 });
-        }
-      } catch { /* allow if cookie invalid — order confirmation pages don't always have session */ }
+    // Strict ownership check — same status code as not-found to avoid leaking
+    // existence of other customers' orders.
+    if (order.customer_id !== session.userId) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
     // Map to frontend shape

@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
+import { isAllowedOrigin } from "@/lib/origin-check";
 
 const STANDARD_SHIPPING = 6000; // ₹60 in paise
 
@@ -19,6 +20,9 @@ const STATIC_COUPONS = [
 
 export async function POST(request: NextRequest) {
   try {
+    if (!isAllowedOrigin(request)) {
+      return NextResponse.json({ valid: false, error: "Forbidden" }, { status: 403 });
+    }
     const { code, cartTotal } = await request.json();
     if (!code)       return NextResponse.json({ valid: false, error: "Please enter a coupon code" }, { status: 400 });
     if (!cartTotal)  return NextResponse.json({ valid: false, error: "Invalid cart total" }, { status: 400 });

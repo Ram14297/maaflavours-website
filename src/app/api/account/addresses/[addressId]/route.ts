@@ -6,17 +6,18 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
+import { verifyCustomerSession } from "@/lib/customer-auth";
+import { isAllowedOrigin } from "@/lib/origin-check";
 
-function getSession(request: NextRequest) {
-  const cookie = request.cookies.get("mf_session")?.value;
-  if (!cookie) return null;
-  try {
-    const s = JSON.parse(cookie);
-    if (!s.userId) return null;
-    return s;
-  } catch {
-    return null;
+async function getSession(request: NextRequest) {
+  return verifyCustomerSession(request);
+}
+
+function originGuard(req: NextRequest): NextResponse | null {
+  if (!isAllowedOrigin(req)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+  return null;
 }
 
 export async function PUT(
@@ -24,7 +25,8 @@ export async function PUT(
   { params }: { params: { addressId: string } }
 ) {
   try {
-    const session = getSession(req);
+    const denied = originGuard(req); if (denied) return denied;
+    const session = await getSession(req);
     if (!session) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
     const body = await req.json();
@@ -59,7 +61,8 @@ export async function PATCH(
   { params }: { params: { addressId: string } }
 ) {
   try {
-    const session = getSession(req);
+    const denied = originGuard(req); if (denied) return denied;
+    const session = await getSession(req);
     if (!session) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
     const admin = createAdminSupabaseClient();
@@ -87,7 +90,8 @@ export async function DELETE(
   { params }: { params: { addressId: string } }
 ) {
   try {
-    const session = getSession(req);
+    const denied = originGuard(req); if (denied) return denied;
+    const session = await getSession(req);
     if (!session) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
     const admin = createAdminSupabaseClient();

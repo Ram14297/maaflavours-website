@@ -2,9 +2,19 @@
 // Maa Flavours — Create Cashfree Payment Session
 // POST /api/checkout/cashfree-create
 // Called after DB order is created — returns paymentSessionId + paymentLink
+//
+// SECURITY:
+//   1. We require a verified mf_session cookie and verify the caller owns
+//      the order they are paying for.
+//   2. We IGNORE the `amount` field from the request body and load the
+//      authoritative total from the orders table. Without this, a user
+//      could replay a real orderId with amount=100 (₹1) and pay a fraction
+//      of the real total.
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
+import { verifyCustomerSession } from "@/lib/customer-auth";
+import { isAllowedOrigin } from "@/lib/origin-check";
 
 const CF_API_VERSION = "2023-08-01";
 
@@ -18,18 +28,48 @@ export async function POST(request: NextRequest) {
     : "https://sandbox.cashfree.com/pg";
 
   try {
+    if (!isAllowedOrigin(request)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const {
       mfOrderId,
-      amount,
       customerName,
       customerPhone,
       customerEmail,
       customerId,
     } = await request.json();
 
-    if (!mfOrderId || !amount || !customerName || !customerPhone) {
+    if (!mfOrderId || !customerName || !customerPhone) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
+
+    // ── Auth + ownership check ────────────────────────────────────────
+    const session = await verifyCustomerSession(request);
+    if (!session) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    // ── Load authoritative order from DB (NEVER trust amount from body) ──
+    const adminSupaForOrder = createAdminSupabaseClient();
+    const { data: dbOrder, error: orderErr } = await adminSupaForOrder
+      .from("orders")
+      .select("id, customer_id, total, payment_status")
+      .eq("id", mfOrderId)
+      .maybeSingle();
+
+    if (orderErr || !dbOrder) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+    if (dbOrder.customer_id !== session.userId) {
+      // Same 404 — don't leak existence
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+    if (dbOrder.payment_status === "paid") {
+      return NextResponse.json({ error: "Order already paid" }, { status: 409 });
+    }
+
+    const amount = dbOrder.total; // paise — authoritative
 
     // Cashfree order_id: max 50 chars, alphanumeric + _ + -
     const cfOrderId = `MF_${mfOrderId.replace(/-/g, "").substring(0, 40)}`;

@@ -30,7 +30,17 @@ export async function GET(req: NextRequest) {
 
     if (status)  query = query.eq("status", status);
     if (payment) query = query.eq("payment_method", payment);
-    if (search)  query = query.or(`order_number.ilike.%${search}%,customer_name.ilike.%${search}%,customer_mobile.ilike.%${search}%`);
+    if (search) {
+      // Strip PostgREST-significant chars to prevent the user-supplied
+      // string from breaking out of the ilike pattern and adding extra
+      // OR clauses (commas, parens, asterisks).
+      const safe = search.replace(/[,()%*]/g, "").trim();
+      if (safe) {
+        query = query.or(
+          `order_number.ilike.%${safe}%,customer_name.ilike.%${safe}%,customer_mobile.ilike.%${safe}%`
+        );
+      }
+    }
 
     const { data, count, error } = await query.range(from, to);
     if (error) throw error;
