@@ -125,9 +125,14 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (err: any) {
+    // Previously fell back to randomly generated mock data, which silently
+    // hid real outages and could mislead operations decisions. Surface the
+    // error instead.
     console.error("[admin/analytics]", err.message);
-    // Return mock data so page renders in dev
-    return buildMockAnalytics(period);
+    return NextResponse.json(
+      { error: "Failed to load analytics data", detail: err.message },
+      { status: 500 }
+    );
   }
 }
 
@@ -180,47 +185,3 @@ function getWeekNumber(d: Date): number {
   return Math.ceil((((d.getTime() - jan1.getTime()) / 86400000) + jan1.getDay() + 1) / 7);
 }
 
-function buildMockAnalytics(period: string) {
-  const days  = period === "90d" ? 90 : period === "6m" ? 180 : period === "1y" ? 365 : 30;
-  const count = Math.min(days, 30);
-  const trend = Array.from({ length: count }, (_, i) => {
-    const d = new Date(Date.now() - (count - i) * 24 * 60 * 60 * 1000);
-    return {
-      date:    d.toLocaleDateString("en-IN", { day:"numeric", month:"short" }),
-      revenue: Math.floor(Math.random() * 1500000 + 300000),
-      orders:  Math.floor(Math.random() * 8 + 1),
-    };
-  });
-  return NextResponse.json({
-    summary: {
-      totalRevenue:48230000, totalOrders:142, avgOrderValue:3396500,
-      cancelledOrders:8, totalCustomers:89, newCustomers:23, cancellationRate:5,
-    },
-    revenueTrend: trend,
-    productPerformance: [
-      { name:"Drumstick Pickle",  revenue:12450000, units:78 },
-      { name:"Pulihora Gongura",  revenue:9870000,  units:54 },
-      { name:"Maamidi Allam",     revenue:8760000,  units:48 },
-      { name:"Amla Pickle",       revenue:7430000,  units:50 },
-      { name:"Red Chilli Pickle", revenue:6120000,  units:38 },
-      { name:"Lemon Pickle",      revenue:3600000,  units:25 },
-    ],
-    paymentMix: { cashfree:68, cod:42, phonepe_qr:12 },
-    topCities: [
-      { city:"Hyderabad",  orders:38 }, { city:"Bangalore",  orders:24 },
-      { city:"Chennai",    orders:18 }, { city:"Vijayawada", orders:14 },
-      { city:"Mumbai",     orders:11 }, { city:"Ongole",     orders:9  },
-      { city:"Delhi",      orders:7  }, { city:"Pune",       orders:6  },
-    ],
-    couponPerformance: [
-      { code:"WELCOME50",  uses:32 },
-      { code:"MAASPECIAL", uses:18 },
-      { code:"FREESHIP",   uses:7  },
-    ],
-    period: {
-      start: new Date(Date.now() - days * 86400000).toISOString(),
-      end:   new Date().toISOString(),
-      label: period,
-    },
-  });
-}

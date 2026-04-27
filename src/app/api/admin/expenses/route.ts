@@ -73,27 +73,44 @@ export async function GET(req: NextRequest) {
     const grossProfit  = totalRevenue - totalExpenses;
 
     // ── 6-month trend ─────────────────────────────────────────────────────
+    // Single window for both queries — fetch all rows in the 6-month range
+    // and bucket in JS, instead of running 12 sequential per-month queries.
     const trendMonths = Array.from({ length: 6 }, (_, i) => {
       const d = new Date(year, mon - 1 - (5 - i), 1);
       return {
         key:   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
         label: d.toLocaleDateString("en-IN", { month: "short", year: "2-digit" }),
-        start: new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split("T")[0],
-        end:   new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split("T")[0],
+        start: new Date(d.getFullYear(), d.getMonth(), 1),
+        end:   new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59),
       };
     });
+    const trendStart = trendMonths[0].start.toISOString().split("T")[0];
+    const trendEnd   = trendMonths[trendMonths.length - 1].end.toISOString().split("T")[0];
 
-    const trendData = await Promise.all(trendMonths.map(async tm => {
-      const [expRes, revRes] = await Promise.all([
-        supabase.from("expenses").select("amount")
-          .gte("expense_date", tm.start).lte("expense_date", tm.end),
-        supabase.from("orders").select("total").eq("payment_status", "paid")
-          .gte("created_at", `${tm.start}T00:00:00`).lte("created_at", `${tm.end}T23:59:59`),
-      ]);
-      const exp = (expRes.data || []).reduce((s, e) => s + e.amount, 0);
-      const rev = (revRes.data || []).reduce((s, o) => s + o.total, 0);
+    const [expRes, revRes] = await Promise.all([
+      supabase.from("expenses").select("amount, expense_date")
+        .gte("expense_date", trendStart).lte("expense_date", trendEnd),
+      supabase.from("orders").select("total, created_at").eq("payment_status", "paid")
+        .gte("created_at", `${trendStart}T00:00:00`).lte("created_at", `${trendEnd}T23:59:59`),
+    ]);
+
+    // Bucket by YYYY-MM key
+    const expByMonth: Record<string, number> = {};
+    for (const e of expRes.data || []) {
+      const k = (e.expense_date as string).slice(0, 7);
+      expByMonth[k] = (expByMonth[k] || 0) + e.amount;
+    }
+    const revByMonth: Record<string, number> = {};
+    for (const o of revRes.data || []) {
+      const k = (o.created_at as string).slice(0, 7);
+      revByMonth[k] = (revByMonth[k] || 0) + o.total;
+    }
+
+    const trendData = trendMonths.map(tm => {
+      const exp = expByMonth[tm.key] || 0;
+      const rev = revByMonth[tm.key] || 0;
       return { month: tm.label, revenue: rev, expenses: exp, profit: rev - exp };
-    }));
+    });
 
     return NextResponse.json({
       expenses,

@@ -114,68 +114,68 @@ export async function POST(request: NextRequest) {
 
     const adminSupa = createAdminSupabaseClient();
 
+    // ── BATCH lookup: fetch every distinct slug + its active variants in
+    //    ONE Supabase round-trip, then resolve each cart item against the
+    //    in-memory map. Previously this did up to 4 round-trips per item
+    //    (products, variants, then again for the static-fallback path),
+    //    so a 5-item cart was up to 20 sequential queries.
+    const distinctSlugs = Array.from(new Set(items.map(i => i.productSlug)));
+
+    type DbVariant = { id: string; label: string; price: number; discounted_price: number | null; weight_grams: number };
+    type DbProduct = { id: string; name: string; slug: string; product_variants: DbVariant[] };
+
+    let dbProductsBySlug = new Map<string, DbProduct>();
+    try {
+      const { data: dbRows } = await adminSupa
+        .from("products")
+        .select("id, name, slug, product_variants!inner(id, label, price, discounted_price, weight_grams, is_active)")
+        .in("slug", distinctSlugs)
+        .eq("is_active", true)
+        .eq("product_variants.is_active", true);
+
+      for (const row of (dbRows || []) as any[]) {
+        // Sort variants by weight ascending so variantIndex matches the
+        // public products API ordering.
+        row.product_variants.sort((a: any, b: any) => a.weight_grams - b.weight_grams);
+        dbProductsBySlug.set(row.slug, row as DbProduct);
+      }
+    } catch { /* DB unreachable — falls back to static-only resolution below */ }
+
     for (const item of items) {
+      const staticProduct = PRODUCTS.find(p => p.slug === item.productSlug);
+      const staticVariant = staticProduct?.variants[item.variantIndex];
+      const dbProduct     = dbProductsBySlug.get(item.productSlug);
+      const dbVariant     = dbProduct?.product_variants[item.variantIndex];
+
       let productName: string;
       let variantLabel: string;
       let unitPrice: number;
-      let productId: string | null  = null;
-      let variantId: string | null  = null;
-
-      const staticProduct = PRODUCTS.find(p => p.slug === item.productSlug);
-      const staticVariant = staticProduct?.variants[item.variantIndex];
+      let productId: string | null = null;
+      let variantId: string | null = null;
 
       if (staticProduct && staticVariant) {
-        // Fast path — static constants
+        // Fast path — static constants give name+price, DB gives UUIDs
         productName  = staticProduct.name;
         variantLabel = staticVariant.label;
-        unitPrice    = staticVariant.price;  // Always use server price (security)
-
-        // Resolve UUIDs from Supabase (non-fatal)
-        try {
-          const { data: dbP } = await adminSupa.from("products")
-            .select("id").eq("slug", item.productSlug).single();
-          if (dbP) {
-            productId = dbP.id;
-            const { data: dbV } = await adminSupa.from("product_variants")
-              .select("id").eq("product_id", dbP.id).eq("label", staticVariant.label).single();
-            if (dbV) variantId = dbV.id;
-          }
-        } catch { /* non-fatal */ }
-
-      } else {
-        // Admin-added product not in static constants — query Supabase
-        try {
-          const { data: dbProduct, error: pe } = await adminSupa
-            .from("products")
-            .select("id, name")
-            .eq("slug", item.productSlug)
-            .eq("is_active", true)
-            .single();
-
-          if (pe || !dbProduct) {
-            return NextResponse.json({ error: `Product not found: ${item.productSlug}` }, { status: 400 });
-          }
-
-          const { data: dbVariants, error: ve } = await adminSupa
-            .from("product_variants")
-            .select("id, label, price, discounted_price")
-            .eq("product_id", dbProduct.id)
-            .eq("is_active", true)
-            .order("weight_grams");
-
-          const dbVariant = dbVariants?.[item.variantIndex];
-          if (ve || !dbVariant) {
-            return NextResponse.json({ error: `Invalid variant index ${item.variantIndex} for ${item.productSlug}` }, { status: 400 });
-          }
-
-          productName  = dbProduct.name;
-          variantLabel = dbVariant.label;
-          unitPrice    = dbVariant.discounted_price ?? dbVariant.price;
-          productId    = dbProduct.id;
-          variantId    = dbVariant.id;
-        } catch {
-          return NextResponse.json({ error: `Product not found: ${item.productSlug}` }, { status: 400 });
+        unitPrice    = staticVariant.price; // Always use server price (security)
+        if (dbProduct) {
+          productId = dbProduct.id;
+          // Match the static variant by label (in case ordering differs)
+          const matched = dbProduct.product_variants.find(v => v.label === staticVariant.label);
+          if (matched) variantId = matched.id;
         }
+      } else if (dbProduct && dbVariant) {
+        // Admin-added product not in static constants — DB authoritative
+        productName  = dbProduct.name;
+        variantLabel = dbVariant.label;
+        unitPrice    = dbVariant.discounted_price ?? dbVariant.price;
+        productId    = dbProduct.id;
+        variantId    = dbVariant.id;
+      } else {
+        return NextResponse.json(
+          { error: `Product not found: ${item.productSlug}` },
+          { status: 400 }
+        );
       }
 
       const totalPrice = unitPrice * item.quantity;

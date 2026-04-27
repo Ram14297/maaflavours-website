@@ -9,6 +9,21 @@ import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin-auth";
 
 export async function POST(req: NextRequest) {
+  // Hard-disable in production. This route hard-deletes every order +
+  // every order_item — there is no business reason to call it on a live
+  // store and accidentally hitting it would be catastrophic. To run it
+  // intentionally on prod, set ALLOW_DESTRUCTIVE_ADMIN=true (one-off env
+  // var) AND rely on the admin-auth check below.
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.ALLOW_DESTRUCTIVE_ADMIN !== "true"
+  ) {
+    return NextResponse.json(
+      { error: "Disabled in production. Set ALLOW_DESTRUCTIVE_ADMIN=true to enable." },
+      { status: 403 }
+    );
+  }
+
   const admin = await requireAdmin(req);
   if (!admin) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 

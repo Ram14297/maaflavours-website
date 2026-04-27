@@ -81,36 +81,31 @@ export const useCheckoutStore = create<CheckoutStore>((set, get) => ({
   setPincodeData: (data) =>
     set((s) => ({ pincodeData: { ...s.pincodeData, ...data } })),
 
-  // ─── Pincode lookup via India Post API ───────────────────────────────
+  // ─── Pincode lookup via our cached server endpoint ──────────────────
+  // Going through /api/pincode (instead of calling api.postalpincode.in
+  // directly) gives us:
+  //   - server-side caching (24h fetch revalidate + in-memory map)
+  //   - no per-client rate-limit risk against India Post
+  //   - a single fall-back path if the upstream goes down
   lookupPincode: async (pincode) => {
     if (pincode.length !== 6) return;
     set((s) => ({ pincodeData: { ...s.pincodeData, loading: true, error: "" } }));
 
     try {
-      // India Post open API — no API key required
-      const res = await fetch(
-        `https://api.postalpincode.in/pincode/${pincode}`
-      );
+      const res  = await fetch(`/api/pincode?pin=${pincode}`);
       const data = await res.json();
 
-      if (
-        data?.[0]?.Status === "Success" &&
-        data[0].PostOffice?.length > 0
-      ) {
-        const post = data[0].PostOffice[0];
-        const city = post.Division || post.Block || post.District;
-        const state = post.State;
-
+      if (res.ok && data.city && data.state) {
         set((s) => ({
           pincodeData: {
-            city,
-            state,
+            city:    data.city,
+            state:   data.state,
             isValid: true,
             loading: false,
-            error: "",
+            error:   "",
           },
           // Auto-fill city and state into the address
-          address: { ...s.address, city, state },
+          address: { ...s.address, city: data.city, state: data.state },
         }));
       } else {
         set((s) => ({
@@ -118,7 +113,7 @@ export const useCheckoutStore = create<CheckoutStore>((set, get) => ({
             ...s.pincodeData,
             isValid: false,
             loading: false,
-            error: "Invalid pincode. Please check and re-enter.",
+            error:   data.error || "Invalid pincode. Please check and re-enter.",
           },
         }));
       }
@@ -128,7 +123,7 @@ export const useCheckoutStore = create<CheckoutStore>((set, get) => ({
           ...s.pincodeData,
           isValid: false,
           loading: false,
-          error: "Could not look up this pincode. Please fill city and state manually.",
+          error:   "Could not look up this pincode. Please fill city and state manually.",
         },
       }));
     }

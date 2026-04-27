@@ -48,10 +48,11 @@ export async function POST(request: NextRequest) {
       try {
         const adminSupa = createAdminSupabaseClient();
         await adminSupa.from("orders").update({
-          status:            isSuccess ? "confirmed" : "failed",
-          payment_status:    isSuccess ? "paid"      : "failed",
-          // Store PhonePe transaction ID in razorpay_order_id column (reused field)
-          razorpay_order_id: phonePeTxnId || null,
+          status:                 isSuccess ? "confirmed" : "failed",
+          payment_status:         isSuccess ? "paid"      : "failed",
+          // Use the dedicated PhonePe column (added in migration 006).
+          // We previously mis-used razorpay_order_id for this — fixed now.
+          phonepe_transaction_id: phonePeTxnId || null,
         }).eq("id", merchantTransactionId);
 
         console.log(

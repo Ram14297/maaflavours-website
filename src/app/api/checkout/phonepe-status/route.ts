@@ -11,12 +11,36 @@ import {
   generateStatusChecksum,
 } from "@/lib/phonepe";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
+import { verifyCustomerSession } from "@/lib/customer-auth";
 
 export async function GET(request: NextRequest) {
   const orderId = request.nextUrl.searchParams.get("orderId");
 
   if (!orderId) {
     return NextResponse.json({ error: "Missing orderId" }, { status: 400 });
+  }
+
+  // ── Require a verified customer session and verify ownership ────────
+  // Without this, anyone could poll any order's payment status — useful
+  // for an attacker enumerating order IDs to map them to outcomes.
+  const session = await verifyCustomerSession(request);
+  if (!session) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+  }
+
+  try {
+    const adminSupa = createAdminSupabaseClient();
+    const { data: ownerCheck } = await adminSupa
+      .from("orders")
+      .select("customer_id")
+      .eq("id", orderId)
+      .maybeSingle();
+    if (!ownerCheck || ownerCheck.customer_id !== session.userId) {
+      // Same 404 — don't leak existence
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+  } catch {
+    return NextResponse.json({ error: "Lookup failed" }, { status: 500 });
   }
 
   const merchantTransactionId = orderId.slice(0, 38);

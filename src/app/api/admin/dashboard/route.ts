@@ -23,7 +23,12 @@ export async function GET(req: NextRequest) {
     const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59).toISOString();
     const last7days    = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    // ── Run all queries in parallel ───────────────────────────────────
+    // Run independent queries in parallel.
+    // (Top-products is fetched as a JOIN below — a single PostgREST call —
+    // not as a broken `.gte("order_id", "uuid1,uuid2")` like before, which
+    // would silently return zero rows.)
+    const last30daysISO = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
     const [
       { data: revToday },
       { data: revMonth },
@@ -33,7 +38,7 @@ export async function GET(req: NextRequest) {
       { data: newCustomers },
       { data: recentOrders },
       { data: lowStock },
-      { data: topProducts },
+      { data: topProductsJoin },
       { data: weeklyOrders },
     ] = await Promise.all([
 
@@ -74,16 +79,16 @@ export async function GET(req: NextRequest) {
         .select("id, sku, label, stock_quantity, low_stock_threshold, product_name")
         .limit(10),
 
-      // Top products by revenue (last 30 days)
+      // Top products (last 30 days, paid orders only).
+      // Single round-trip via PostgREST embedded join: pull each item with
+      // its parent order, then filter inline. This replaces the previous
+      // two-query pattern that was also broken (used `.gte` with a
+      // comma-separated UUID string).
       supabase.from("order_items")
-        .select("product_name, quantity, total_price")
-        .gte("order_id",
-          (await supabase.from("orders")
-            .select("id").eq("payment_status", "paid")
-            .gte("created_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-          ).data?.map(o => o.id).join(",") || ""
-        )
-        .limit(100),
+        .select("product_name, quantity, total_price, orders!inner(payment_status, created_at)")
+        .eq("orders.payment_status", "paid")
+        .gte("orders.created_at", last30daysISO)
+        .limit(500),
 
       // Orders per day last 7 days (for chart)
       supabase.from("orders")
@@ -91,6 +96,8 @@ export async function GET(req: NextRequest) {
         .gte("created_at", last7days)
         .order("created_at", { ascending: true }),
     ]);
+
+    const topProducts = topProductsJoin || [];
 
     // ── Calculate KPIs ────────────────────────────────────────────────
     const sumPaise = (arr: { total: number }[] | null) =>
@@ -154,22 +161,13 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (err: any) {
+    // Previously this returned random mock data which made it impossible to
+    // tell a real outage from healthy zero-state, and operations could end
+    // up making decisions on hallucinated numbers. Return a real error.
     console.error("[admin/dashboard]", err.message);
-    // Return mock data for development
-    return NextResponse.json({
-      kpis: {
-        revenueToday: 287400, revenueMonth: 4823000, revenueLastMonth: 3921000,
-        revenueGrowthPercent: 23, totalOrders: 142, pendingOrders: 8,
-        processingOrders: 12, shippedOrders: 6, totalCustomers: 89, newCustomersThisMonth: 14, lowStockCount: 2,
-      },
-      chart: Array.from({ length: 7 }, (_, i) => ({
-        date:    ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][i],
-        orders:  Math.floor(Math.random() * 8) + 2,
-        revenue: Math.floor(Math.random() * 5000) + 2000,
-      })),
-      recentOrders: [],
-      lowStock:     [],
-      topProducts:  [],
-    });
+    return NextResponse.json(
+      { error: "Failed to load dashboard data", detail: err.message },
+      { status: 500 }
+    );
   }
 }
