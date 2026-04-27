@@ -88,7 +88,10 @@ export async function POST(request: NextRequest) {
       },
       order_meta: {
         return_url:   `${siteUrl}/checkout/confirmation?orderId=${mfOrderId}&method=cashfree`,
-        notify_url:   `${siteUrl}/api/checkout/cashfree-webhook`,
+        // notify_url intentionally omitted — the webhook is configured at the
+        // project level in the Cashfree dashboard. Sending notify_url here
+        // would cause Cashfree to fire BOTH the per-order NOTIFY_URL row AND
+        // the dashboard-configured webhook, double-firing the same event.
       },
       order_note: `Maa Flavours order ${mfOrderId}`,
     };
