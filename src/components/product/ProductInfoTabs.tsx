@@ -4,9 +4,10 @@
 // Tabs: Product Description | Ingredients | Shipping & Returns
 // Accessible tab panel with smooth transitions
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Truck, Package, Leaf, Info, Lock, Thermometer, Utensils, Snowflake, Sun, Droplets, AlertTriangle } from "lucide-react";
 import { SHIPPING } from "@/lib/constants/products";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 interface ProductInfoTabsProps {
   description: string;
@@ -31,6 +32,9 @@ export default function ProductInfoTabs({
   isVegetarian = true,
 }: ProductInfoTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>("description");
+
+  // Sanitise admin-authored HTML before rendering with dangerouslySetInnerHTML
+  const safeDescription = useMemo(() => sanitizeHtml(description), [description]);
 
   const ingredientList = ingredients.split(",").map((i) => i.trim()).filter(Boolean);
 
@@ -85,7 +89,7 @@ export default function ProductInfoTabs({
           <div
             className="font-dm-sans text-base leading-relaxed [&_p]:mb-4 [&_p:last-child]:mb-0 [&_strong]:font-semibold [&_em]:italic [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-4 [&_li]:mb-1"
             style={{ color: "var(--color-grey)" }}
-            dangerouslySetInnerHTML={{ __html: description }}
+            dangerouslySetInnerHTML={{ __html: safeDescription }}
           />
 
           {/* Quick specs */}

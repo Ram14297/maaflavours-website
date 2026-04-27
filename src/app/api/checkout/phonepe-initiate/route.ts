@@ -11,8 +11,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import {
-  PHONEPE_MERCHANT_ID,
-  PHONEPE_PAY_URL,
+  getPhonePeMerchantId,
+  getPhonePePayUrl,
   generatePayChecksum,
 } from "@/lib/phonepe";
 
@@ -45,8 +45,11 @@ export async function POST(request: NextRequest) {
 
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://maaflavours.com";
 
+    const merchantId = getPhonePeMerchantId();
+    const payUrl     = getPhonePePayUrl();
+
     const payload = {
-      merchantId:            PHONEPE_MERCHANT_ID,
+      merchantId,
       merchantTransactionId,
       merchantUserId:        `MUID${merchantTransactionId.replace(/-/g, "").slice(0, 20)}`,
       amount,                                    // paise
@@ -61,14 +64,14 @@ export async function POST(request: NextRequest) {
     const base64Payload = Buffer.from(JSON.stringify(payload)).toString("base64");
     const checksum      = generatePayChecksum(base64Payload);
 
-    console.log("[phonepe-initiate] UPI_COLLECT request to:", PHONEPE_PAY_URL, "vpa:", upiId, "orderId:", orderId);
+    console.log("[phonepe-initiate] UPI_COLLECT request to:", payUrl, "vpa:", upiId, "orderId:", orderId);
 
-    const phonePeRes = await fetch(PHONEPE_PAY_URL, {
+    const phonePeRes = await fetch(payUrl, {
       method: "POST",
       headers: {
         "Content-Type":   "application/json",
         "X-VERIFY":       checksum,
-        "X-MERCHANT-ID":  PHONEPE_MERCHANT_ID,
+        "X-MERCHANT-ID":  merchantId,
       },
       body: JSON.stringify({ request: base64Payload }),
     });

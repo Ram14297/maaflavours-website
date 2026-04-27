@@ -11,8 +11,17 @@ const ADMIN_COOKIE = "mf-admin-token";
 const JWT_EXPIRY  = "24h";
 
 // ─── Get JWT secret as Uint8Array ─────────────────────────────────────────
+// In production we refuse to start without an explicit secret.
+// In dev (NODE_ENV !== "production") we fall back to a fixed string so
+// `next dev` works out of the box.
 function getSecret(): Uint8Array {
-  const secret = process.env.ADMIN_JWT_SECRET || process.env.ADMIN_PASSWORD_HASH || "maa-admin-dev-secret-change-in-prod";
+  const secret = process.env.ADMIN_JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("ADMIN_JWT_SECRET must be set in production");
+    }
+    return new TextEncoder().encode("dev-only-admin-secret-change-me");
+  }
   return new TextEncoder().encode(secret);
 }
 

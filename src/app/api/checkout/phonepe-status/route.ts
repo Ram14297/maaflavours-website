@@ -6,8 +6,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import {
-  PHONEPE_MERCHANT_ID,
-  PHONEPE_STATUS_BASE,
+  getPhonePeMerchantId,
+  getPhonePeStatusBase,
   generateStatusChecksum,
 } from "@/lib/phonepe";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
@@ -23,15 +23,17 @@ export async function GET(request: NextRequest) {
 
   // ─── 1. Check PhonePe status API ─────────────────────────────────────────
   try {
+    const merchantId = getPhonePeMerchantId();
+    const statusBase = getPhonePeStatusBase();
     const checksum   = generateStatusChecksum(merchantTransactionId);
-    const statusUrl  = `${PHONEPE_STATUS_BASE}/${PHONEPE_MERCHANT_ID}/${merchantTransactionId}`;
+    const statusUrl  = `${statusBase}/${merchantId}/${merchantTransactionId}`;
 
     const res  = await fetch(statusUrl, {
       method: "GET",
       headers: {
         "Content-Type":  "application/json",
         "X-VERIFY":      checksum,
-        "X-MERCHANT-ID": PHONEPE_MERCHANT_ID,
+        "X-MERCHANT-ID": merchantId,
       },
     });
 

@@ -29,9 +29,15 @@ export async function GET(req: NextRequest) {
       .from("customers")
       .select("id, mobile, name, email, total_orders, total_spent, is_active, created_at, updated_at", { count: "exact" });
 
-    // Search
+    // Search — strip PostgREST-significant chars (commas/parens/asterisks)
+    // to prevent the value from breaking out of the ilike pattern.
     if (search) {
-      query = query.or(`mobile.ilike.%${search}%,name.ilike.%${search}%,email.ilike.%${search}%`);
+      const safe = search.replace(/[,()%*]/g, "").trim();
+      if (safe) {
+        query = query.or(
+          `mobile.ilike.%${safe}%,name.ilike.%${safe}%,email.ilike.%${safe}%`
+        );
+      }
     }
 
     // Active filter

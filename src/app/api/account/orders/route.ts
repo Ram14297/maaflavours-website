@@ -5,23 +5,14 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
+import { verifyCustomerSession } from "@/lib/customer-auth";
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionCookie = request.cookies.get("mf_session")?.value;
-    if (!sessionCookie) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-
-    let session: any;
-    try {
-      session = JSON.parse(sessionCookie);
-    } catch {
+    const session = await verifyCustomerSession(request);
+    if (!session) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
-
-    if (!session.userId) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    }
-
     const customerId = session.userId;
     const supabase = createAdminSupabaseClient();
 

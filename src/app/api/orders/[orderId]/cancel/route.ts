@@ -9,6 +9,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { notifyCustomerSMS, msgOrderCancelled, shortOrderId } from "@/lib/notify-customer";
+import { verifyCustomerSession } from "@/lib/customer-auth";
+import { isAllowedOrigin } from "@/lib/origin-check";
 
 const CANCELLABLE_STATUSES = ["pending", "confirmed"];
 
@@ -19,6 +21,18 @@ export async function POST(
   const { orderId } = params;
   if (!orderId) {
     return NextResponse.json({ error: "Order ID required" }, { status: 400 });
+  }
+
+  if (!isAllowedOrigin(req)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  // ── Require a verified customer session ──────────────────────────────
+  // Previously the ownership check was only run when a cookie was present,
+  // so anyone with an order ID could cancel any order.
+  const session = await verifyCustomerSession(req);
+  if (!session) {
+    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
   try {
@@ -35,15 +49,9 @@ export async function POST(
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    // ── Verify ownership ──────────────────────────────────────────────────
-    const sessionCookie = req.cookies.get("mf_session")?.value;
-    if (sessionCookie) {
-      try {
-        const session = JSON.parse(sessionCookie);
-        if (session.userId && session.userId !== order.customer_id) {
-          return NextResponse.json({ error: "Order not found" }, { status: 404 });
-        }
-      } catch { /* allow — guest orders have no session */ }
+    // Strict ownership — same 404 to avoid leaking existence
+    if (order.customer_id !== session.userId) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
     // ── Check status ──────────────────────────────────────────────────────
@@ -72,7 +80,7 @@ export async function POST(
     await supabase.from("order_status_history").insert({
       order_id:   orderId,
       new_status: "cancelled",
-      changed_by: "customer",
+      changed_by: `customer:${session.userId}`,
       note:       "Cancelled by customer via website",
     });
 

@@ -5,27 +5,12 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
+import { verifyCustomerSession } from "@/lib/customer-auth";
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionCookie = request.cookies.get("mf_session")?.value;
-    if (!sessionCookie) return NextResponse.json({ user: null });
-
-    let session: any;
-    try {
-      session = JSON.parse(sessionCookie);
-    } catch {
-      return NextResponse.json({ user: null });
-    }
-
-    // Check expiry
-    if (session.exp && session.exp < Math.floor(Date.now() / 1000)) {
-      return NextResponse.json({ user: null });
-    }
-
-    if (!session.userId && !session.mobile && !session.email) {
-      return NextResponse.json({ user: null });
-    }
+    const session = await verifyCustomerSession(request);
+    if (!session) return NextResponse.json({ user: null });
 
     const supabase = createAdminSupabaseClient();
 

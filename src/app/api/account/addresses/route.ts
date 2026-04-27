@@ -5,22 +5,16 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
+import { verifyCustomerSession } from "@/lib/customer-auth";
+import { isAllowedOrigin } from "@/lib/origin-check";
 
-function getSession(request: NextRequest) {
-  const cookie = request.cookies.get("mf_session")?.value;
-  if (!cookie) return null;
-  try {
-    const s = JSON.parse(cookie);
-    if (!s.userId) return null;
-    return s;
-  } catch {
-    return null;
-  }
+async function getSession(request: NextRequest) {
+  return verifyCustomerSession(request);
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const session = getSession(request);
+    const session = await getSession(request);
     if (!session) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
     const supabase = createAdminSupabaseClient();
@@ -40,7 +34,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = getSession(request);
+    if (!isAllowedOrigin(request)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    const session = await getSession(request);
     if (!session) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
     const body = await request.json();

@@ -10,11 +10,27 @@ import { jwtVerify } from "jose";
 import { NextResponse, type NextRequest } from "next/server";
 
 const ADMIN_COOKIE = "mf-admin-token";
+const CUSTOMER_COOKIE = "mf_session";
 
 function getAdminSecret(): Uint8Array {
-  const s = process.env.ADMIN_JWT_SECRET ||
-            process.env.ADMIN_PASSWORD_HASH ||
-            "maa-admin-dev-secret-change-in-prod";
+  const s = process.env.ADMIN_JWT_SECRET;
+  if (!s) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("ADMIN_JWT_SECRET must be set in production");
+    }
+    return new TextEncoder().encode("dev-only-admin-secret-change-me");
+  }
+  return new TextEncoder().encode(s);
+}
+
+function getCustomerSecret(): Uint8Array {
+  const s = process.env.MF_SESSION_SECRET || process.env.ADMIN_JWT_SECRET;
+  if (!s) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("MF_SESSION_SECRET must be set in production");
+    }
+    return new TextEncoder().encode("dev-only-mf-session-secret-change-me");
+  }
   return new TextEncoder().encode(s);
 }
 
@@ -78,32 +94,35 @@ export async function middleware(request: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession();
 
   // ── 3. Protected Customer Routes ──────────────────────────────────────
-  // NOTE: We use custom mf_session cookie for auth — NOT Supabase session.
-  // Supabase session will always be null for our OTP-based auth flow.
-  // phonepe-status is a post-payment redirect landing page — no auth needed
+  // NOTE: We use a SIGNED custom mf_session JWT cookie for auth — NOT Supabase
+  // session. Supabase session will always be null for our OTP-based flow.
+  // phonepe-status is a post-payment redirect landing page — no auth needed.
   const PROTECTED = ["/account", "/checkout"];
   if (PROTECTED.some(r => pathname.startsWith(r)) && pathname !== "/checkout/phonepe-status") {
     let isAuthenticated = false;
-    const mfSessionVal = request.cookies.get("mf_session")?.value;
+    let sess: any = null;
+    const mfSessionVal = request.cookies.get(CUSTOMER_COOKIE)?.value;
     if (mfSessionVal) {
       try {
-        const sess = JSON.parse(mfSessionVal);
-        const now = Math.floor(Date.now() / 1000);
-        // Valid session: has userId, name set (not new user), not expired
-        if (
-          sess.userId &&
-          !sess.isNewUser &&
-          sess.name &&
-          (!sess.exp || sess.exp > now)
-        ) {
-          isAuthenticated = true;
-        }
-      } catch { /* invalid cookie — not authenticated */ }
+        const verified = await jwtVerify(mfSessionVal, getCustomerSecret(), {
+          issuer: "maaflavours.com",
+          audience: "customer",
+        });
+        sess = verified.payload;
+      } catch { /* invalid/expired/forged */ }
+    }
+    if (sess?.userId && !sess.isNewUser && sess.name) {
+      isAuthenticated = true;
     }
     if (!isAuthenticated) {
       const url = new URL("/login", request.url);
       url.searchParams.set("redirect", pathname);
-      return NextResponse.redirect(url);
+      const res = NextResponse.redirect(url);
+      // Clear any stale cookie (including legacy unsigned-JSON variants)
+      if (mfSessionVal) {
+        res.cookies.set(CUSTOMER_COOKIE, "", { maxAge: 0, path: "/" });
+      }
+      return res;
     }
   }
 
