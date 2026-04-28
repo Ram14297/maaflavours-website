@@ -56,6 +56,7 @@ interface LiveProduct {
   ingredients: string;
   shelf_life_days: number;
   is_vegetarian: boolean;
+  contains_garlic?: boolean;
   variants: LiveVariant[];
 }
 
@@ -264,6 +265,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           ingredients:       p.ingredients       || base?.ingredients       || "",
           shelf_life_days:   p.shelf_life_days   || base?.shelf_life_days   || 180,
           is_vegetarian:     p.is_vegetarian     ?? base?.is_vegetarian     ?? true,
+          contains_garlic:   base?.contains_garlic,
           variants: (variants && variants.length > 0)
             ? variants.map((v: any) => ({
                 ...v,
@@ -289,6 +291,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             ingredients:       base.ingredients,
             shelf_life_days:   base.shelf_life_days,
             is_vegetarian:     base.is_vegetarian,
+            contains_garlic:   base.contains_garlic,
             variants:          base.variants,
           });
         } else {
@@ -421,6 +424,20 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   </span>
                 </div>
               </div>
+
+              {/* Contains Garlic notice */}
+              {product.contains_garlic && (
+                <div
+                  className="flex items-center gap-2 px-3.5 py-2 rounded-xl font-dm-sans text-sm font-medium w-fit"
+                  style={{
+                    background: "rgba(139,90,43,0.08)",
+                    border: "1.5px solid rgba(139,90,43,0.25)",
+                    color: "var(--color-brown)",
+                  }}
+                >
+                  🧄 Contains Garlic
+                </div>
+              )}
 
               {/* Product name */}
               <div>
