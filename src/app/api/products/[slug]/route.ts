@@ -7,6 +7,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { PRODUCTS } from "@/lib/constants/products";
 
+// Always fetch fresh data — never serve a stale cached response
+export const dynamic = "force-dynamic";
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: { slug: string } }

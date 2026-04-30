@@ -17,7 +17,6 @@ export interface ProductSeed {
   shelf_life_days: number;
   is_vegetarian: boolean;
   is_featured: boolean;
-  contains_garlic?: boolean;
   variants: {
     weight_grams: number;
     label: string;
@@ -81,7 +80,6 @@ export const PRODUCTS: ProductSeed[] = [
     shelf_life_days: 60,
     is_vegetarian: true,
     is_featured: true,
-    contains_garlic: true,
     variants: [
       { weight_grams: 250, label: "250g", price: 21900 },   // ₹219 ⭐ fan fav
       { weight_grams: 500, label: "500g", price: 40900 },   // ₹409 ⭐ fan fav

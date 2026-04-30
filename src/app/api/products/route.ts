@@ -10,6 +10,8 @@
 //   ?featured=true
 // Returns: { products: ProductWithDetails[], total: number, page, limit }
 
+export const dynamic = "force-dynamic";
+
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { PRODUCTS } from "@/lib/constants/products";
