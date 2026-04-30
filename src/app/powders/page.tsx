@@ -206,12 +206,14 @@ function PowdersContent() {
                 ingredients: p.ingredients || "",
                 shelf_life_days: p.shelf_life_days || 180,
                 is_vegetarian: true,
+                image_placeholder: p.slug,
+                primary_image_url: p.primary_image_url || null,
                 variants: p.variants.map((v: any) => ({
                   weight_grams: v.weight_grams,
                   label:        v.label,
                   price:        v.price,
                 })),
-              } as ProductSeed;
+              } as unknown as ProductSeed;
             })
             .filter(Boolean) as ProductSeed[];
           setLiveProducts(mapped);

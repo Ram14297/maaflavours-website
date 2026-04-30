@@ -159,6 +159,7 @@ export default function ProductGrid({
         >
           <ProductCard
             product={product}
+            imageUrl={(product as any).primary_image_url || undefined}
             view={viewMode}
             onAddToCart={onAddToCart}
           />

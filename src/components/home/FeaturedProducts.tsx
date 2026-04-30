@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ShoppingBag, Star } from "lucide-react";
 import { PRODUCTS } from "@/lib/constants/products";
 import { formatPrice, getSpiceLevelConfig } from "@/lib/utils";
@@ -17,9 +18,10 @@ type ProductEntry = (typeof PRODUCTS)[0];
 
 interface ProductCardProps {
   product: ProductEntry;
+  imageUrl?: string;
 }
 
-function ProductCard({ product }: ProductCardProps) {
+function ProductCard({ product, imageUrl }: ProductCardProps) {
   const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
   const [adding, setAdding] = useState(false);
 
@@ -69,19 +71,27 @@ function ProductCard({ product }: ProductCardProps) {
             "linear-gradient(135deg, var(--color-cream) 0%, var(--color-cream-dark) 100%)",
         }}
       >
-        {/* Placeholder — REPLACE with Next.js Image */}
-        <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-          <span className="text-5xl" style={{ filter: "drop-shadow(0 3px 6px rgba(74,44,10,0.15))" }}>
-            🫙
-          </span>
-          <span
-            className="font-dm-sans text-xs text-center px-3"
-            style={{ color: "var(--color-grey)" }}
-          >
-            {/* REPLACE with actual product image path: /images/products/{product.slug}.jpg */}
-            Product Image
-          </span>
-        </div>
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-400 group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+            <span className="text-5xl" style={{ filter: "drop-shadow(0 3px 6px rgba(74,44,10,0.15))" }}>
+              🫙
+            </span>
+            <span
+              className="font-dm-sans text-xs text-center px-3"
+              style={{ color: "var(--color-grey)" }}
+            >
+              Product Image
+            </span>
+          </div>
+        )}
 
         {/* Tag badge */}
         <div
@@ -242,14 +252,15 @@ function mapApiProduct(p: any): ProductEntry | null {
     shelf_life_days:   p.shelf_life_days || base?.shelf_life_days || 90,
     is_vegetarian:     p.is_vegetarian ?? true,
     is_featured:       p.is_featured ?? false,
-    image_placeholder: p.slug,
+    image_placeholder:  p.slug,
+    primary_image_url:  p.primary_image_url || null,
     // Live variant prices from Supabase
     variants: p.variants.map((v: any) => ({
       weight_grams: v.weight_grams,
       label:        v.label,
       price:        v.price,
     })),
-  } as ProductEntry;
+  } as unknown as ProductEntry;
 }
 
 export default function FeaturedProducts() {
@@ -300,7 +311,7 @@ export default function FeaturedProducts() {
         {/* ─── Product Grid ─────────────────────────────────────────────── */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-6">
           {products.map((product) => (
-            <ProductCard key={product.slug} product={product} />
+            <ProductCard key={product.slug} product={product} imageUrl={(product as any).primary_image_url || undefined} />
           ))}
         </div>
 

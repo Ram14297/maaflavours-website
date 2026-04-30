@@ -328,7 +328,7 @@ function ProductsContent() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {powderProducts.map((product) => (
-                <ProductCard key={product.slug} product={product} />
+                <ProductCard key={product.slug} product={product} imageUrl={(product as any).primary_image_url || undefined} />
               ))}
             </div>
           </div>

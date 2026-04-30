@@ -6,6 +6,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ShoppingBag, Star, Heart, Eye } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import { PRODUCTS } from "@/lib/constants/products";
@@ -16,12 +17,14 @@ type ProductSeed = (typeof PRODUCTS)[0];
 
 interface ProductCardProps {
   product: ProductSeed;
+  imageUrl?: string;
   view?: "grid" | "list";
   onAddToCart?: (product: ProductSeed, variantIndex: number) => void;
 }
 
 export default function ProductCard({
   product,
+  imageUrl,
   view = "grid",
   onAddToCart,
 }: ProductCardProps) {
@@ -76,23 +79,28 @@ export default function ProductCard({
         aria-label={`View ${product.name}`}
       >
         {/* Image */}
-        {/* REPLACE with actual product image */}
         <div
           className="w-40 sm:w-48 flex-shrink-0 flex items-center justify-center relative overflow-hidden"
           style={{
             background: "linear-gradient(135deg, var(--color-cream) 0%, var(--color-cream-dark) 100%)",
           }}
         >
-          <div className="text-center py-6 px-4">
-            <span className="text-4xl block mb-1">🫙</span>
-            <span
-              className="font-dm-sans text-xs"
-              style={{ color: "var(--color-grey)" }}
-            >
-              {/* REPLACE: /images/products/{product.slug}.jpg */}
-              Product Image
-            </span>
-          </div>
+          {imageUrl ? (
+            <Image
+              src={imageUrl}
+              alt={product.name}
+              fill
+              className="object-cover"
+              sizes="192px"
+            />
+          ) : (
+            <div className="text-center py-6 px-4">
+              <span className="text-4xl block mb-1">🫙</span>
+              <span className="font-dm-sans text-xs" style={{ color: "var(--color-grey)" }}>
+                Product Image
+              </span>
+            </div>
+          )}
           {/* Veg badge */}
           <div
             className="absolute top-2 left-2 w-5 h-5 flex items-center justify-center rounded"
@@ -217,32 +225,36 @@ export default function ProductCard({
       <span className="corner-br z-20" />
 
       {/* ─── Image Area ─────────────────────────────────────────────────── */}
-      {/* REPLACE with actual product image */}
       <div
         className="relative aspect-square overflow-hidden rounded-t-2xl"
         style={{
           background: "linear-gradient(135deg, var(--color-cream) 0%, var(--color-cream-dark) 100%)",
         }}
       >
-        {/* Placeholder — REPLACE with Next.js <Image /> */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 transition-transform duration-400 group-hover:scale-105">
-          <span
-            className="text-5xl transition-transform duration-300"
-            style={{
-              filter: "drop-shadow(0 3px 8px rgba(74,44,10,0.2))",
-              transform: imageHovered ? "scale(1.1) translateY(-4px)" : "scale(1)",
-            }}
-          >
-            🫙
-          </span>
-          <span
-            className="font-dm-sans text-xs text-center px-2"
-            style={{ color: "var(--color-grey)" }}
-          >
-            {/* REPLACE: /images/products/{product.slug}.jpg */}
-            Product Photo
-          </span>
-        </div>
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={product.name}
+            fill
+            className="object-cover transition-transform duration-400 group-hover:scale-105"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 transition-transform duration-400 group-hover:scale-105">
+            <span
+              className="text-5xl transition-transform duration-300"
+              style={{
+                filter: "drop-shadow(0 3px 8px rgba(74,44,10,0.2))",
+                transform: imageHovered ? "scale(1.1) translateY(-4px)" : "scale(1)",
+              }}
+            >
+              🫙
+            </span>
+            <span className="font-dm-sans text-xs text-center px-2" style={{ color: "var(--color-grey)" }}>
+              Product Photo
+            </span>
+          </div>
+        )}
 
         {/* Product tag */}
         <div
