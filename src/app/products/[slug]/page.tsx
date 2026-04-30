@@ -56,6 +56,8 @@ interface LiveProduct {
   ingredients: string;
   shelf_life_days: number;
   is_vegetarian: boolean;
+  contains_garlic?: boolean;
+  images: { id: string; url: string; alt: string; is_primary: boolean; sort_order: number }[];
   variants: LiveVariant[];
 }
 
@@ -248,7 +250,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       })
       .then((data) => {
         if (!data) return;
-        const { product: p, variants } = data;
+        const { product: p, variants, images: apiImages } = data;
         // Enrich with static content (richer descriptions, ingredients) if available
         const base = PRODUCTS.find((sp) => sp.slug === slug);
 
@@ -264,6 +266,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           ingredients:       p.ingredients       || base?.ingredients       || "",
           shelf_life_days:   p.shelf_life_days   || base?.shelf_life_days   || 180,
           is_vegetarian:     p.is_vegetarian     ?? base?.is_vegetarian     ?? true,
+          contains_garlic:   base?.contains_garlic,
+          images:            (apiImages && apiImages.length > 0) ? apiImages : [],
           variants: (variants && variants.length > 0)
             ? variants.map((v: any) => ({
                 ...v,
@@ -289,6 +293,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             ingredients:       base.ingredients,
             shelf_life_days:   base.shelf_life_days,
             is_vegetarian:     base.is_vegetarian,
+            contains_garlic:   base.contains_garlic,
+            images:            [],
             variants:          base.variants,
           });
         } else {
@@ -374,6 +380,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               <ProductImageGallery
                 productName={product.name}
                 productSlug={product.slug}
+                images={product.images}
                 emoji={emoji}
               />
             </div>
