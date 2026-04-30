@@ -5,6 +5,7 @@
 // All images are placeholders — REPLACE with actual product images
 
 import { useState, useCallback } from "react";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 
 interface GalleryImage {
@@ -99,47 +100,48 @@ export default function ProductImageGallery({
           }}
         />
 
-        {/* ─── Image placeholder — REPLACE with Next.js <Image /> ──────── */}
-        {/* Replace this entire div with:
+        {/* ─── Main image ───────────────────────────────────────────────── */}
+        {active.url ? (
+          <div
+            className="absolute inset-0 transition-transform duration-300"
+            style={{
+              transformOrigin: `${mousePos.x}% ${mousePos.y}%`,
+              transform: zoomed ? "scale(1.5)" : "scale(1)",
+            }}
+          >
             <Image
-              src={`/images/products/${productSlug}-${activeIndex + 1}.jpg`}
+              src={active.url}
               alt={active.alt}
               fill
               className="object-cover"
               priority={activeIndex === 0}
+              sizes="(max-width: 1024px) 100vw, 50vw"
             />
-        */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center gap-3 transition-transform duration-300"
-          style={{
-            transformOrigin: `${mousePos.x}% ${mousePos.y}%`,
-            transform: zoomed ? "scale(1.5)" : "scale(1)",
-          }}
-        >
-          <span
-            className="text-[5rem] lg:text-[7rem]"
+          </div>
+        ) : (
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center gap-3 transition-transform duration-300"
             style={{
-              filter: "drop-shadow(0 8px 16px rgba(74,44,10,0.2))",
+              transformOrigin: `${mousePos.x}% ${mousePos.y}%`,
+              transform: zoomed ? "scale(1.5)" : "scale(1)",
             }}
           >
-            {emoji}
-          </span>
-          <div className="text-center">
-            <p
-              className="font-dancing text-xl"
-              style={{ color: "var(--color-brown)" }}
+            <span
+              className="text-[5rem] lg:text-[7rem]"
+              style={{ filter: "drop-shadow(0 8px 16px rgba(74,44,10,0.2))" }}
             >
-              {productName}
-            </p>
-            <p
-              className="font-dm-sans text-xs mt-0.5"
-              style={{ color: "var(--color-grey)" }}
-            >
-              {/* REPLACE with actual product image */}
-              View {activeIndex + 1} of {galleryImages.length}
-            </p>
+              {emoji}
+            </span>
+            <div className="text-center">
+              <p className="font-dancing text-xl" style={{ color: "var(--color-brown)" }}>
+                {productName}
+              </p>
+              <p className="font-dm-sans text-xs mt-0.5" style={{ color: "var(--color-grey)" }}>
+                View {activeIndex + 1} of {galleryImages.length}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Gold corner ornaments */}
         <span className="corner-tl" />
@@ -222,10 +224,19 @@ export default function ProductImageGallery({
               aria-label={`View image ${idx + 1}`}
               aria-current={idx === activeIndex}
             >
-              {/* Thumbnail placeholder — REPLACE with actual images */}
-              <div className="absolute inset-0 flex items-center justify-center text-2xl opacity-70">
-                {emoji}
-              </div>
+              {img.url ? (
+                <Image
+                  src={img.url}
+                  alt={img.alt}
+                  fill
+                  className="object-cover"
+                  sizes="96px"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center text-2xl opacity-70">
+                  {emoji}
+                </div>
+              )}
               {/* Active overlay */}
               {idx === activeIndex && (
                 <div
