@@ -138,7 +138,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
         if (d.images?.length) {
           setImages(d.images.map((img: any, i: number) => ({
             id:         img.id,
-            url:        img.image_url,
+            url:        img.url,
             sort_order: img.sort_order ?? i,
             is_primary: img.is_primary ?? (i === 0),
           })));
@@ -282,7 +282,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
         .filter(img => !img.uploading && !img.error)
         .map((img, idx) => ({
           id:         img.id?.startsWith("temp-") ? undefined : img.id,
-          image_url:  img.url,
+          url:        img.url,
           sort_order: idx,
           is_primary: img.is_primary,
         })),

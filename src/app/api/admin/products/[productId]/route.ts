@@ -129,10 +129,10 @@ export async function PUT(
           // New image — insert
           await supabase.from("product_images").insert({
             product_id: params.productId,
-            image_url:  img.image_url,
+            url:        img.url,
             sort_order: img.sort_order,
             is_primary: img.is_primary,
-            alt_text:   img.alt_text || null,
+            alt:        img.alt || productData.name || "Product image",
           });
         }
       }

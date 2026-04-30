@@ -116,10 +116,10 @@ export async function POST(req: NextRequest) {
       await supabase.from("product_images").insert(
         images.map((img: any, i: number) => ({
           product_id: product.id,
-          image_url:  img.image_url,
+          url:        img.url,
           sort_order: img.sort_order ?? i,
           is_primary: img.is_primary ?? (i === 0),
-          alt_text:   img.alt_text || null,
+          alt:        img.alt || productData.name || "Product image",
         }))
       );
     }
