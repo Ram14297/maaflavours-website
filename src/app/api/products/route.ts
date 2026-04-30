@@ -13,10 +13,12 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { unstable_noStore as noStore } from "next/cache";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { PRODUCTS } from "@/lib/constants/products";
 
 export async function GET(req: NextRequest) {
+  noStore();
   try {
     const sp = req.nextUrl.searchParams;
     const category = sp.get("category");

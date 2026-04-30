@@ -4,6 +4,7 @@
 // Returns: { product, variants, images, related }
 
 import { NextRequest, NextResponse } from "next/server";
+import { unstable_noStore as noStore } from "next/cache";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { PRODUCTS } from "@/lib/constants/products";
 
@@ -14,6 +15,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: { slug: string } }
 ) {
+  noStore(); // belt-and-suspenders: opt out of Next.js data cache entirely
   const { slug } = params;
 
   try {
