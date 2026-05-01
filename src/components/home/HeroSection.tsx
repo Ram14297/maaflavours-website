@@ -6,15 +6,28 @@
 // Right side: elegant product showcase placeholder
 
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function HeroSection() {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible]       = useState(false);
+  const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 100);
     return () => clearTimeout(t);
+  }, []);
+
+  // Fetch the primary image of the first featured product to use as hero image
+  useEffect(() => {
+    fetch("/api/products?featured=true&limit=1")
+      .then(r => r.json())
+      .then(data => {
+        const first = data.products?.[0];
+        if (first?.primary_image_url) setHeroImageUrl(first.primary_image_url);
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -155,8 +168,7 @@ export default function HeroSection() {
                 }}
               />
 
-              {/* Central product image placeholder */}
-              {/* REPLACE with actual hero product image */}
+              {/* Central product image — shows featured product photo, falls back to placeholder */}
               <div
                 className="absolute inset-8 rounded-full flex items-center justify-center overflow-hidden"
                 style={{
@@ -166,28 +178,31 @@ export default function HeroSection() {
                     "0 20px 60px rgba(74, 44, 10, 0.15), 0 4px 16px rgba(200, 150, 12, 0.1)",
                 }}
               >
-                {/* Product pack illustration placeholder */}
-                <div className="text-center">
-                  <div
-                    className="text-7xl mb-2"
-                    style={{ filter: "drop-shadow(0 4px 8px rgba(74,44,10,0.2))" }}
-                  >
-                    🫙
+                {heroImageUrl ? (
+                  <Image
+                    src={heroImageUrl}
+                    alt="Maa Flavours — Featured Product"
+                    fill
+                    className="object-cover rounded-full"
+                    sizes="(max-width: 768px) 80vw, 500px"
+                    priority
+                  />
+                ) : (
+                  <div className="text-center">
+                    <div
+                      className="text-7xl mb-2"
+                      style={{ filter: "drop-shadow(0 4px 8px rgba(74,44,10,0.2))" }}
+                    >
+                      🫙
+                    </div>
+                    <p
+                      className="font-dancing text-lg"
+                      style={{ color: "var(--color-brown)" }}
+                    >
+                      Maa Flavours
+                    </p>
                   </div>
-                  <p
-                    className="font-dancing text-lg"
-                    style={{ color: "var(--color-brown)" }}
-                  >
-                    Maa Flavours
-                  </p>
-                  <p
-                    className="font-dm-sans text-xs mt-1"
-                    style={{ color: "var(--color-grey)" }}
-                  >
-                    {/* REPLACE with actual product image */}
-                    Product Image Here
-                  </p>
-                </div>
+                )}
               </div>
 
               {/* Floating product tag — top right */}
