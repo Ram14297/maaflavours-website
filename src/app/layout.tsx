@@ -126,9 +126,6 @@ export const metadata: Metadata = {
     ],
   },
   manifest: "/site.webmanifest",
-  verification: {
-    // google: "your-google-site-verification-code", // Add when available
-  },
 };
 
 export const viewport: Viewport = {
