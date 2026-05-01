@@ -86,6 +86,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
   const [isFeatured,      setIsFeatured]      = useState(false);
   const [variants,        setVariants]        = useState<Variant[]>(DEFAULT_VARIANTS);
   const [images,          setImages]          = useState<ProductImage[]>([]);
+  const [heroImageUrls,   setHeroImageUrls]   = useState<Set<string>>(new Set());
 
   // ── UI state ────────────────────────────────────────────────────────────
   const [loading,         setLoading]         = useState(!isNew);
@@ -147,6 +148,38 @@ export default function ProductForm({ productId }: { productId?: string }) {
       .catch(() => setError("Failed to load product"))
       .finally(() => setLoading(false));
   }, [productId, isNew]);
+
+  // ── Load hero image list ────────────────────────────────────────────────
+  useEffect(() => {
+    fetch("/api/admin/hero-images")
+      .then(r => r.json())
+      .then(d => {
+        if (Array.isArray(d.images)) {
+          setHeroImageUrls(new Set(d.images.map((i: any) => i.url)));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  async function toggleHeroImage(url: string) {
+    const isHero = heroImageUrls.has(url);
+    const method = isHero ? "DELETE" : "POST";
+    const endpoint = isHero
+      ? `/api/admin/hero-images?url=${encodeURIComponent(url)}`
+      : "/api/admin/hero-images";
+
+    try {
+      const r = await fetch(endpoint, {
+        method,
+        ...(isHero ? {} : {
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url, name }),
+        }),
+      });
+      const d = await r.json();
+      if (d.images) setHeroImageUrls(new Set(d.images.map((i: any) => i.url)));
+    } catch {}
+  }
 
   // Auto-generate slug from name (unless manually edited)
   function handleNameChange(val: string) {
@@ -669,7 +702,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
           {images.length > 0 && (
             <Card
               title={`Uploaded Images (${images.filter(i => !i.error).length})`}
-              subtitle="Drag to reorder · Click ⭐ to set as primary · First image is shown in product cards"
+              subtitle="Click ⭐ to set as primary · Click 🏠 to add/remove from homepage hero slideshow"
             >
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {images.map((img, idx) => (
@@ -678,15 +711,17 @@ export default function ProductForm({ productId }: { productId?: string }) {
                     image={img}
                     index={idx}
                     total={images.length}
+                    isHero={heroImageUrls.has(img.url)}
                     onSetPrimary={() => setPrimaryImage(img.url)}
                     onRemove={() => removeImage(img.url)}
                     onMoveLeft={() => idx > 0 && moveImage(idx, idx - 1)}
                     onMoveRight={() => idx < images.length - 1 && moveImage(idx, idx + 1)}
+                    onToggleHero={() => toggleHeroImage(img.url)}
                   />
                 ))}
               </div>
 
-              <div className="mt-4 pt-4 border-t flex items-center gap-4" style={{ borderColor:A.border }}>
+              <div className="mt-4 pt-4 border-t flex items-center gap-4 flex-wrap" style={{ borderColor:A.border }}>
                 <button
                   onClick={() => fileRef.current?.click()}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors"
@@ -694,9 +729,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
                 >
                   + Add More Images
                 </button>
-                <p style={{ color:A.grey, fontSize:11 }}>
-                  ⭐ = primary (shown in product card & detail page)
-                </p>
+                <p style={{ color:A.grey, fontSize:11 }}>⭐ = primary &nbsp;·&nbsp; 🏠 = shown in homepage hero slideshow</p>
               </div>
             </Card>
           )}
@@ -950,18 +983,22 @@ function ImageTile({
   image,
   index,
   total,
+  isHero,
   onSetPrimary,
   onRemove,
   onMoveLeft,
   onMoveRight,
+  onToggleHero,
 }: {
   image:        ProductImage;
   index:        number;
   total:        number;
+  isHero:       boolean;
   onSetPrimary: () => void;
   onRemove:     () => void;
   onMoveLeft:   () => void;
   onMoveRight:  () => void;
+  onToggleHero: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
 
@@ -1024,6 +1061,14 @@ function ImageTile({
           </div>
         )}
 
+        {/* Hero badge — always visible when active */}
+        {isHero && !image.uploading && (
+          <div className="absolute top-1 right-1">
+            <span className="px-1.5 py-0.5 rounded text-xs font-bold"
+              style={{ background:"#2E7D32", color:"#fff" }}>🏠 Hero</span>
+          </div>
+        )}
+
         {/* Hover controls */}
         {hovered && !image.uploading && !image.error && (
           <div className="absolute inset-0 flex items-center justify-center gap-2 flex-wrap"
@@ -1038,6 +1083,14 @@ function ImageTile({
                 ⭐ Primary
               </button>
             )}
+            <button
+              onClick={onToggleHero}
+              className="px-2 py-1 rounded text-xs font-bold"
+              style={{ background: isHero ? "#2E7D32" : "rgba(46,125,50,0.8)", color:"#fff" }}
+              title={isHero ? "Remove from homepage hero" : "Add to homepage hero slideshow"}
+            >
+              {isHero ? "🏠 Remove Hero" : "🏠 Add to Hero"}
+            </button>
             <button
               onClick={onRemove}
               className="px-2 py-1 rounded text-xs font-bold"

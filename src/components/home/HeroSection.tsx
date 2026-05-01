@@ -24,15 +24,14 @@ export default function HeroSection() {
     return () => clearTimeout(t);
   }, []);
 
-  // Fetch all featured products that have a primary image
+  // Fetch hand-picked hero images from admin settings
   useEffect(() => {
-    fetch("/api/products?featured=true&limit=20")
+    fetch("/api/admin/hero-images")
       .then(r => r.json())
       .then(data => {
-        const imgs = (data.products || [])
-          .filter((p: any) => p.primary_image_url)
-          .map((p: any) => ({ url: p.primary_image_url, name: p.name }));
-        if (imgs.length > 0) setHeroImages(imgs);
+        if (Array.isArray(data.images) && data.images.length > 0) {
+          setHeroImages(data.images);
+        }
       })
       .catch(() => {});
   }, []);
