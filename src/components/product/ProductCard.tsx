@@ -32,6 +32,7 @@ export default function ProductCard({
   const [adding, setAdding] = useState(false);
   const [wishlisted, setWishlisted] = useState(false);
   const [imageHovered, setImageHovered] = useState(false);
+  const [zoomedOpen, setZoomedOpen] = useState(false);
 
   const selectedVariant = product.variants[selectedVariantIndex];
   const addItem = useCartStore((s) => s.addItem);
@@ -226,9 +227,15 @@ export default function ProductCard({
 
       {/* ─── Image Area ─────────────────────────────────────────────────── */}
       <div
-        className="relative aspect-square overflow-hidden rounded-t-2xl"
+        className="relative aspect-square overflow-hidden rounded-t-2xl cursor-zoom-in"
         style={{
           background: "linear-gradient(135deg, var(--color-cream) 0%, var(--color-cream-dark) 100%)",
+        }}
+        onClick={(e) => {
+          if (!imageUrl) return; // no zoom for emoji placeholder
+          e.preventDefault();
+          e.stopPropagation();
+          setZoomedOpen(true);
         }}
       >
         {imageUrl ? (
@@ -236,16 +243,15 @@ export default function ProductCard({
             src={imageUrl}
             alt={product.name}
             fill
-            className="object-cover transition-transform duration-400 group-hover:scale-105"
+            className="object-cover"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
         ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 transition-transform duration-400 group-hover:scale-105">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
             <span
-              className="text-5xl transition-transform duration-300"
+              className="text-5xl"
               style={{
                 filter: "drop-shadow(0 3px 8px rgba(74,44,10,0.2))",
-                transform: imageHovered ? "scale(1.1) translateY(-4px)" : "scale(1)",
               }}
             >
               🫙
@@ -394,6 +400,48 @@ export default function ProductCard({
           </button>
         </div>
       </div>
+
+      {/* ─── Image Lightbox (click to zoom) ─────────────────────────────── */}
+      {zoomedOpen && imageUrl && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-[9999]"
+          style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(6px)" }}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setZoomedOpen(false); }}
+        >
+          <div
+            className="relative max-w-[90vw] max-h-[90vh] rounded-2xl overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={imageUrl}
+              alt={product.name}
+              width={700}
+              height={700}
+              className="object-contain w-full h-full"
+              style={{ maxWidth: "90vw", maxHeight: "85vh" }}
+            />
+            {/* Close button */}
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setZoomedOpen(false); }}
+              className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center font-bold text-lg"
+              style={{ background: "rgba(0,0,0,0.6)", color: "white", border: "1.5px solid rgba(255,255,255,0.3)" }}
+              aria-label="Close zoom"
+            >
+              ✕
+            </button>
+            {/* Product name at bottom */}
+            <div
+              className="absolute bottom-0 left-0 right-0 px-4 py-3"
+              style={{ background: "linear-gradient(transparent, rgba(0,0,0,0.7))" }}
+            >
+              <p className="font-playfair font-bold text-white text-base">{product.name}</p>
+              <p className="font-dm-sans text-xs" style={{ color: "rgba(255,255,255,0.7)" }}>
+                {selectedVariant.label} — {formatPrice(selectedVariant.price)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </Link>
   );
 }

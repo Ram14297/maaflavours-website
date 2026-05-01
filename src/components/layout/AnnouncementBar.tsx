@@ -7,9 +7,9 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
 const MESSAGES = [
+  "🎉 Launch Offer — Prices Slashed! Shop Now Before It Ends",
   "🚚 Free Shipping on orders above ₹499 — Pan-India Delivery",
   "🌿 No Preservatives. No Shortcuts. Just Pure Andhra Flavour.",
-  "🌱 100% Pure Vegetarian · Homemade — Every product, always guaranteed",
 ];
 
 export default function AnnouncementBar() {
