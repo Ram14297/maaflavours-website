@@ -151,7 +151,7 @@ export default function ProductCard({
                 {product.variants.map((v, i) => (
                   <button
                     key={v.label}
-                    onClick={(e) => { e.preventDefault(); setSelectedVariantIndex(i); }}
+                    onClick={(e) => { e.stopPropagation(); setSelectedVariantIndex(i); }}
                     className="px-3 py-1 rounded-lg font-dm-sans text-xs font-semibold transition-all duration-200"
                     style={{
                       background: selectedVariantIndex === i ? "var(--color-crimson)" : "var(--color-cream)",
@@ -256,19 +256,21 @@ export default function ProductCard({
           </div>
         )}
 
-        {/* Product tag */}
-        <div
-          className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full font-dm-sans text-[0.6rem] font-600 z-20"
-          style={{
-            background: "white",
-            color: "var(--color-brown)",
-            boxShadow: "0 2px 6px rgba(74,44,10,0.1)",
-            border: "1px solid rgba(200,150,12,0.2)",
-            fontWeight: 600,
-          }}
-        >
-          {product.tag}
-        </div>
+        {/* Product tag — only render when tag text exists */}
+        {product.tag && (
+          <div
+            className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full font-dm-sans text-[0.6rem] font-600 z-20"
+            style={{
+              background: "white",
+              color: "var(--color-brown)",
+              boxShadow: "0 2px 6px rgba(74,44,10,0.1)",
+              border: "1px solid rgba(200,150,12,0.2)",
+              fontWeight: 600,
+            }}
+          >
+            {product.tag}
+          </div>
+        )}
 
         {/* Veg dot */}
         <div
@@ -295,9 +297,9 @@ export default function ProductCard({
           <Heart size={14} fill={wishlisted ? "var(--color-crimson)" : "none"} />
         </button>
 
-        {/* Quick view button — appears on hover */}
+        {/* Quick view label — decorative only, never intercepts clicks */}
         <div
-          className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full font-dm-sans text-xs font-semibold transition-all duration-200 z-20"
+          className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full font-dm-sans text-xs font-semibold transition-all duration-200 z-20 pointer-events-none"
           style={{
             background: "rgba(74,44,10,0.85)",
             color: "white",
@@ -333,7 +335,7 @@ export default function ProductCard({
             <button
               key={variant.label}
               onClick={(e) => {
-                e.preventDefault();
+                e.stopPropagation(); // don't bubble to Link; no preventDefault so Next.js navigation stays functional
                 setSelectedVariantIndex(idx);
               }}
               className="flex-1 py-1.5 rounded-lg font-dm-sans text-xs font-semibold transition-all duration-150"

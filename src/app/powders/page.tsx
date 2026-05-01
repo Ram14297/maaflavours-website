@@ -261,8 +261,26 @@ function PowdersContent() {
       <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 xl:px-10">
         <PageHeader />
 
-        {/* Show grinding soon if no powder products exist yet */}
-        {loaded && liveProducts.length === 0 ? (
+        {/* Loading state while fetch is in progress */}
+        {!loaded ? (
+          <div className="flex items-center justify-center py-32">
+            <div className="flex flex-col items-center gap-4">
+              <div
+                className="w-14 h-14 rounded-full flex items-center justify-center"
+                style={{
+                  background: "linear-gradient(135deg, var(--color-cream), var(--color-cream-dark))",
+                  border: "2px solid rgba(200,150,12,0.2)",
+                  animation: "pulseGold 1.5s ease-in-out infinite",
+                }}
+              >
+                <Flame size={24} style={{ color: "var(--color-gold)" }} />
+              </div>
+              <p className="font-cormorant italic text-xl" style={{ color: "var(--color-brown)" }}>
+                Loading spice powders…
+              </p>
+            </div>
+          </div>
+        ) : loaded && liveProducts.length === 0 ? (
           <GrindingSoon />
         ) : (
           <div className="flex gap-7">
