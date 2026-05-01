@@ -251,7 +251,6 @@ export default function ProductsPage() {
             loading={loading}
             columns={[
               { key:"product",  label:"Product"                  },
-              { key:"spice",    label:"Spice Level", width:"130px"},
               { key:"variants", label:"Variants"                  },
               { key:"stock",    label:"Stock",       width:"140px"},
               { key:"featured", label:"",            width:"90px" },
@@ -274,12 +273,6 @@ export default function ProductsPage() {
                     <p style={{ fontSize:10, color:A.grey, fontStyle:"italic" }}>{p.tag}</p>
                   </div>
                 </div>
-              ),
-              spice: (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
-                  style={{ background:`${SPICE_COLOURS[p.spice_level]}15`, color:SPICE_COLOURS[p.spice_level] }}>
-                  {SPICE_ICONS[p.spice_level]} {p.spice_level}
-                </span>
               ),
               variants: (
                 <div className="space-y-0.5">
@@ -387,8 +380,6 @@ function ProductCard({
   onDelete: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
-  const spiceCol = SPICE_COLOURS[p.spice_level] || "#6B6B6B";
-
   const lowestStock = Math.min(...(p.variants || []).map((v: any) => v.stock_quantity));
   const anyLowStock = (p.variants || []).some((v: any) => v.stock_quantity <= v.low_stock_threshold);
   const anyOutOfStock = (p.variants || []).some((v: any) => v.stock_quantity === 0);
@@ -449,23 +440,17 @@ function ProductCard({
 
       {/* Content */}
       <div className="p-3.5">
-        {/* Name + spice */}
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <div>
-            <Link href={`/admin/products/${p.id}`}>
-              <p style={{ fontWeight:700, fontSize:13, color:A.brown, lineHeight:1.3 }}
-                className="hover:underline">
-                {p.name}
-              </p>
-            </Link>
-            {p.tag && (
-              <p style={{ fontSize:10, color:A.grey, marginTop:1 }}>{p.tag}</p>
-            )}
-          </div>
-          <span className="shrink-0 text-xs px-2 py-0.5 rounded-full font-semibold"
-            style={{ background:`${spiceCol}18`, color:spiceCol, whiteSpace:"nowrap" }}>
-            {SPICE_ICONS[p.spice_level]} {p.spice_level}
-          </span>
+        {/* Name */}
+        <div className="mb-2">
+          <Link href={`/admin/products/${p.id}`}>
+            <p style={{ fontWeight:700, fontSize:13, color:A.brown, lineHeight:1.3 }}
+              className="hover:underline">
+              {p.name}
+            </p>
+          </Link>
+          {p.tag && (
+            <p style={{ fontSize:10, color:A.grey, marginTop:1 }}>{p.tag}</p>
+          )}
         </div>
 
         {/* Variants pricing */}

@@ -10,7 +10,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ShoppingBag, Star } from "lucide-react";
 import { PRODUCTS } from "@/lib/constants/products";
-import { formatPrice, getSpiceLevelConfig } from "@/lib/utils";
+import { formatPrice } from "@/lib/utils";
 import toast from "react-hot-toast";
 import { useCartStore, AddItemMeta } from "@/store/cartStore";
 
@@ -26,7 +26,6 @@ function ProductCard({ product, imageUrl }: ProductCardProps) {
   const [adding, setAdding] = useState(false);
 
   const selectedVariant = product.variants[selectedVariantIndex] as typeof product.variants[0] & { discounted_price?: number };
-  const spiceConfig = getSpiceLevelConfig(product.spice_level);
   const addItem = useCartStore((s) => s.addItem);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
@@ -125,16 +124,6 @@ function ProductCard({ product, imageUrl }: ProductCardProps) {
 
       {/* ─── Card Content ──────────────────────────────────────────────── */}
       <div className="flex flex-col flex-1 p-4">
-        {/* Spice badge */}
-        <div className="flex items-center justify-between mb-2">
-          <span
-            className={`badge-spice text-[0.6875rem] font-semibold ${spiceConfig.className}`}
-          >
-            {spiceConfig.emoji} {spiceConfig.label}
-          </span>
-
-        </div>
-
         {/* Product name */}
         <h3
           className="font-playfair font-semibold mb-1 leading-tight"
