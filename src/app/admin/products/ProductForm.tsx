@@ -168,10 +168,10 @@ export default function ProductForm({ productId }: { productId?: string }) {
     const fileArr = Array.from(files);
 
     for (const file of fileArr) {
-      // Client-side guard — Vercel functions cap request body at ~4.5 MB
-      const MAX_BYTES = 4 * 1024 * 1024; // 4 MB
+      // Sanity cap — direct uploads go straight to Supabase so Vercel is not involved
+      const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
       if (file.size > MAX_BYTES) {
-        alert(`"${file.name}" is ${(file.size / 1024 / 1024).toFixed(1)} MB — please resize it under 4 MB before uploading.`);
+        alert(`"${file.name}" is ${(file.size / 1024 / 1024).toFixed(1)} MB — please keep images under 20 MB.`);
         continue;
       }
 
@@ -186,35 +186,47 @@ export default function ProductForm({ productId }: { productId?: string }) {
       };
       setImages(prev => [...prev, tempImg]);
 
-      // Upload
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("bucket", "product-images");
-      fd.append("path", `products/${toSlug(name || "product")}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g,"_")}`);
+      // ── 2-step direct upload: server issues signed URL, browser streams file straight to Supabase ──
+      const storagePath = `products/${toSlug(name || "product")}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g,"_")}`;
 
       try {
-        const r = await fetch("/api/admin/upload", { method:"POST", body:fd });
-        // Safely parse JSON — Vercel may return HTML for oversized requests
-        let d: any = {};
-        try { d = await r.json(); } catch { d = { error: `Server error ${r.status}` }; }
+        // Step 1 — get signed upload URL (tiny JSON request, no file bytes go through Vercel)
+        const signRes = await fetch("/api/admin/upload", {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ bucket: "product-images", path: storagePath }),
+        });
+        let signData: any = {};
+        try { signData = await signRes.json(); } catch { signData = { error: `Server error ${signRes.status}` }; }
 
-        if (d.url) {
-          setImages(prev => prev.map(img =>
-            img.id === tempId
-              ? { ...img, url: d.url, uploading: false }
-              : img
-          ));
-        } else {
-          setImages(prev => prev.map(img =>
-            img.id === tempId
-              ? { ...img, uploading: false, error: d.error || `Upload failed (${r.status})` }
-              : img
-          ));
+        if (!signData.signedUrl) {
+          throw new Error(signData.error || "Could not get upload URL");
         }
+
+        // Step 2 — upload directly to Supabase Storage (bypasses Vercel, no size cap)
+        const putRes = await fetch(signData.signedUrl, {
+          method:  "PUT",
+          headers: { "Content-Type": file.type, "x-upsert": "true" },
+          body:    file,
+        });
+
+        if (!putRes.ok) {
+          let putErr = `Storage error ${putRes.status}`;
+          try { const j = await putRes.json(); putErr = j.message || j.error || putErr; } catch {}
+          throw new Error(putErr);
+        }
+
+        // Step 3 — mark upload done with the final public URL
+        setImages(prev => prev.map(img =>
+          img.id === tempId
+            ? { ...img, url: signData.publicUrl, uploading: false }
+            : img
+        ));
+
       } catch (err: any) {
         setImages(prev => prev.map(img =>
           img.id === tempId
-            ? { ...img, uploading: false, error: err?.message || "Network error — please try again" }
+            ? { ...img, uploading: false, error: err?.message || "Upload failed — please try again" }
             : img
         ));
       }
@@ -649,7 +661,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
               {dragOver ? "Drop images here" : "Upload Product Images"}
             </p>
             <p style={{ color:A.grey, fontSize:12 }}>
-              Drag & drop or click to browse · JPEG, PNG, WebP · Max 4MB each · Multiple files supported
+              Drag & drop or click to browse · JPEG, PNG, WebP · Max 20MB each · Multiple files supported
             </p>
           </div>
 

@@ -1,76 +1,61 @@
 // src/app/api/admin/upload/route.ts
 // Maa Flavours — Admin Image Upload API
-// POST /api/admin/upload
-// Content-Type: multipart/form-data
-// Fields:
-//   - file: image file (JPEG/PNG/WebP, max 5MB)
-//   - bucket: "product-images" | "blog-images"
-//   - path: e.g. "products/drumstick-pickle/main.jpg"
-// Returns: { url: string } — public Supabase Storage URL
-// Protected: admin JWT required
+//
+// POST /api/admin/upload   (JSON body)
+//   { bucket, path }  →  { signedUrl, publicUrl, path }
+//   Returns a short-lived signed upload URL.
+//   The client uploads the file *directly* to Supabase Storage (no Vercel body limit).
+//
+// DELETE /api/admin/upload?path=xxx&bucket=yyy — remove an uploaded image
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin-auth";
 
-const ALLOWED_TYPES   = ["image/jpeg", "image/png", "image/webp"];
-const MAX_SIZE_BYTES  = 4 * 1024 * 1024;  // 4 MB — Vercel functions cap request body at ~4.5 MB
+const ALLOWED_BUCKETS = ["product-images", "blog-images", "admin-uploads"];
 
 export async function POST(req: NextRequest) {
   const admin = await requireAdmin(req);
   if (!admin) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   try {
-    const formData = await req.formData();
-    const file     = formData.get("file") as File | null;
-    const bucket   = (formData.get("bucket") as string) || "product-images";
-    const path     = formData.get("path") as string | null;
+    const body   = await req.json();
+    const bucket = (body.bucket as string) || "product-images";
+    const path   = body.path   as string | undefined;
 
-    if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: "Only JPEG, PNG and WebP images are allowed" }, { status: 400 });
-    }
-    if (file.size > MAX_SIZE_BYTES) {
-      return NextResponse.json({ error: "File size must be under 5 MB" }, { status: 400 });
-    }
-
-    // Validate bucket
-    const allowedBuckets = ["product-images", "blog-images", "admin-uploads"];
-    if (!allowedBuckets.includes(bucket)) {
+    if (!path)   return NextResponse.json({ error: "path is required" }, { status: 400 });
+    if (!ALLOWED_BUCKETS.includes(bucket))
       return NextResponse.json({ error: "Invalid bucket" }, { status: 400 });
-    }
 
-    // Build storage path: products/drumstick-pickle/1720000000000-main.jpg
-    const ext      = file.type === "image/webp" ? "webp" : file.type === "image/png" ? "png" : "jpg";
-    const filename = path || `uploads/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-
-    const buffer   = await file.arrayBuffer();
     const supabase = createAdminSupabaseClient();
 
-    const { error: uploadError } = await supabase.storage
+    // Create a signed upload URL — file goes browser → Supabase directly,
+    // never passes through Vercel so there is no function body-size cap.
+    const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(filename, Buffer.from(buffer), {
-        contentType:  file.type,
-        cacheControl: "3600",
-        upsert:       true,  // Overwrite if same path
-      });
+      .createSignedUploadUrl(path, { upsert: true });
 
-    if (uploadError) throw uploadError;
+    if (error) throw error;
 
-    // Get public URL
+    // Compute the final public URL the caller needs after upload completes
     const { data: { publicUrl } } = supabase.storage
       .from(bucket)
-      .getPublicUrl(filename);
+      .getPublicUrl(path);
 
-    return NextResponse.json({ url: publicUrl, path: filename, bucket });
+    return NextResponse.json({
+      signedUrl: data.signedUrl,
+      token:     data.token,
+      path:      data.path,
+      publicUrl,
+    });
 
   } catch (err: any) {
-    console.error("[admin/upload]", err.message);
-    return NextResponse.json({ error: err.message || "Upload failed" }, { status: 500 });
+    console.error("[admin/upload] signed-url error:", err.message);
+    return NextResponse.json({ error: err.message || "Could not create upload URL" }, { status: 500 });
   }
 }
 
-// DELETE /api/admin/upload?path=xxx&bucket=yyy — delete an uploaded image
+// DELETE /api/admin/upload?path=xxx&bucket=yyy
 export async function DELETE(req: NextRequest) {
   const admin = await requireAdmin(req);
   if (!admin) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
