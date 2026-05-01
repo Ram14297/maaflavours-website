@@ -66,6 +66,9 @@ export const metadata: Metadata = {
   authors: [{ name: "Maa Flavours", url: "https://maaflavours.com" }],
   creator: "Maa Flavours",
   publisher: "Maa Flavours",
+  verification: {
+    google: "Gvn7E67_rlMLpkcIB7iKWLBzG6kfYnwjkXbXaP-_kso",
+  },
   category: "Food & Grocery",
   metadataBase: new URL(
     process.env.NEXT_PUBLIC_SITE_URL || "https://maaflavours.com"
