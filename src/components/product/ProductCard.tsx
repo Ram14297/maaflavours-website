@@ -164,12 +164,35 @@ export default function ProductCard({
                   </button>
                 ))}
               </div>
-              <span
-                className="font-dm-sans font-bold text-lg"
-                style={{ color: "var(--color-crimson)" }}
-              >
-                {formatPrice(selectedVariant.price)}
-              </span>
+              <div className="flex flex-col">
+                <div className="flex items-baseline gap-1.5">
+                  <span
+                    className="font-dm-sans font-bold text-lg"
+                    style={{ color: "var(--color-crimson)" }}
+                  >
+                    {formatPrice(selectedVariant.price)}
+                  </span>
+                  {selectedVariant.compare_at_price && (
+                    <span
+                      className="font-dm-sans text-sm line-through"
+                      style={{ color: "var(--color-grey)" }}
+                    >
+                      {formatPrice(selectedVariant.compare_at_price)}
+                    </span>
+                  )}
+                </div>
+                {selectedVariant.compare_at_price && (
+                  <span
+                    className="font-dm-sans text-[0.6rem] font-semibold px-1.5 py-0.5 rounded-full self-start"
+                    style={{
+                      background: "rgba(192,39,45,0.1)",
+                      color: "var(--color-crimson)",
+                    }}
+                  >
+                    {Math.round((1 - selectedVariant.price / selectedVariant.compare_at_price) * 100)}% OFF
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Add to cart */}
@@ -361,18 +384,41 @@ export default function ProductCard({
         <div className="flex flex-col gap-2 mt-auto">
           <div className="flex items-end justify-between">
             <div>
-              <span
-                className="font-dm-sans font-bold text-lg leading-none block"
-                style={{ color: "var(--color-crimson)" }}
-              >
-                {formatPrice(selectedVariant.price)}
-              </span>
-              <span
-                className="font-dm-sans text-[0.65rem]"
-                style={{ color: "var(--color-grey)" }}
-              >
-                Free ship ≥ ₹499
-              </span>
+              <div className="flex items-baseline gap-2">
+                <span
+                  className="font-dm-sans font-bold text-lg leading-none"
+                  style={{ color: "var(--color-crimson)" }}
+                >
+                  {formatPrice(selectedVariant.price)}
+                </span>
+                {selectedVariant.compare_at_price && (
+                  <span
+                    className="font-dm-sans text-sm line-through leading-none"
+                    style={{ color: "var(--color-grey)" }}
+                  >
+                    {formatPrice(selectedVariant.compare_at_price)}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span
+                  className="font-dm-sans text-[0.65rem]"
+                  style={{ color: "var(--color-grey)" }}
+                >
+                  Free ship ≥ ₹499
+                </span>
+                {selectedVariant.compare_at_price && (
+                  <span
+                    className="font-dm-sans text-[0.6rem] font-semibold px-1.5 py-0.5 rounded-full"
+                    style={{
+                      background: "rgba(192,39,45,0.1)",
+                      color: "var(--color-crimson)",
+                    }}
+                  >
+                    {Math.round((1 - selectedVariant.price / selectedVariant.compare_at_price) * 100)}% OFF
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 

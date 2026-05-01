@@ -160,9 +160,10 @@ function ProductsContent() {
             primary_image_url: p.primary_image_url || null,
             product_type: p.product_type || "pickle",
             variants: p.variants.map((v: any) => ({
-              weight_grams: v.weight_grams,
-              label:        v.label,
-              price:        v.price,
+              weight_grams:     v.weight_grams,
+              label:            v.label,
+              price:            v.discounted_price ?? v.price,
+              compare_at_price: v.compare_at_price ?? null,
             })),
           } as ProductSeed;
         }

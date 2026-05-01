@@ -21,7 +21,8 @@ export interface ProductSeed {
   variants: {
     weight_grams: number;
     label: string;
-    price: number;  // in paise
+    price: number;           // in paise (discounted / current price)
+    compare_at_price?: number | null;  // in paise — original price before discount
   }[];
   // REPLACE with actual Supabase Storage image paths
   image_placeholder: string;

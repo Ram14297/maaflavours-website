@@ -41,6 +41,7 @@ interface LiveVariant {
   label: string;
   price: number;
   discounted_price?: number;
+  compare_at_price?: number | null;
   stock_quantity?: number;
 }
 
@@ -271,7 +272,8 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           variants: (variants && variants.length > 0)
             ? variants.map((v: any) => ({
                 ...v,
-                discounted_price: v.discounted_price ?? undefined,
+                discounted_price:  v.discounted_price  ?? undefined,
+                compare_at_price:  v.compare_at_price  ?? null,
               }))
             : (base?.variants || []),
         });
@@ -453,7 +455,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
               <div className="ornament-line" />
 
               {/* Price */}
-              <div className="flex items-baseline gap-3">
+              <div className="flex items-baseline gap-3 flex-wrap">
                 <span
                   className="font-playfair font-bold"
                   style={{
@@ -464,7 +466,28 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 >
                   {formatPrice(selectedVariant.price)}
                 </span>
-                {selectedVariant.discounted_price && (
+                {/* compare_at_price = original price before launch offer */}
+                {selectedVariant.compare_at_price && (
+                  <>
+                    <span
+                      className="font-dm-sans text-lg line-through"
+                      style={{ color: "var(--color-grey)" }}
+                    >
+                      {formatPrice(selectedVariant.compare_at_price)}
+                    </span>
+                    <span
+                      className="px-2.5 py-0.5 rounded-full font-dm-sans text-xs font-bold"
+                      style={{
+                        background: "rgba(192,39,45,0.1)",
+                        color: "var(--color-crimson)",
+                      }}
+                    >
+                      {Math.round((1 - selectedVariant.price / selectedVariant.compare_at_price) * 100)}% OFF
+                    </span>
+                  </>
+                )}
+                {/* Fallback: DB-level discounted_price (future use) */}
+                {!selectedVariant.compare_at_price && selectedVariant.discounted_price && (
                   <>
                     <span
                       className="font-dm-sans text-lg line-through"
@@ -479,7 +502,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                         color: "var(--color-crimson)",
                       }}
                     >
-                      SAVE {Math.round(((selectedVariant.discounted_price - selectedVariant.price) / selectedVariant.discounted_price) * 100)}%
+                      {Math.round((1 - selectedVariant.price / selectedVariant.discounted_price) * 100)}% OFF
                     </span>
                   </>
                 )}
