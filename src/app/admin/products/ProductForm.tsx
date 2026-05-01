@@ -185,19 +185,28 @@ export default function ProductForm({ productId }: { productId?: string }) {
       fd.append("bucket", "product-images");
       fd.append("path", `products/${toSlug(name || "product")}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g,"_")}`);
 
-      const r = await fetch("/api/admin/upload", { method:"POST", body:fd });
-      const d = await r.json();
+      try {
+        const r = await fetch("/api/admin/upload", { method:"POST", body:fd });
+        const d = await r.json();
 
-      if (d.url) {
+        if (d.url) {
+          setImages(prev => prev.map(img =>
+            img.id === tempId
+              ? { ...img, url: d.url, uploading: false }
+              : img
+          ));
+        } else {
+          setImages(prev => prev.map(img =>
+            img.id === tempId
+              ? { ...img, uploading: false, error: d.error || "Upload failed" }
+              : img
+          ));
+        }
+      } catch {
+        // Network error / timeout / bad response — always unblock the image
         setImages(prev => prev.map(img =>
           img.id === tempId
-            ? { ...img, url: d.url, uploading: false }
-            : img
-        ));
-      } else {
-        setImages(prev => prev.map(img =>
-          img.id === tempId
-            ? { ...img, uploading: false, error: d.error || "Upload failed" }
+            ? { ...img, uploading: false, error: "Upload failed — please try again" }
             : img
         ));
       }
@@ -964,12 +973,27 @@ function ImageTile({
           </div>
         )}
 
-        {/* Error overlay */}
+        {/* Error overlay — click ✕ to remove the failed image */}
         {image.error && (
-          <div className="absolute inset-0 flex items-center justify-center p-2 text-center"
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center gap-1"
             style={{ background:"rgba(192,39,45,0.15)" }}>
             <p style={{ color:"#C0272D", fontSize:10 }}>{image.error}</p>
+            <button
+              onClick={onRemove}
+              className="px-2 py-0.5 rounded text-xs font-bold"
+              style={{ background:"rgba(192,39,45,0.9)", color:"#fff" }}
+            >✕ Remove</button>
           </div>
+        )}
+
+        {/* Uploading stuck — allow dismissal */}
+        {image.uploading && hovered && (
+          <button
+            onClick={onRemove}
+            className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold z-10"
+            style={{ background:"rgba(192,39,45,0.85)", color:"#fff" }}
+            title="Cancel / remove"
+          >✕</button>
         )}
 
         {/* Primary badge */}
