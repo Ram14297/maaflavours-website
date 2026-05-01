@@ -168,6 +168,13 @@ export default function ProductForm({ productId }: { productId?: string }) {
     const fileArr = Array.from(files);
 
     for (const file of fileArr) {
+      // Client-side guard — Vercel functions cap request body at ~4.5 MB
+      const MAX_BYTES = 4 * 1024 * 1024; // 4 MB
+      if (file.size > MAX_BYTES) {
+        alert(`"${file.name}" is ${(file.size / 1024 / 1024).toFixed(1)} MB — please resize it under 4 MB before uploading.`);
+        continue;
+      }
+
       // Add placeholder immediately
       const tempId = `temp-${Date.now()}-${Math.random()}`;
       const tempImg: ProductImage = {
@@ -187,7 +194,9 @@ export default function ProductForm({ productId }: { productId?: string }) {
 
       try {
         const r = await fetch("/api/admin/upload", { method:"POST", body:fd });
-        const d = await r.json();
+        // Safely parse JSON — Vercel may return HTML for oversized requests
+        let d: any = {};
+        try { d = await r.json(); } catch { d = { error: `Server error ${r.status}` }; }
 
         if (d.url) {
           setImages(prev => prev.map(img =>
@@ -198,15 +207,14 @@ export default function ProductForm({ productId }: { productId?: string }) {
         } else {
           setImages(prev => prev.map(img =>
             img.id === tempId
-              ? { ...img, uploading: false, error: d.error || "Upload failed" }
+              ? { ...img, uploading: false, error: d.error || `Upload failed (${r.status})` }
               : img
           ));
         }
-      } catch {
-        // Network error / timeout / bad response — always unblock the image
+      } catch (err: any) {
         setImages(prev => prev.map(img =>
           img.id === tempId
-            ? { ...img, uploading: false, error: "Upload failed — please try again" }
+            ? { ...img, uploading: false, error: err?.message || "Network error — please try again" }
             : img
         ));
       }
@@ -641,7 +649,7 @@ export default function ProductForm({ productId }: { productId?: string }) {
               {dragOver ? "Drop images here" : "Upload Product Images"}
             </p>
             <p style={{ color:A.grey, fontSize:12 }}>
-              Drag & drop or click to browse · JPEG, PNG, WebP · Max 5MB each · Multiple files supported
+              Drag & drop or click to browse · JPEG, PNG, WebP · Max 4MB each · Multiple files supported
             </p>
           </div>
 

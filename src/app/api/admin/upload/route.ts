@@ -14,7 +14,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/admin-auth";
 
 const ALLOWED_TYPES   = ["image/jpeg", "image/png", "image/webp"];
-const MAX_SIZE_BYTES  = 5 * 1024 * 1024;  // 5 MB
+const MAX_SIZE_BYTES  = 4 * 1024 * 1024;  // 4 MB — Vercel functions cap request body at ~4.5 MB
 
 export async function POST(req: NextRequest) {
   const admin = await requireAdmin(req);
