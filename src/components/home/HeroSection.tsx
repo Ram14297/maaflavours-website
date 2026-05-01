@@ -306,11 +306,11 @@ export default function HeroSection() {
                 </div>
               </div>
 
-              {/* Small pickle packs around */}
+              {/* Small floating icons around the circle */}
               {[
-                { top: "10%", right: "12%", delay: "0s", emoji: "🌿", label: "Amla" },
+                { top: "4%",  left: "18%", delay: "0s",   emoji: "🌿",  label: "Amla"    },
                 { bottom: "18%", right: "5%", delay: "0.8s", emoji: "🍋", label: "Lemon" },
-                { top: "35%", left: "2%", delay: "1.2s", emoji: "🌶️", label: "Gongura" },
+                { top: "35%", left: "2%",  delay: "1.2s", emoji: "🌶️", label: "Gongura" },
               ].map((item, i) => (
                 <div
                   key={i}
