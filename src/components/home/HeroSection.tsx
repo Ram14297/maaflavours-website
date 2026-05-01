@@ -8,27 +8,47 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, ChevronDown } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function HeroSection() {
-  const [visible, setVisible]       = useState(false);
-  const [heroImageUrl, setHeroImageUrl] = useState<string | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  // ── Hero slideshow ────────────────────────────────────────────────────────
+  const [heroImages, setHeroImages]   = useState<{ url: string; name: string }[]>([]);
+  const [activeIdx,  setActiveIdx]    = useState(0);
+  const [fadeIn,     setFadeIn]       = useState(true);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 100);
     return () => clearTimeout(t);
   }, []);
 
-  // Fetch the primary image of the first featured product to use as hero image
+  // Fetch all featured products that have a primary image
   useEffect(() => {
-    fetch("/api/products?featured=true&limit=1")
+    fetch("/api/products?featured=true&limit=20")
       .then(r => r.json())
       .then(data => {
-        const first = data.products?.[0];
-        if (first?.primary_image_url) setHeroImageUrl(first.primary_image_url);
+        const imgs = (data.products || [])
+          .filter((p: any) => p.primary_image_url)
+          .map((p: any) => ({ url: p.primary_image_url, name: p.name }));
+        if (imgs.length > 0) setHeroImages(imgs);
       })
       .catch(() => {});
   }, []);
+
+  // Auto-rotate every 3 seconds, loop infinitely
+  useEffect(() => {
+    if (heroImages.length <= 1) return;
+    timerRef.current = setInterval(() => {
+      setFadeIn(false);
+      setTimeout(() => {
+        setActiveIdx(prev => (prev + 1) % heroImages.length);
+        setFadeIn(true);
+      }, 300); // fade out 300ms, then swap image and fade in
+    }, 3000);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [heroImages]);
 
   return (
     <section
@@ -168,9 +188,9 @@ export default function HeroSection() {
                 }}
               />
 
-              {/* Central product image — shows featured product photo, falls back to placeholder */}
+              {/* Central product image — auto-rotating slideshow of featured products */}
               <div
-                className="absolute inset-8 rounded-full flex items-center justify-center overflow-hidden"
+                className="absolute inset-8 rounded-full overflow-hidden"
                 style={{
                   background:
                     "radial-gradient(circle at 40% 40%, #F5EFE0, #EDE3CE 60%, #E0D4BC)",
@@ -178,27 +198,56 @@ export default function HeroSection() {
                     "0 20px 60px rgba(74, 44, 10, 0.15), 0 4px 16px rgba(200, 150, 12, 0.1)",
                 }}
               >
-                {heroImageUrl ? (
-                  <Image
-                    src={heroImageUrl}
-                    alt="Maa Flavours — Featured Product"
-                    fill
-                    className="object-cover rounded-full"
-                    sizes="(max-width: 768px) 80vw, 500px"
-                    priority
-                  />
+                {heroImages.length > 0 ? (
+                  <>
+                    {/* Sliding image with fade transition */}
+                    <div
+                      className="absolute inset-0 transition-opacity duration-300"
+                      style={{ opacity: fadeIn ? 1 : 0 }}
+                    >
+                      <Image
+                        key={heroImages[activeIdx].url}
+                        src={heroImages[activeIdx].url}
+                        alt={heroImages[activeIdx].name}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 80vw, 500px"
+                        priority={activeIdx === 0}
+                      />
+                    </div>
+
+                    {/* Dot indicators — only show when more than 1 image */}
+                    {heroImages.length > 1 && (
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                        {heroImages.map((_, i) => (
+                          <button
+                            key={i}
+                            onClick={() => {
+                              if (timerRef.current) clearInterval(timerRef.current);
+                              setFadeIn(false);
+                              setTimeout(() => { setActiveIdx(i); setFadeIn(true); }, 300);
+                            }}
+                            className="rounded-full transition-all duration-300"
+                            style={{
+                              width:   i === activeIdx ? 16 : 6,
+                              height:  6,
+                              background: i === activeIdx ? "var(--color-gold)" : "rgba(255,255,255,0.7)",
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </>
                 ) : (
-                  <div className="text-center">
+                  /* Fallback placeholder until images load */
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <div
                       className="text-7xl mb-2"
                       style={{ filter: "drop-shadow(0 4px 8px rgba(74,44,10,0.2))" }}
                     >
                       🫙
                     </div>
-                    <p
-                      className="font-dancing text-lg"
-                      style={{ color: "var(--color-brown)" }}
-                    >
+                    <p className="font-dancing text-lg" style={{ color: "var(--color-brown)" }}>
                       Maa Flavours
                     </p>
                   </div>
