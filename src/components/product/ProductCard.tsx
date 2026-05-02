@@ -152,7 +152,8 @@ export default function ProductCard({
                 {product.variants.map((v, i) => (
                   <button
                     key={v.label}
-                    onClick={(e) => { e.stopPropagation(); setSelectedVariantIndex(i); }}
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedVariantIndex(i); }}
                     className="px-3 py-1 rounded-lg font-dm-sans text-xs font-semibold transition-all duration-200"
                     style={{
                       background: selectedVariantIndex === i ? "var(--color-crimson)" : "var(--color-cream)",
@@ -363,8 +364,10 @@ export default function ProductCard({
           {product.variants.map((variant, idx) => (
             <button
               key={variant.label}
+              type="button"
               onClick={(e) => {
-                e.stopPropagation(); // don't bubble to Link; no preventDefault so Next.js navigation stays functional
+                e.preventDefault();
+                e.stopPropagation();
                 setSelectedVariantIndex(idx);
               }}
               className="flex-1 py-1.5 rounded-lg font-dm-sans text-xs font-semibold transition-all duration-150"

@@ -58,12 +58,14 @@ interface LiveProduct {
   shelf_life_days: number;
   is_vegetarian: boolean;
   contains_garlic?: boolean;
+  product_type?: string;
   images: { id: string; url: string; alt: string; is_primary: boolean; sort_order: number }[];
   variants: LiveVariant[];
 }
 
 // ─── Breadcrumb ────────────────────────────────────────────────────────────
-function Breadcrumb({ productName }: { productName: string }) {
+function Breadcrumb({ productName, productType }: { productName: string; productType?: string }) {
+  const isPowder = productType === "powder";
   return (
     <nav
       className="flex items-center flex-wrap gap-1.5 font-dm-sans text-sm mb-6"
@@ -78,11 +80,11 @@ function Breadcrumb({ productName }: { productName: string }) {
       </Link>
       <ChevronRight size={13} style={{ color: "rgba(200,150,12,0.4)" }} />
       <Link
-        href="/products"
+        href={isPowder ? "/powders" : "/products"}
         className="transition-colors hover:text-gold"
         style={{ color: "var(--color-grey)" }}
       >
-        All Pickles
+        {isPowder ? "All Powders" : "All Pickles"}
       </Link>
       <ChevronRight size={13} style={{ color: "rgba(200,150,12,0.4)" }} />
       <span style={{ color: "var(--color-brown)", fontWeight: 600 }}>
@@ -268,6 +270,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           shelf_life_days:   p.shelf_life_days   || base?.shelf_life_days   || 180,
           is_vegetarian:     p.is_vegetarian     ?? base?.is_vegetarian     ?? true,
           contains_garlic:   base?.contains_garlic,
+          product_type:      p.product_type      || "pickle",
           images:            (apiImages && apiImages.length > 0) ? apiImages : [],
           variants: (variants && variants.length > 0)
             ? variants.map((v: any) => ({
@@ -372,7 +375,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
       <main className="flex-1">
         <div className="section-container py-6 lg:py-10">
 
-          <Breadcrumb productName={product.name} />
+          <Breadcrumb productName={product.name} productType={product.product_type} />
 
           {/* ─── Main Detail Grid ─────────────────────────────────────── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 xl:gap-16 mb-12">

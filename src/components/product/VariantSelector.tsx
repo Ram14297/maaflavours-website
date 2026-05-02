@@ -51,6 +51,7 @@ export default function VariantSelector({
           return (
             <button
               key={variant.label}
+              type="button"
               onClick={() => onChange(idx)}
               className="relative flex-1 flex flex-col items-center gap-1 py-4 px-3 rounded-2xl transition-all duration-250"
               style={{
