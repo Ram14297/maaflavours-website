@@ -26,6 +26,9 @@ export const LAUNCH_ORIGINAL_PRICES: Record<string, number> = {
   // Curry Leaf Powder (100g unchanged — no entry)
   "curry-leaf-powder-250g": 17900,
   "curry-leaf-powder-500g": 32900,
+  // Pappulapodi (100g unchanged — no entry)
+  "pappulapodi-250g": 17900,
+  "pappulapodi-500g": 32900,
 };
 
 /** Returns original price in paise if a discount exists, else null */
