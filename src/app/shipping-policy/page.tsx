@@ -80,7 +80,7 @@ export default function ShippingPolicyPage() {
             <tbody>
               <tr className="border-t" style={{ borderColor: "rgba(200,150,12,0.08)" }}>
                 <td className="px-5 py-3" style={{ color: "var(--color-grey)" }}>Below ₹499</td>
-                <td className="px-5 py-3 font-semibold" style={{ color: "var(--color-brown)" }}>₹60 flat shipping</td>
+                <td className="px-5 py-3 font-semibold" style={{ color: "var(--color-brown)" }}>₹49 flat shipping</td>
               </tr>
               <tr className="border-t" style={{ borderColor: "rgba(200,150,12,0.08)", background: "rgba(200,150,12,0.02)" }}>
                 <td className="px-5 py-3" style={{ color: "var(--color-grey)" }}>₹499 and above</td>

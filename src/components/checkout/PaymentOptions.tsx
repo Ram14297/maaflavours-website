@@ -134,9 +134,36 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
         redirectTarget: "_modal",
       });
 
-      // result is only returned if user cancelled or payment failed (no redirect)
-      // On success, Cashfree redirects to return_url → confirmation page clears cart
-      if (result?.error) {
+      // With UPI, payment happens in a separate app — the modal may close
+      // before the browser receives a success redirect. Poll our order status
+      // and redirect manually if payment was confirmed via webhook.
+      if (!result?.error) {
+        // Modal closed without an explicit error — check if payment went through
+        setPlacingOrder(true);
+        let confirmed = false;
+        for (let attempt = 0; attempt < 6; attempt++) {
+          await new Promise((r) => setTimeout(r, 2000));
+          try {
+            const statusRes = await fetch(`/api/orders/${orderId}`);
+            if (statusRes.ok) {
+              const statusData = await statusRes.json();
+              if (statusData?.payment_status === "paid") {
+                confirmed = true;
+                break;
+              }
+            }
+          } catch { /* ignore */ }
+        }
+        setPlacingOrder(false);
+        if (confirmed) {
+          clearCart();
+          router.push(`/checkout/confirmation?orderId=${orderId}&method=cashfree`);
+          return;
+        }
+        // If still not confirmed after polling, show a helpful message
+        setOrderError("Payment not confirmed yet. If money was deducted, please contact us on WhatsApp — your order will be processed.");
+        toast.error("Payment status unclear. Please contact us if amount was deducted.");
+      } else {
         setOrderError(result.error.message || "Payment not completed. Please try again.");
         toast.error(result.error.message || "Payment cancelled. Please try again.");
       }

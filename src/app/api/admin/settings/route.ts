@@ -11,12 +11,12 @@ const DEFAULTS: Record<string, any> = {
     address: "Ongole, Andhra Pradesh — 523001", gstin: "", fssai: "20126171000153", pincode: "523001",
   },
   shipping: {
-    free_threshold: 49900, standard_fee: 6000, cod_extra: 3000,
+    free_threshold: 49900, standard_fee: 4900, cod_extra: 3000,
     tat_days: "5-7", courier: "DTDC / Delhivery",
     zones: [
       { name: "Andhra Pradesh", fee: 0,    tat: "2-3 days" },
       { name: "South India",    fee: 4000, tat: "3-5 days" },
-      { name: "Rest of India",  fee: 6000, tat: "5-7 days" },
+      { name: "Rest of India",  fee: 4900, tat: "5-7 days" },
     ],
   },
   payments: {

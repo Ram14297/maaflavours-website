@@ -53,7 +53,7 @@ const FAQ_CATEGORIES = [
       },
       {
         q: "Is shipping free?",
-        a: "Yes — free shipping on all orders above ₹499. For orders below ₹499, a flat shipping charge of ₹60 applies.",
+        a: "Yes — free shipping on all orders above ₹499. For orders below ₹499, a flat shipping charge of ₹49 applies.",
       },
       {
         q: "How do I track my order?",

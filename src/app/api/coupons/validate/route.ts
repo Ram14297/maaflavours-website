@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { isAllowedOrigin } from "@/lib/origin-check";
 
-const STANDARD_SHIPPING = 6000; // ₹60 in paise
+const STANDARD_SHIPPING = 4900; // ₹49 in paise
 
 const STATIC_COUPONS = [
   { code: "WELCOME50",  description: "₹50 off your first order",         type: "flat"          as const, value: 5000,  min_order_amount: 29900, max_discount_amount: null,  is_active: true },
