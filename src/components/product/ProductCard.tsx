@@ -251,15 +251,9 @@ export default function ProductCard({
 
       {/* ─── Image Area ─────────────────────────────────────────────────── */}
       <div
-        className="relative aspect-square overflow-hidden rounded-t-2xl cursor-zoom-in"
+        className="relative aspect-square overflow-hidden rounded-t-2xl"
         style={{
           background: "linear-gradient(135deg, var(--color-cream) 0%, var(--color-cream-dark) 100%)",
-        }}
-        onClick={(e) => {
-          if (!imageUrl) return; // no zoom for emoji placeholder
-          e.preventDefault();
-          e.stopPropagation();
-          setZoomedOpen(true);
         }}
       >
         {imageUrl ? (
