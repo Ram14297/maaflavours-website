@@ -62,7 +62,7 @@ const RequestSchema = z.object({
 
 // ─── Business rules (paise) ──────────────────────────────────────────────────
 const FREE_SHIPPING_THRESHOLD = 49900;  // ₹499
-const STANDARD_SHIPPING       = 6000;   // ₹60
+const STANDARD_SHIPPING       = 4900;   // ₹49
 const COD_CHARGE              = 5000;   // ₹50
 
 // GST rates for pickles (HSN 2001, 12%)
