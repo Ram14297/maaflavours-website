@@ -111,7 +111,7 @@ export default function SortBar({
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setSortDropdownOpen((o) => !o)}
-            className="flex items-center gap-2 py-2 px-3.5 rounded-xl font-dm-sans text-sm font-medium transition-all duration-200"
+            className="flex items-center gap-1.5 py-2 px-2.5 sm:px-3.5 rounded-xl font-dm-sans text-sm font-medium transition-all duration-200"
             style={{
               background: sortDropdownOpen ? "var(--color-cream)" : "transparent",
               color: "var(--color-brown)",
@@ -179,9 +179,9 @@ export default function SortBar({
           )}
         </div>
 
-        {/* View mode toggle — grid / list */}
+        {/* View mode toggle — grid / list (hidden on mobile, shown sm+) */}
         <div
-          className="flex items-center rounded-xl overflow-hidden"
+          className="hidden sm:flex items-center rounded-xl overflow-hidden"
           style={{ border: "1.5px solid rgba(200,150,12,0.2)" }}
         >
           <button
