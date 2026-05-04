@@ -462,6 +462,16 @@ ul, ol {
   position: absolute;
   width: 20px;
   height: 20px;
+  display: none; /* hidden on mobile */
+}
+
+@media (min-width: 640px) {
+  .corner-tl,
+  .corner-tr,
+  .corner-bl,
+  .corner-br {
+    display: block;
+  }
 }
 
 .corner-tl {

@@ -338,23 +338,23 @@ export default function ProductCard({
       </div>
 
       {/* ─── Card Content ────────────────────────────────────────────────── */}
-      <div className="flex flex-col flex-1 p-3.5 sm:p-4">
+      <div className="flex flex-col flex-1 p-2.5 sm:p-4">
         {/* Name */}
         <h3
-          className="font-playfair font-bold text-[0.9375rem] leading-tight mb-0.5"
+          className="font-playfair font-bold text-[0.8rem] sm:text-[0.9375rem] leading-tight mb-0.5"
           style={{ color: "var(--color-brown)" }}
         >
           {product.name}
         </h3>
         <p
-          className="font-cormorant italic text-sm mb-3 leading-tight"
+          className="font-cormorant italic text-sm mb-3 leading-tight hidden sm:block"
           style={{ color: "var(--color-grey)" }}
         >
           {product.subtitle}
         </p>
 
         {/* Weight selector */}
-        <div className="flex gap-2 mb-3">
+        <div className="flex gap-1.5 mb-2 sm:mb-3">
           {product.variants.map((variant, idx) => (
             <button
               key={variant.label}
@@ -364,7 +364,7 @@ export default function ProductCard({
                 e.stopPropagation();
                 setSelectedVariantIndex(idx);
               }}
-              className="flex-1 py-1.5 rounded-lg font-dm-sans text-xs font-semibold transition-all duration-150"
+              className="flex-1 py-1 sm:py-1.5 rounded-lg font-dm-sans text-[0.65rem] sm:text-xs font-semibold transition-all duration-150"
               style={{
                 background: selectedVariantIndex === idx ? "var(--color-crimson)" : "var(--color-cream)",
                 color: selectedVariantIndex === idx ? "white" : "var(--color-brown)",
@@ -381,7 +381,7 @@ export default function ProductCard({
         <div className="flex flex-col gap-2 mt-auto">
           <div className="flex items-end justify-between">
             <div>
-              <div className="flex items-baseline gap-2">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <span
                   className="font-dm-sans font-bold text-lg leading-none"
                   style={{ color: "var(--color-crimson)" }}
@@ -390,20 +390,12 @@ export default function ProductCard({
                 </span>
                 {selectedVariant.compare_at_price && (
                   <span
-                    className="font-dm-sans text-sm line-through leading-none"
+                    className="font-dm-sans text-xs line-through leading-none"
                     style={{ color: "var(--color-grey)" }}
                   >
                     {formatPrice(selectedVariant.compare_at_price)}
                   </span>
                 )}
-              </div>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span
-                  className="font-dm-sans text-[0.65rem]"
-                  style={{ color: "var(--color-grey)" }}
-                >
-                  Free ship ≥ ₹499
-                </span>
                 {selectedVariant.compare_at_price && (
                   <span
                     className="font-dm-sans text-[0.6rem] font-semibold px-1.5 py-0.5 rounded-full"
@@ -416,6 +408,12 @@ export default function ProductCard({
                   </span>
                 )}
               </div>
+              <span
+                className="font-dm-sans text-[0.65rem] hidden sm:block mt-0.5"
+                style={{ color: "var(--color-grey)" }}
+              >
+                Free ship ≥ ₹499
+              </span>
             </div>
           </div>
 
