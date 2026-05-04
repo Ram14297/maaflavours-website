@@ -361,6 +361,7 @@ ul, ol {
 /* ─── Cart Badge ─────────────────────────────────────────────────────────── */
 .cart-badge {
   position: absolute;
+  display: none; /* hidden on mobile */
   top: -6px;
   right: -6px;
   min-width: 18px;
@@ -436,6 +437,7 @@ ul, ol {
 .nav-link::after {
   content: '';
   position: absolute;
+  display: none; /* hidden on mobile */
   bottom: -2px;
   left: 0;
   width: 0;
@@ -460,6 +462,7 @@ ul, ol {
 .corner-bl,
 .corner-br {
   position: absolute;
+  display: none; /* hidden on mobile */
   width: 20px;
   height: 20px;
 }
@@ -496,6 +499,10 @@ ul, ol {
   border-radius: 0 0 2px 0;
 }
 
+
+@media (min-width: 640px) {
+  .corner-tl, .corner-tr, .corner-bl, .corner-br { display: block; }
+}
 /* ─── OTP Input Focus States ─────────────────────────────────────────────── */
 .otp-box {
   width: 3rem;
