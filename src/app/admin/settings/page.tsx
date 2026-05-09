@@ -482,7 +482,7 @@ export default function SettingsPage() {
                   label="Show Announcement Bar" sub="Hides or shows the crimson banner on the customer site"/>
                 <Textarea label="Announcement Text" rows={2}
                   value={s.announcement?.text||""}
-                  placeholder="Free Shipping on orders above Rs.499 | Pan-India Delivery | No Preservatives"
+                  placeholder="Free Shipping on orders above Rs.899 | Pan-India Delivery | No Preservatives"
                   onChange={e => patch("announcement","text",e.target.value)}/>
                 <p style={{ color:A.grey, fontSize:11 }}>
                   Use | (pipe) to separate multiple messages. Messages auto-scroll on mobile screens.

@@ -97,7 +97,7 @@ function Breadcrumb({ productName, productType }: { productName: string; product
 // ─── Free shipping progress bar ────────────────────────────────────────────
 function FreeShippingProgress({ currentTotal }: { currentTotal: number }) {
   const needed = amountForFreeShipping(currentTotal);
-  const pct = Math.min((currentTotal / 49900) * 100, 100);
+  const pct = Math.min((currentTotal / 89900) * 100, 100);
 
   if (needed <= 0) {
     return (
@@ -528,7 +528,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   ) : (
                     <>
                       Delivery: <span className="font-semibold" style={{ color: "var(--color-brown)" }}>₹{deliveryCharge / 100}</span>{" "}
-                      · Free above ₹499
+                      · Free above ₹899
                     </>
                   )}
                   {" "}<span style={{ color: "var(--color-gold)", fontWeight: 500 }}>Pan-India</span>

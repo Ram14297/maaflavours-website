@@ -11,12 +11,12 @@ const DEFAULTS: Record<string, any> = {
     address: "Ongole, Andhra Pradesh — 523001", gstin: "", fssai: "20126171000153", pincode: "523001",
   },
   shipping: {
-    free_threshold: 49900, standard_fee: 4900, cod_extra: 3000,
-    tat_days: "5-7", courier: "DTDC / Delhivery",
+    free_threshold: 89900, standard_fee: 8900, cod_extra: 3000,
+    tat_days: "5-7", courier: "DTDC",
     zones: [
-      { name: "Andhra Pradesh", fee: 0,    tat: "2-3 days" },
-      { name: "South India",    fee: 4000, tat: "3-5 days" },
-      { name: "Rest of India",  fee: 4900, tat: "5-7 days" },
+      { name: "AP / Telangana", fee: 8900,  tat: "2-3 days" },
+      { name: "South India",    fee: 14900, tat: "3-5 days" },
+      { name: "Rest of India",  fee: 18900, tat: "5-7 days" },
     ],
   },
   payments: {
@@ -32,7 +32,7 @@ const DEFAULTS: Record<string, any> = {
     meta_title: "Maa Flavours — Authentic Andhra Pickles",
     meta_description: "Authentic Andhra homemade pickles from Ongole. No preservatives, traditional recipes.",
   },
-  announcement: { enabled: true, text: "Free Shipping on orders above Rs.499 | Pan-India Delivery | No Preservatives" },
+  announcement: { enabled: true, text: "Free Shipping on orders above Rs.899 | Pan-India Delivery | No Preservatives" },
 };
 
 export async function GET(req: NextRequest) {

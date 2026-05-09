@@ -9,7 +9,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { isAllowedOrigin } from "@/lib/origin-check";
 
-const STANDARD_SHIPPING = 4900; // ₹49 in paise
+// Default to Zone 1 (AP/TG) rate for coupon discount preview — actual charge is zone-based at order creation
+const STANDARD_SHIPPING = 8900; // ₹89 in paise (Zone 1 AP/TG default)
 
 const STATIC_COUPONS = [
   { code: "WELCOME50",  description: "₹50 off your first order",         type: "flat"          as const, value: 5000,  min_order_amount: 29900, max_discount_amount: null,  is_active: true },
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
     let discountAmount = 0;
     if (coupon.type === "flat")          discountAmount = Math.min(coupon.value, cartTotal);
     else if (coupon.type === "percent")  { discountAmount = Math.floor((cartTotal * coupon.value) / 100); if (coupon.max_discount_amount) discountAmount = Math.min(discountAmount, coupon.max_discount_amount); }
-    else if (coupon.type === "free_shipping") discountAmount = cartTotal >= 49900 ? 0 : STANDARD_SHIPPING;
+    else if (coupon.type === "free_shipping") discountAmount = cartTotal >= 89900 ? 0 : STANDARD_SHIPPING;
 
     return NextResponse.json({ valid: true, coupon: { code: coupon.code, description: coupon.description, type: coupon.type, value: coupon.value, discountAmount }, source: fromDatabase ? "database" : "static" });
   } catch (err: any) {

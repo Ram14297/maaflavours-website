@@ -19,7 +19,7 @@ const BADGES = [
   {
     emoji: "🚚",
     title: "Pan-India Delivery",
-    description: "Free above ₹499",
+    description: "Free above ₹899",
     veg: false,
   },
   {

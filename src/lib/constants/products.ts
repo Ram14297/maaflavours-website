@@ -170,10 +170,13 @@ export const SITE = {
 } as const;
 
 export const SHIPPING = {
-  free_threshold_rupees: 499,
-  free_threshold_paise: 49900,
-  standard_charge_rupees: 49,
-  standard_charge_paise: 4900,
+  // Zone-based flat rates (AP/TG ₹89 | South ₹149 | Rest ₹189)
+  // All zones: free shipping above ₹899
+  free_threshold_rupees: 899,
+  free_threshold_paise: 89900,
+  // Default rate shown in product cards / SEO (Zone 1 — AP/TG)
+  standard_charge_rupees: 89,
+  standard_charge_paise: 8900,
   cod_extra_rupees: 30,
   cod_extra_paise: 3000,
   estimated_days: "3–7 business days",

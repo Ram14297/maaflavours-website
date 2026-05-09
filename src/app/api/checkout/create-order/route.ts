@@ -61,9 +61,20 @@ const RequestSchema = z.object({
 });
 
 // ─── Business rules (paise) ──────────────────────────────────────────────────
-const FREE_SHIPPING_THRESHOLD = 49900;  // ₹499
-const STANDARD_SHIPPING       = 4900;   // ₹49
+// Zone-based shipping: AP/TG ₹89 | South India ₹149 | Rest of India ₹189
+// All zones: free shipping above ₹899
+const FREE_SHIPPING_THRESHOLD = 89900;  // ₹899
 const COD_CHARGE              = 5000;   // ₹50
+
+const ZONE1_STATES = ["andhra pradesh", "telangana"];
+const ZONE2_STATES = ["karnataka", "tamil nadu", "kerala", "goa", "puducherry", "pondicherry"];
+
+function getZoneShipping(state: string): number {
+  const s = state.toLowerCase().trim();
+  if (ZONE1_STATES.some((z) => s.includes(z))) return 8900;  // ₹89
+  if (ZONE2_STATES.some((z) => s.includes(z))) return 14900; // ₹149
+  return 18900;                                               // ₹189 — Rest of India
+}
 
 // GST rates for pickles (HSN 2001, 12%)
 const CGST_RATE  = 6;   // percent
@@ -251,7 +262,7 @@ export async function POST(request: NextRequest) {
     }
 
     const isFreeShipping = appliedCoupon?.type === "free_shipping" || subtotal >= FREE_SHIPPING_THRESHOLD;
-    const deliveryCharge = isFreeShipping ? 0 : STANDARD_SHIPPING;
+    const deliveryCharge = isFreeShipping ? 0 : getZoneShipping(deliveryAddress.state);
     const codCharge      = paymentMethod === "cod" ? COD_CHARGE : 0;
     const total          = Math.max(0, subtotal - couponDiscount + deliveryCharge + codCharge);
 

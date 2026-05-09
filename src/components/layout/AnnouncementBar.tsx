@@ -8,7 +8,7 @@ import { X } from "lucide-react";
 
 const MESSAGES = [
   "🎉 Launch Offer — Prices Slashed! Shop Now Before It Ends",
-  "🚚 Free Shipping on orders above ₹499 — Pan-India Delivery",
+  "🚚 Free Shipping on orders above ₹899 — Pan-India Delivery",
   "🌿 No Preservatives. No Shortcuts. Just Pure Andhra Flavour.",
 ];
 

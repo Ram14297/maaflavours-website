@@ -7,7 +7,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
-import { X, ShoppingBag, Trash2, ArrowRight, Lock, Zap } from "lucide-react";
+import { X, ShoppingBag, Trash2, ArrowRight, Lock } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 import { formatPrice } from "@/lib/utils";
 import CartLineItemRow from "./CartLineItem";
@@ -283,20 +283,6 @@ export default function CartDrawer({ onClose }: CartDrawerProps) {
               <Lock size={17} />
               Proceed to Checkout
               <ArrowRight size={17} />
-            </Link>
-
-            <Link
-              href="/checkout?express=true"
-              onClick={onClose}
-              className="w-full py-3.5 rounded-xl font-dm-sans font-semibold text-sm flex items-center justify-center gap-2.5 transition-all duration-200 hover:opacity-90"
-              style={{
-                background: "linear-gradient(135deg, var(--color-gold) 0%, var(--color-gold-light) 100%)",
-                color: "var(--color-brown)",
-                boxShadow: "0 2px 8px rgba(200,150,12,0.25)",
-              }}
-            >
-              <Zap size={16} fill="var(--color-brown)" />
-              Express Pay — UPI / Cashfree
             </Link>
 
             <button

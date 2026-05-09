@@ -26,7 +26,7 @@ const STEPS = [
     icon: "🚚",
     title: "Delivered to Your Door",
     description:
-      "Pan-India delivery in 3–7 business days. Orders above ₹499 ship free. Packed to survive the journey without breaking.",
+      "Pan-India delivery in 3–7 business days. Orders above ₹899 ship free. Packed to survive the journey without breaking.",
     accent: "var(--color-brown)",
   },
 ];

@@ -104,7 +104,7 @@ function PageHeader() {
             className="font-dm-sans text-xs font-medium"
             style={{ color: "var(--color-grey)" }}
           >
-            Free Ship ≥₹499
+            Free Ship ≥₹899
           </span>
         </div>
       </div>

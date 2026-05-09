@@ -53,7 +53,7 @@ interface CartStore {
   itemCount: () => number;
   subtotal: () => number;
   couponDiscount: () => number;
-  deliveryCharge: () => number;
+  deliveryCharge: (state?: string) => number;
   total: () => number;
 
   openCart: () => void;
@@ -99,9 +99,11 @@ export const useCartStore = create<CartStore>()(
         return 0;
       },
 
-      deliveryCharge: () => {
+      // state param is optional — cart drawer uses default (Zone 1 / AP/TG ₹89)
+      // OrderSummaryPanel passes actual delivery state once user enters address
+      deliveryCharge: (state?: string) => {
         if (get().coupon?.type === "free_shipping") return 0;
-        return calculateDeliveryCharge(get().subtotal());
+        return calculateDeliveryCharge(get().subtotal(), state);
       },
 
       total: () => {
@@ -131,13 +133,14 @@ export const useCartStore = create<CartStore>()(
 
         const id = `${productSlug}_${variantIndex}`;
 
-        // Single atomic set — combining items + isOpen in one call avoids
+        // Single atomic set — combining items in one call avoids
         // a race between two separate set() calls with persist middleware
+        // NOTE: Do NOT set isOpen:true here — let the toast + cart count
+        // badge communicate the add. Opening the drawer is too intrusive.
         set((s) => {
           const existing = s.items.find((i) => i.id === id);
           if (existing) {
             return {
-              isOpen: true,
               items: s.items.map((i) =>
                 i.id === id
                   ? { ...i, quantity: Math.min(i.quantity + quantity, i.maxQuantity) }
@@ -146,7 +149,6 @@ export const useCartStore = create<CartStore>()(
             };
           }
           return {
-            isOpen: true,
             items: [
               ...s.items,
               {

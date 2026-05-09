@@ -413,7 +413,7 @@ export default function ProductCard({
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="font-dm-sans text-[0.65rem]" style={{ color: "var(--color-grey)" }}>
-                    Free ship ≥ ₹499
+                    Free ship ≥ ₹899
                   </span>
                   {selectedVariant.compare_at_price && (
                     <span className="font-dm-sans text-[0.6rem] font-semibold px-1.5 py-0.5 rounded-full"

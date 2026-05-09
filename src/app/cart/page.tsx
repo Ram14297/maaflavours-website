@@ -5,7 +5,7 @@
 // Connected to Zustand cart store
 
 import Link from "next/link";
-import { ShoppingBag, ArrowRight, Lock, Trash2, Zap } from "lucide-react";
+import { ShoppingBag, ArrowRight, Lock, Trash2 } from "lucide-react";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import NavbarWithCart from "@/components/layout/NavbarWithCart";
 import Footer from "@/components/layout/Footer";
@@ -294,19 +294,6 @@ export default function CartPage() {
                   <Lock size={17} />
                   Proceed to Checkout
                   <ArrowRight size={17} />
-                </Link>
-
-                <Link
-                  href="/checkout?express=true"
-                  className="w-full py-3.5 rounded-xl font-dm-sans font-semibold text-sm flex items-center justify-center gap-2.5 transition-all duration-200 hover:opacity-90"
-                  style={{
-                    background: "linear-gradient(135deg, var(--color-gold) 0%, var(--color-gold-light) 100%)",
-                    color: "var(--color-brown)",
-                    boxShadow: "0 2px 8px rgba(200,150,12,0.25)",
-                  }}
-                >
-                  <Zap size={16} fill="var(--color-brown)" />
-                  Express Pay — UPI / Cashfree
                 </Link>
 
                 {/* Trust badges */}

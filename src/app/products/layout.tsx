@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Shop Andhra Pickles — All Varieties | Maa Flavours",
   description:
-    "Shop authentic Andhra homemade pickles. Drumstick, Gongura, Lemon, Amla, Maamidi Allam, Red Chilli — handcrafted with no preservatives. Pan-India delivery. Free shipping above ₹499.",
+    "Shop authentic Andhra homemade pickles. Drumstick, Gongura, Lemon, Amla, Maamidi Allam, Red Chilli — handcrafted with no preservatives. Pan-India delivery. Free shipping above ₹899.",
 };
 
 export default function ProductsLayout({

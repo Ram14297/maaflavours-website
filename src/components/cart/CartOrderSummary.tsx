@@ -24,7 +24,7 @@ export default function CartOrderSummary({
   appliedCoupon,
   itemCount,
 }: CartOrderSummaryProps) {
-  const freeShippingThreshold = 49900; // ₹499 in paise
+  const freeShippingThreshold = 89900; // ₹899 in paise — applies to all zones
   const amountToFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
   const freeShippingProgress = Math.min((subtotal / freeShippingThreshold) * 100, 100);
 

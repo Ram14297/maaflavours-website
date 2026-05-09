@@ -7,7 +7,8 @@ import React from "react";
 import Link from "next/link";
 import { ShoppingBag, Edit2 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
-import { formatPrice } from "@/lib/utils";
+import { useCheckoutStore } from "@/store/checkoutStore";
+import { formatPrice, calculateDeliveryCharge, getShippingZone, SHIPPING_ZONES } from "@/lib/utils";
 
 const COD_CHARGE = 5000;
 
@@ -17,15 +18,18 @@ export default function OrderSummaryPanel({ isCOD = false }: { isCOD?: boolean }
     coupon,
     subtotal,
     couponDiscount,
-    deliveryCharge,
-    total,
     itemCount,
   } = useCartStore();
 
-  const sub = subtotal();
+  // Use actual delivery state for zone-aware shipping once user enters address
+  const { address } = useCheckoutStore();
+  const deliveryState = address.state || undefined;
+
+  const sub  = subtotal();
   const disc = couponDiscount();
-  const del = deliveryCharge();
-  const tot = total();
+  // Zone-aware delivery charge — updates live as user enters state at checkout
+  const del  = coupon?.type === "free_shipping" ? 0 : calculateDeliveryCharge(sub, deliveryState);
+  const tot  = Math.max(0, sub - disc + del);
   const count = itemCount();
   const codTotal = isCOD ? tot + COD_CHARGE : tot;
 
@@ -157,10 +161,15 @@ export default function OrderSummaryPanel({ isCOD = false }: { isCOD?: boolean }
           </div>
         )}
 
-        {/* Delivery */}
+        {/* Delivery — zone-aware */}
         <div className="flex items-center justify-between">
           <span className="font-dm-sans text-sm" style={{ color: "var(--color-grey)" }}>
             Delivery
+            {deliveryState && (
+              <span className="ml-1 text-xs" style={{ color: "var(--color-gold)" }}>
+                ({SHIPPING_ZONES[getShippingZone(deliveryState)].label})
+              </span>
+            )}
           </span>
           <span
             className="font-dm-sans font-semibold text-sm"

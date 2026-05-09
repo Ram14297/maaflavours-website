@@ -166,19 +166,43 @@ export function slugify(str: string): string {
 
 // ─── Shipping Utilities ──────────────────────────────────────────────────
 
-const FREE_SHIPPING_THRESHOLD_PAISE = 49900; // ₹499
-const STANDARD_DELIVERY_PAISE = 4900;        // ₹49
+// Zone 1 — Andhra Pradesh & Telangana  : ₹89 flat | Free ≥ ₹899
+// Zone 2 — South India (KA/TN/KL/GA)  : ₹149 flat | Free ≥ ₹899
+// Zone 3 — Rest of India               : ₹189 flat | Free ≥ ₹899
 
-/** Calculate delivery charge based on cart total */
-export function calculateDeliveryCharge(cartTotalPaise: number): number {
-  if (cartTotalPaise >= FREE_SHIPPING_THRESHOLD_PAISE) return 0;
-  return STANDARD_DELIVERY_PAISE;
+export type ShippingZone = "zone1" | "zone2" | "zone3";
+
+const ZONE1_STATES = ["andhra pradesh", "telangana"];
+const ZONE2_STATES = ["karnataka", "tamil nadu", "kerala", "goa", "puducherry", "pondicherry"];
+
+export const SHIPPING_ZONES: Record<ShippingZone, { label: string; flat: number; freeThreshold: number }> = {
+  zone1: { label: "AP / Telangana",  flat: 8900,  freeThreshold: 89900 },
+  zone2: { label: "South India",     flat: 14900, freeThreshold: 89900 },
+  zone3: { label: "Rest of India",   flat: 18900, freeThreshold: 89900 },
+};
+
+/** Derive shipping zone from state name (case-insensitive) */
+export function getShippingZone(state?: string): ShippingZone {
+  if (!state) return "zone1"; // default — most customers are AP/TG
+  const s = state.toLowerCase().trim();
+  if (ZONE1_STATES.some((z) => s.includes(z))) return "zone1";
+  if (ZONE2_STATES.some((z) => s.includes(z))) return "zone2";
+  return "zone3";
 }
 
-/** Amount needed for free shipping */
-export function amountForFreeShipping(cartTotalPaise: number): number {
-  const remaining = FREE_SHIPPING_THRESHOLD_PAISE - cartTotalPaise;
-  return Math.max(0, remaining);
+/** Calculate delivery charge based on cart total and delivery state */
+export function calculateDeliveryCharge(cartTotalPaise: number, state?: string): number {
+  const zone   = getShippingZone(state);
+  const config = SHIPPING_ZONES[zone];
+  if (cartTotalPaise >= config.freeThreshold) return 0;
+  return config.flat;
+}
+
+/** Amount needed to qualify for free shipping */
+export function amountForFreeShipping(cartTotalPaise: number, state?: string): number {
+  const zone      = getShippingZone(state);
+  const threshold = SHIPPING_ZONES[zone].freeThreshold;
+  return Math.max(0, threshold - cartTotalPaise);
 }
 
 // ─── Spice Level Utilities ────────────────────────────────────────────────

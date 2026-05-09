@@ -111,7 +111,11 @@ export async function middleware(request: NextRequest) {
         sess = verified.payload;
       } catch { /* invalid/expired/forged */ }
     }
-    if (sess?.userId && !sess.isNewUser && sess.name) {
+    // A valid signed JWT with a userId is sufficient for authentication.
+    // Do NOT block on isNewUser or name — that creates a redirect loop where
+    // new users who just completed OTP can never reach /checkout or /account.
+    // Profile completion is handled gracefully within those pages, not here.
+    if (sess?.userId) {
       isAuthenticated = true;
     }
     if (!isAuthenticated) {
