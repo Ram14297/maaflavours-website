@@ -58,6 +58,23 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createAdminSupabaseClient();
 
+    // Check if mobile is already used by a different account
+    if (mobile) {
+      const { data: existing } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("mobile", mobile)
+        .neq("id", userId!)
+        .maybeSingle();
+
+      if (existing) {
+        return NextResponse.json(
+          { error: "This phone number is already registered. Please use a different number." },
+          { status: 409 }
+        );
+      }
+    }
+
     // Step 1: Try UPDATE the existing row by userId
     // Only update mobile if a real value is provided (don't overwrite real mobile with placeholder)
     const updatePayload: Record<string, any> = {
