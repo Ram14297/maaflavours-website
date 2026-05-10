@@ -104,7 +104,7 @@ export const PRODUCTS: ProductSeed[] = [
     is_vegetarian: true,
     is_featured: true,
     variants: [
-      { weight_grams: 250, label: "250g", price: 14900 },   // ₹149
+      { weight_grams: 250, label: "250g", price: 15900 },   // ₹159
       { weight_grams: 500, label: "500g", price: 28900 },   // ₹289
     ],
     image_placeholder: "lemon-pickle", // REPLACE with actual image
