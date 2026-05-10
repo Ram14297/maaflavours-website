@@ -128,7 +128,18 @@ export default function ProductCard({
               >
                 {product.subtitle}
               </p>
-              {!product.contains_garlic && (
+              {product.contains_garlic ? (
+                <span
+                  className="inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full font-dm-sans text-[0.65rem] font-semibold"
+                  style={{
+                    background: "rgba(183,28,28,0.08)",
+                    border: "1px solid rgba(183,28,28,0.3)",
+                    color: "#B71C1C",
+                  }}
+                >
+                  🧄 Contains Garlic
+                </span>
+              ) : (
                 <span
                   className="inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full font-dm-sans text-[0.65rem] font-semibold"
                   style={{
@@ -309,7 +320,20 @@ export default function ProductCard({
               {product.tag}
             </div>
           )}
-          {!product.contains_garlic && (
+          {product.contains_garlic ? (
+            <div
+              className="px-2.5 py-1 rounded-full font-dm-sans text-[0.6rem]"
+              style={{
+                background: "white",
+                color: "#B71C1C",
+                boxShadow: "0 2px 6px rgba(183,28,28,0.12)",
+                border: "1px solid rgba(183,28,28,0.3)",
+                fontWeight: 600,
+              }}
+            >
+              🧄 Contains Garlic
+            </div>
+          ) : (
             <div
               className="px-2.5 py-1 rounded-full font-dm-sans text-[0.6rem]"
               style={{

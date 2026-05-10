@@ -407,7 +407,18 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                   >
                     ✨ {product.tag}
                   </span>
-                  {!product.contains_garlic && (
+                  {product.contains_garlic ? (
+                    <span
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full font-dm-sans text-xs font-semibold"
+                      style={{
+                        background: "rgba(183,28,28,0.08)",
+                        border: "1px solid rgba(183,28,28,0.3)",
+                        color: "#B71C1C",
+                      }}
+                    >
+                      🧄 Contains Garlic
+                    </span>
+                  ) : (
                     <span
                       className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full font-dm-sans text-xs font-semibold"
                       style={{
