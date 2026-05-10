@@ -26,7 +26,6 @@ const PRODUCT_EMOJIS: Record<string, string> = {
   "amla-pickle": "🫙",
   "pulihora-gongura": "🍃",
   "lemon-pickle": "🍋",
-  "maamidi-allam": "🥭",
   "red-chilli-pickle": "🌶️",
 };
 

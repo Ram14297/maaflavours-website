@@ -29,7 +29,6 @@ const PRODUCT_EMOJIS: Record<string, string> = {
   "amla-pickle":       "🫙",
   "pulihora-gongura":  "🍃",
   "lemon-pickle":      "🍋",
-  "maamidi-allam":     "🥭",
   "red-chilli-pickle": "🌶️",
   "aavakaaya":         "🥭",
 };
@@ -332,6 +331,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
     if (!liveProduct || !selectedVariant) return;
     try {
       // Pass full meta so admin-added products (not in static constants) work correctly
+      const primaryImage = liveProduct.images?.find((i: any) => i.is_primary) ?? liveProduct.images?.[0];
       const meta: AddItemMeta = {
         productName:     liveProduct.name,
         productSubtitle: liveProduct.subtitle,
@@ -339,6 +339,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
         unitPrice:       selectedVariant.price,
         emoji:           PRODUCT_EMOJIS[liveProduct.slug] || "🫙",
         maxQuantity:     selectedVariant.stock_quantity ?? 10,
+        imageUrl:        primaryImage?.url || "",
       };
       await addItem(liveProduct.slug, selectedVariantIndex, quantity, meta);
       toast.success(

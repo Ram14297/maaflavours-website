@@ -44,9 +44,9 @@ const REVIEWS = [
     name: "Ramesh Babu",
     city: "Pune",
     rating: 5,
-    product: "Maamidi Allam",
+    product: "Lemon Pickle",
     review:
-      "Maamidi Allam with hot dosa is heaven! The sweet-spicy balance is incredible. My kids devour it. We've gifted packs to relatives visiting and everyone wants to order online now.",
+      "Lemon Pickle with hot dosa is heaven! The tangy flavour is incredible. My kids devour it. We've gifted packs to relatives visiting and everyone wants to order online now.",
     date: "2 months ago",
   },
   {

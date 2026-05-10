@@ -55,7 +55,6 @@ function WishlistCard({
     "amla-pickle": "🫙",
     "pulihora-gongura": "🍃",
     "lemon-pickle": "🍋",
-    "maamidi-allam": "🥭",
     "red-chilli-pickle": "🌶️",
   };
   const emoji = EMOJI_MAP[slug] || "🫙";

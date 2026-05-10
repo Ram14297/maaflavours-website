@@ -145,11 +145,11 @@ const FAQ_CATEGORIES = [
     items: [
       {
         q: "Which pickle is best for beginners or those with low spice tolerance?",
-        a: "We recommend our Maamidi Allam (mango ginger pickle) — it's medium spicy with sweet notes that balance the heat beautifully. Our Amla Pickle is also mild-to-medium with more sour notes than spice.",
+        a: "We recommend our Amla Pickle — it's mild-to-medium with more sour notes than spice. Our Lemon Pickle is also a great starter with a bright tangy flavour that isn't overwhelming.",
       },
       {
         q: "What's the best pickle to pair with dosa?",
-        a: "Maamidi Allam is the traditional Andhra choice for dosa. Its sweet-sour-spicy combination works beautifully in place of chutney. Our Lemon Pickle is also excellent with plain dosa.",
+        a: "Our Lemon Pickle is an excellent choice for dosa — its bright, tangy flavour works beautifully in place of chutney. Gongura Pickle is also a popular Andhra pairing for plain dosa.",
       },
       {
         q: "Do you offer bulk or wholesale orders?",

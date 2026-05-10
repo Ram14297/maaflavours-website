@@ -69,7 +69,7 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
   const [codConfirmed, setCodConfirmed]   = useState(false);
   const [upiTxnId,    setUpiTxnId]        = useState("");
 
-  const cartTotal = total();
+  const cartTotal = total(address?.state);
   const codTotal  = paymentMethod === "cod" ? cartTotal + COD_CHARGE : cartTotal;
 
   // ─── Cashfree: UPI + Card + Net Banking ─────────────────────────────────

@@ -110,26 +110,6 @@ export const PRODUCTS: ProductSeed[] = [
     image_placeholder: "lemon-pickle", // REPLACE with actual image
   },
 
-  // ─── 5. Maamidi Allam ─────────────────────────────────────────────────
-  {
-    slug: "maamidi-allam",
-    name: "Maamidi Allam",
-    subtitle: "Medium Spicy & Sweet",
-    tag: "Best with Rice & Dosa",
-    spice_level: "medium",
-    short_description: "Mango ginger slow-cooked with jaggery and tamarind — a beautifully balanced sweet, sour and spicy pickle unlike any other.",
-    description: `<p>Mango Ginger (Curcuma amada) is one of the most unique rhizomes in Indian cooking — it looks like ginger but carries a natural mango-like fragrance that is impossible to replicate. We combine it with jaggery for sweetness, tamarind for sourness, and red chilli for heat to create a pickle that hits every note at once.</p><p>Sweet, sour, spicy, and aromatic — this is the pickle that people reach for again and again without knowing exactly why. It pairs brilliantly with dosa, idli, curd rice, or hot rice with ghee. A truly special recipe from Maa's kitchen.</p>`,
-    ingredients: "Mango Ginger, Groundnut Oil, Jaggery, Tamarind, Red Chilli Powder, Salt",
-    shelf_life_days: 90,
-    is_vegetarian: true,
-    is_featured: true,
-    variants: [
-      { weight_grams: 250, label: "250g", price: 19900 },   // ₹199
-      { weight_grams: 500, label: "500g", price: 36900 },   // ₹369
-    ],
-    image_placeholder: "maamidi-allam", // REPLACE with actual image
-  },
-
   // ─── 6. Red Chilli Pickle ──────────────────────────────────────────────
   {
     slug: "red-chilli-pickle",

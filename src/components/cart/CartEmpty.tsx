@@ -11,7 +11,7 @@ interface CartEmptyProps {
 const FEATURED_PICKS = [
   { slug: "pulihora-gongura", name: "Pulihora Gongura", emoji: "🍃", price: "₹200" },
   { slug: "drumstick-pickle", name: "Drumstick Pickle", emoji: "🥢", price: "₹180" },
-  { slug: "maamidi-allam", name: "Maamidi Allam", emoji: "🥭", price: "₹190" },
+  { slug: "lemon-pickle",  name: "Lemon Pickle",  emoji: "🍋", price: "₹160" },
 ];
 
 export default function CartEmpty({ onClose }: CartEmptyProps) {

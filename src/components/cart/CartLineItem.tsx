@@ -5,6 +5,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Trash2, Minus, Plus } from "lucide-react";
 import { CartLineItem as CartLineItemType } from "@/store/cartStore";
 import { formatPrice } from "@/lib/utils";
@@ -52,9 +53,19 @@ export default function CartLineItemRow({
         tabIndex={-1}
         aria-label={`View ${item.productName}`}
       >
-        <span className="text-3xl" style={{ filter: "drop-shadow(0 2px 4px rgba(74,44,10,0.15))" }}>
-          {item.emoji}
-        </span>
+        {item.imageUrl ? (
+          <Image
+            src={item.imageUrl}
+            alt={item.productName}
+            fill
+            className="object-cover"
+            sizes="72px"
+          />
+        ) : (
+          <span className="text-3xl" style={{ filter: "drop-shadow(0 2px 4px rgba(74,44,10,0.15))" }}>
+            {item.emoji}
+          </span>
+        )}
         {/* Veg dot */}
         <span
           className="absolute bottom-1 right-1 w-3.5 h-3.5 flex items-center justify-center rounded"

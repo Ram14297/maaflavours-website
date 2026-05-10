@@ -40,7 +40,6 @@ function getItemEmoji(name: string): string {
   if (n.includes("amla") || n.includes("gooseberry")) return "🫙";
   if (n.includes("gongura") || n.includes("pulihora")) return "🍃";
   if (n.includes("lemon")) return "🍋";
-  if (n.includes("maamidi") || n.includes("mango") || n.includes("allam")) return "🥭";
   if (n.includes("chilli") || n.includes("chili")) return "🌶️";
   return "🫙";
 }

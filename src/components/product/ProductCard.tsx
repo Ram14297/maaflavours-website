@@ -47,6 +47,7 @@ export default function ProductCard({
         productSubtitle: product.subtitle,
         variantLabel:    selectedVariant.label,
         unitPrice:       selectedVariant.price,
+        imageUrl:        imageUrl || "",
       };
       addItem(product.slug, selectedVariantIndex, 1, meta);
       onAddToCart?.(product, selectedVariantIndex);

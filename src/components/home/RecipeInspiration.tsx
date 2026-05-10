@@ -25,9 +25,9 @@ const PAIRINGS = [
   {
     food: "Dosa",
     foodEmoji: "🫓",
-    pickle: "Maamidi Allam",
-    pickleSlug: "maamidi-allam",
-    description: "Sweet, sour, and spicy Maamidi Allam is the ultimate dosa companion.",
+    pickle: "Lemon Pickle",
+    pickleSlug: "lemon-pickle",
+    description: "Bright and tangy lemon pickle cuts through the crispiness of dosa beautifully.",
     bg: "linear-gradient(135deg, #F5EFE0, #EDE3CE)",
   },
   {

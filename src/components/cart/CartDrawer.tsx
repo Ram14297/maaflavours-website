@@ -40,10 +40,42 @@ export default function CartDrawer({ onClose }: CartDrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
   const isEmpty = items.length === 0;
 
-  // ─── Lock body scroll ─────────────────────────────────────────────────
+  // ─── Hydrate imageUrls for items missing them (e.g. added before fix) ─
   useEffect(() => {
+    const missing = items.filter((i) => !i.imageUrl);
+    if (!missing.length) return;
+    fetch("/api/products")
+      .then((r) => r.json())
+      .then((data) => {
+        const list: any[] = data.products ?? data ?? [];
+        useCartStore.setState((s) => ({
+          items: s.items.map((item) => {
+            if (item.imageUrl) return item;
+            const match = list.find((p: any) => p.slug === item.productSlug);
+            return match?.primary_image_url
+              ? { ...item, imageUrl: match.primary_image_url }
+              : item;
+          }),
+        }));
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ─── Lock body scroll (iOS-safe) ──────────────────────────────────────
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+      window.scrollTo(0, scrollY);
+    };
   }, []);
 
   // ─── Close on Escape ──────────────────────────────────────────────────
@@ -175,12 +207,12 @@ export default function CartDrawer({ onClose }: CartDrawerProps) {
                 <p className="font-dm-sans text-xs leading-snug" style={{ color: "var(--color-brown)" }}>
                   <strong>Pair it up!</strong> Try{" "}
                   <Link
-                    href="/products/maamidi-allam"
+                    href="/products/lemon-pickle"
                     onClick={onClose}
                     className="font-semibold underline hover:no-underline"
                     style={{ color: "var(--color-crimson)" }}
                   >
-                    Maamidi Allam
+                    Lemon Pickle
                   </Link>{" "}
                   — perfect with every Andhra meal.
                 </p>

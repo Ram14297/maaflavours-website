@@ -41,6 +41,7 @@ export interface AddItemMeta {
   unitPrice: number;    // paise
   emoji?: string;
   maxQuantity?: number;
+  imageUrl?: string;
 }
 
 interface CartStore {
@@ -54,7 +55,7 @@ interface CartStore {
   subtotal: () => number;
   couponDiscount: () => number;
   deliveryCharge: (state?: string) => number;
-  total: () => number;
+  total: (state?: string) => number;
 
   openCart: () => void;
   closeCart: () => void;
@@ -73,7 +74,6 @@ const PRODUCT_EMOJIS: Record<string, string> = {
   "amla-pickle": "🫙",
   "pulihora-gongura": "🍃",
   "lemon-pickle": "🍋",
-  "maamidi-allam": "🥭",
   "red-chilli-pickle": "🌶️",
 };
 
@@ -106,8 +106,8 @@ export const useCartStore = create<CartStore>()(
         return calculateDeliveryCharge(get().subtotal(), state);
       },
 
-      total: () => {
-        return Math.max(0, get().subtotal() - get().couponDiscount() + get().deliveryCharge());
+      total: (state?: string) => {
+        return Math.max(0, get().subtotal() - get().couponDiscount() + get().deliveryCharge(state));
       },
 
       openCart: () => set({ isOpen: true }),
@@ -124,6 +124,7 @@ export const useCartStore = create<CartStore>()(
         const variantLabel    = meta?.variantLabel    ?? staticVariant?.label    ?? `Variant ${variantIndex + 1}`;
         const unitPrice       = meta?.unitPrice       ?? staticVariant?.price    ?? 0;
         const emoji           = meta?.emoji           ?? PRODUCT_EMOJIS[productSlug] ?? "🫙";
+        const imageUrl        = meta?.imageUrl        ?? "";
         const maxQty          = Math.min(meta?.maxQuantity ?? (staticVariant as any)?.stock_quantity ?? 10, 10);
 
         if (!unitPrice) {
@@ -162,7 +163,7 @@ export const useCartStore = create<CartStore>()(
                 quantity,
                 maxQuantity: maxQty,
                 emoji,
-                imageUrl: "",
+                imageUrl,
               },
             ],
           };

@@ -6,7 +6,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Shop Andhra Pickles — All Varieties",
   description:
-    "Shop authentic Andhra homemade pickles by Maa Flavours. Drumstick, Gongura, Lemon, Amla, Maamidi Allam, Red Chilli — all handcrafted with no preservatives. Pan-India delivery.",
+    "Shop authentic Andhra homemade pickles by Maa Flavours. Drumstick, Gongura, Lemon, Amla, Red Chilli — all handcrafted with no preservatives. Pan-India delivery.",
   keywords: [
     "buy Andhra pickles online",
     "homemade Andhra achar",
