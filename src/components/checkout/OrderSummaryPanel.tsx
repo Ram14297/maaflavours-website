@@ -27,9 +27,10 @@ export default function OrderSummaryPanel({ isCOD = false }: { isCOD?: boolean }
 
   const sub  = subtotal();
   const disc = couponDiscount();
-  // Zone-aware delivery charge — updates live as user enters state at checkout
-  const del  = coupon?.type === "free_shipping" ? 0 : calculateDeliveryCharge(sub, deliveryState);
-  const tot  = Math.max(0, sub - disc + del);
+  const pincodeKnown = !!deliveryState;
+  // Only calculate delivery once state is known from pincode lookup
+  const del  = !pincodeKnown ? null : coupon?.type === "free_shipping" ? 0 : calculateDeliveryCharge(sub, deliveryState);
+  const tot  = del === null ? Math.max(0, sub - disc) : Math.max(0, sub - disc + del);
   const count = itemCount();
   const codTotal = isCOD ? tot + COD_CHARGE : tot;
 
@@ -161,7 +162,7 @@ export default function OrderSummaryPanel({ isCOD = false }: { isCOD?: boolean }
           </div>
         )}
 
-        {/* Delivery — zone-aware */}
+        {/* Delivery — zone-aware, hidden until pincode entered */}
         <div className="flex items-center justify-between">
           <span className="font-dm-sans text-sm" style={{ color: "var(--color-grey)" }}>
             Delivery
@@ -171,12 +172,18 @@ export default function OrderSummaryPanel({ isCOD = false }: { isCOD?: boolean }
               </span>
             )}
           </span>
-          <span
-            className="font-dm-sans font-semibold text-sm"
-            style={{ color: del === 0 ? "#2E7D32" : "var(--color-brown)" }}
-          >
-            {del === 0 ? "🎉 Free" : formatPrice(del)}
-          </span>
+          {del === null ? (
+            <span className="font-dm-sans text-xs italic" style={{ color: "var(--color-grey)" }}>
+              Enter pincode
+            </span>
+          ) : (
+            <span
+              className="font-dm-sans font-semibold text-sm"
+              style={{ color: del === 0 ? "#2E7D32" : "var(--color-brown)" }}
+            >
+              {del === 0 ? "🎉 Free" : formatPrice(del)}
+            </span>
+          )}
         </div>
 
         {/* COD charge */}
@@ -201,12 +208,19 @@ export default function OrderSummaryPanel({ isCOD = false }: { isCOD?: boolean }
               Total
             </span>
             <p className="font-dm-sans text-xs" style={{ color: "var(--color-grey)" }}>
-              Incl. all taxes
+              {del === null ? "Excl. delivery" : "Incl. all taxes"}
             </p>
           </div>
-          <span className="font-playfair font-bold text-2xl" style={{ color: "var(--color-crimson)" }}>
-            {formatPrice(isCOD ? codTotal : tot)}
-          </span>
+          <div className="text-right">
+            <span className="font-playfair font-bold text-2xl" style={{ color: "var(--color-crimson)" }}>
+              {formatPrice(isCOD ? codTotal : tot)}
+            </span>
+            {del === null && (
+              <p className="font-dm-sans text-xs" style={{ color: "var(--color-grey)" }}>
+                + delivery
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Savings callout */}
