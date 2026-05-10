@@ -8,6 +8,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useCartStore } from "@/store/cartStore";
+import { useAuth } from "@/hooks/useAuth";
 import Navbar from "./Navbar";
 
 interface NavbarWithCartProps {
@@ -17,21 +18,34 @@ interface NavbarWithCartProps {
 
 export default function NavbarWithCart({
   onAccountClick,
-  isLoggedIn,
+  isLoggedIn: isLoggedInProp,
 }: NavbarWithCartProps) {
   const { itemCount, openCart } = useCartStore();
+  const { isLoggedIn: authLoggedIn, loading: authLoading } = useAuth();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
   const count = mounted ? itemCount() : 0;
 
+  const isLoggedIn = isLoggedInProp ?? authLoggedIn;
+
   // Default: navigate to /login. Pages that open an OTP modal pass their own handler.
   const handleAccountClick = onAccountClick ?? (() => router.push("/login"));
+
+  const handleCartClick = () => {
+    // Wait for auth check before deciding — prevents false redirect during hydration
+    if (authLoading) return;
+    if (!isLoggedIn) {
+      router.push("/login?redirect=/cart");
+      return;
+    }
+    openCart();
+  };
 
   return (
     <Navbar
       cartCount={count}
-      onCartClick={openCart}
+      onCartClick={handleCartClick}
       onAccountClick={handleAccountClick}
       isLoggedIn={isLoggedIn}
     />
