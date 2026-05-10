@@ -254,6 +254,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ─── 3. Calculate final totals ────────────────────────────────────────
+    console.log("[create-order] couponCode received:", couponCode, "| appliedCoupon:", JSON.stringify(appliedCoupon), "| subtotal:", subtotal);
     let couponDiscount = 0;
     if (appliedCoupon) {
       if (appliedCoupon.type === "flat")         couponDiscount = Math.min(appliedCoupon.value, subtotal);
