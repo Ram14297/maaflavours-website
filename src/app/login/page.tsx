@@ -118,11 +118,10 @@ function LoginPageContent() {
         setStep("profile");
         setTimeout(() => nameRef.current?.focus(), 100);
       } else {
-        setStep("success");
         window.dispatchEvent(new CustomEvent("mf:auth:login", {
           detail: { name: data.user?.name, email: email.trim(), isNewUser: false }
         }));
-        setTimeout(() => router.push(redirectTo), 1800);
+        router.push(redirectTo);
       }
     } catch {
       setOtpError("Verification failed. Please try again.");
@@ -167,11 +166,10 @@ function LoginPageContent() {
       });
       const data = await res.json();
       if (!data.success) { setProfileError(data.error || "Could not save profile."); return; }
-      setStep("success");
       window.dispatchEvent(new CustomEvent("mf:auth:login", {
         detail: { name: name.trim(), email: email.trim(), isNewUser: true }
       }));
-      setTimeout(() => router.push(redirectTo), 1800);
+      router.push(redirectTo);
     } catch {
       setProfileError("Failed to save. Please try again.");
     } finally {
