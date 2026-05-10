@@ -128,6 +128,18 @@ export default function ProductCard({
               >
                 {product.subtitle}
               </p>
+              {!product.contains_garlic && (
+                <span
+                  className="inline-flex items-center gap-1 mt-1 px-2.5 py-0.5 rounded-full font-dm-sans text-[0.65rem] font-semibold"
+                  style={{
+                    background: "rgba(46,125,50,0.08)",
+                    border: "1px solid rgba(46,125,50,0.3)",
+                    color: "#1B5E20",
+                  }}
+                >
+                  🧄 No Garlic
+                </span>
+              )}
             </div>
             <button
               onClick={handleWishlist}
@@ -282,20 +294,36 @@ export default function ProductCard({
         )}
 
         {/* Product tag — only render when tag text exists */}
-        {product.tag && (
-          <div
-            className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full font-dm-sans text-[0.6rem] font-600 z-20"
-            style={{
-              background: "white",
-              color: "var(--color-brown)",
-              boxShadow: "0 2px 6px rgba(74,44,10,0.1)",
-              border: "1px solid rgba(200,150,12,0.2)",
-              fontWeight: 600,
-            }}
-          >
-            {product.tag}
-          </div>
-        )}
+        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-20">
+          {product.tag && (
+            <div
+              className="px-2.5 py-1 rounded-full font-dm-sans text-[0.6rem]"
+              style={{
+                background: "white",
+                color: "var(--color-brown)",
+                boxShadow: "0 2px 6px rgba(74,44,10,0.1)",
+                border: "1px solid rgba(200,150,12,0.2)",
+                fontWeight: 600,
+              }}
+            >
+              {product.tag}
+            </div>
+          )}
+          {!product.contains_garlic && (
+            <div
+              className="px-2.5 py-1 rounded-full font-dm-sans text-[0.6rem]"
+              style={{
+                background: "white",
+                color: "#1B5E20",
+                boxShadow: "0 2px 6px rgba(46,125,50,0.12)",
+                border: "1px solid rgba(46,125,50,0.3)",
+                fontWeight: 600,
+              }}
+            >
+              🧄 No Garlic
+            </div>
+          )}
+        </div>
 
         {/* Veg dot */}
         <div

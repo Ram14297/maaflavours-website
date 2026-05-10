@@ -395,17 +395,31 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
             <div className="reveal reveal-delay-1 flex flex-col gap-5">
 
               {/* Tag + Veg badge */}
-              <div className="flex items-center justify-between">
-                <span
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-dm-sans text-xs font-semibold"
-                  style={{
-                    background: "var(--color-cream)",
-                    border: "1px solid rgba(200,150,12,0.25)",
-                    color: "var(--color-brown)",
-                  }}
-                >
-                  ✨ {product.tag}
-                </span>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full font-dm-sans text-xs font-semibold"
+                    style={{
+                      background: "var(--color-cream)",
+                      border: "1px solid rgba(200,150,12,0.25)",
+                      color: "var(--color-brown)",
+                    }}
+                  >
+                    ✨ {product.tag}
+                  </span>
+                  {!product.contains_garlic && (
+                    <span
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full font-dm-sans text-xs font-semibold"
+                      style={{
+                        background: "rgba(46,125,50,0.08)",
+                        border: "1px solid rgba(46,125,50,0.3)",
+                        color: "#1B5E20",
+                      }}
+                    >
+                      🧄 No Garlic
+                    </span>
+                  )}
+                </div>
 
                 {/* Veg badge */}
                 <div
