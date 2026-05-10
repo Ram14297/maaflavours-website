@@ -143,18 +143,10 @@ export default function CartOrderSummary({
               Delivery
             </span>
             <span
-              className="font-dm-sans font-semibold text-sm"
-              style={{
-                color: deliveryCharge === 0 ? "#2E7D32" : "var(--color-brown)",
-              }}
+              className="font-dm-sans text-xs italic"
+              style={{ color: "var(--color-grey)" }}
             >
-              {deliveryCharge === 0 ? (
-                <span className="flex items-center gap-1">
-                  🎉 Free
-                </span>
-              ) : (
-                formatPrice(deliveryCharge)
-              )}
+              Calculated at checkout
             </span>
           </div>
 
@@ -174,15 +166,20 @@ export default function CartOrderSummary({
                 className="block font-dm-sans text-xs mt-0.5"
                 style={{ color: "var(--color-grey)" }}
               >
-                Inclusive of all taxes
+                Excl. delivery charges
               </span>
             </div>
-            <span
-              className="font-playfair font-bold text-xl"
-              style={{ color: "var(--color-crimson)" }}
-            >
-              {formatPrice(total)}
-            </span>
+            <div className="text-right">
+              <span
+                className="font-playfair font-bold text-xl"
+                style={{ color: "var(--color-crimson)" }}
+              >
+                {formatPrice(subtotal - couponDiscount)}
+              </span>
+              <p className="font-dm-sans text-xs mt-0.5" style={{ color: "var(--color-grey)" }}>
+                + delivery
+              </p>
+            </div>
           </div>
         </div>
       </div>
