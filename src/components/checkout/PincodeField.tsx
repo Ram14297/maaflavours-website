@@ -52,7 +52,7 @@ export default function PincodeField({ value, onChange, error }: PincodeFieldPro
             const v = e.target.value.replace(/\D/g, "").slice(0, 6);
             onChange(v);
           }}
-          placeholder="e.g. 523001"
+          placeholder="6-digit pincode"
           className="input-brand w-full pr-10"
           style={{
             borderColor: showSuccess

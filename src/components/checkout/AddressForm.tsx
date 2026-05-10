@@ -269,7 +269,7 @@ export default function AddressForm() {
               <input
                 {...register("full_name")}
                 type="text"
-                placeholder="e.g. Priya Reddy"
+                placeholder="Full name"
                 className={inputClass(!!errors.full_name)}
                 autoComplete="name"
               />
@@ -287,7 +287,7 @@ export default function AddressForm() {
                   {...register("mobile")}
                   type="tel"
                   inputMode="numeric"
-                  placeholder="10-digit mobile"
+                  placeholder="Mobile number"
                   maxLength={10}
                   className={inputClass(!!errors.mobile)}
                   style={{ paddingLeft: "3rem" }}
@@ -306,7 +306,7 @@ export default function AddressForm() {
             <input
               {...register("address_line1")}
               type="text"
-              placeholder="e.g. Plot 12, Kaveri Apartments"
+              placeholder="Flat / House No. / Building"
               className={inputClass(!!errors.address_line1)}
               autoComplete="address-line1"
             />
@@ -317,7 +317,7 @@ export default function AddressForm() {
             <input
               {...register("address_line2")}
               type="text"
-              placeholder="e.g. Labbipet, Near State Bank"
+              placeholder="Area / Street / Colony"
               className="input-brand w-full"
               autoComplete="address-line2"
             />
@@ -328,7 +328,7 @@ export default function AddressForm() {
             <input
               {...register("landmark")}
               type="text"
-              placeholder="e.g. Opposite SBI ATM"
+              placeholder="Landmark"
               className="input-brand w-full"
             />
           </Field>
@@ -345,7 +345,7 @@ export default function AddressForm() {
               <input
                 {...register("city")}
                 type="text"
-                placeholder="e.g. Vijayawada"
+                placeholder="City"
                 className={inputClass(!!errors.city)}
                 autoComplete="address-level2"
               />
