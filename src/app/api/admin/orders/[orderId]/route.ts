@@ -1,8 +1,8 @@
 // src/app/api/admin/orders/[orderId]/route.ts
 // Maa Flavours — Admin Single Order API
-// GET   /api/admin/orders/[orderId]  — full order detail with items
-// PATCH /api/admin/orders/[orderId]  — update status, tracking, internal notes
-//   Body: { status?, trackingId?, courierName?, trackingUrl?, internalNotes? }
+// GET    /api/admin/orders/[orderId]  — full order detail with items
+// PATCH  /api/admin/orders/[orderId]  — update status, tracking, internal notes
+// DELETE /api/admin/orders/[orderId]  — permanently delete order + items + history
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
@@ -157,4 +157,27 @@ async function notifyCustomerOnStatusChange(
   }
 
   if (message) await notifyCustomerSMS(mobile, message);
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { orderId: string } }
+) {
+  const admin = await requireAdmin(req);
+  if (!admin) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+
+  try {
+    const supabase = createAdminSupabaseClient();
+
+    // Delete child rows first, then the order
+    await supabase.from("order_status_history").delete().eq("order_id", params.orderId);
+    await supabase.from("order_items").delete().eq("order_id", params.orderId);
+    const { error } = await supabase.from("orders").delete().eq("id", params.orderId);
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
 }

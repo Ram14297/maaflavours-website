@@ -68,6 +68,7 @@ export default function OrdersPage() {
   const [dateTo,   setDateTo]   = useState("");
   const [exporting,setExporting]= useState(false);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [toast,    setToast]    = useState("");
   const searchTimer = useRef<ReturnType<typeof setTimeout>>();
 
@@ -112,6 +113,21 @@ export default function OrdersPage() {
       await load(page);
     }
     setUpdatingId(null);
+  }
+
+  // Delete order permanently
+  async function deleteOrder(orderId: string, orderNumber: string, e: React.MouseEvent) {
+    e.preventDefault(); e.stopPropagation();
+    if (!confirm(`Delete order ${orderNumber}? This cannot be undone.`)) return;
+    setDeletingId(orderId);
+    const r = await fetch(`/api/admin/orders/${orderId}`, { method: "DELETE" });
+    if (r.ok) {
+      showToast(`Order ${orderNumber} deleted`);
+      await load(page);
+    } else {
+      showToast("Failed to delete order");
+    }
+    setDeletingId(null);
   }
 
   // Export current filtered orders as CSV
@@ -330,6 +346,16 @@ export default function OrdersPage() {
                   <a href={`/admin/orders/${o.id}?invoice=1`} target="_blank">
                     <Btn variant="ghost" size="sm" title="GST Invoice">📄</Btn>
                   </a>
+                  <Btn
+                    variant="ghost"
+                    size="sm"
+                    title="Delete order"
+                    onClick={(e: React.MouseEvent) => deleteOrder(o.id, o.order_number, e)}
+                    disabled={deletingId === o.id}
+                    style={{ color: "#B71C1C" }}
+                  >
+                    {deletingId === o.id ? "…" : "🗑️"}
+                  </Btn>
                 </div>
               ),
             };
