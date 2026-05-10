@@ -24,6 +24,7 @@ const NAV_SECTIONS = [
     label: "Commerce",
     items: [
       { href: "/admin/orders",    label: "Orders",     icon: IconOrders     },
+      { href: "/admin/prep",      label: "Prep List",  icon: IconPrep       },
       { href: "/admin/products",  label: "Products",   icon: IconProducts   },
       { href: "/admin/inventory", label: "Inventory",  icon: IconInventory  },
       { href: "/admin/coupons",   label: "Coupons",    icon: IconCoupons    },
@@ -480,6 +481,7 @@ function getPageTitle(pathname: string): string {
     "/admin/dashboard": "Dashboard",
     "/admin/analytics": "Analytics",
     "/admin/orders":    "Orders",
+    "/admin/prep":      "Prep List",
     "/admin/products":  "Products",
     "/admin/inventory": "Inventory",
     "/admin/customers": "Customers",
@@ -521,6 +523,13 @@ function IconOrders({ size = 15, style }: { size?: number; style?: React.CSSProp
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" style={style}>
       <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+    </svg>
+  );
+}
+function IconPrep({ size = 15, style }: { size?: number; style?: React.CSSProperties }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" style={style}>
+      <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><path d="M9 12h6M9 16h4"/>
     </svg>
   );
 }
