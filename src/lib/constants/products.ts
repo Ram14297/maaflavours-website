@@ -43,8 +43,8 @@ export const PRODUCTS: ProductSeed[] = [
     is_vegetarian: true,
     is_featured: true,
     variants: [
-      { weight_grams: 250, label: "250g", price: 21900 },   // ₹219
-      { weight_grams: 500, label: "500g", price: 40900 },   // ₹409
+      { weight_grams: 250, label: "250g", price: 16900 },   // ₹169
+      { weight_grams: 500, label: "500g", price: 32900 },   // ₹329
     ],
     image_placeholder: "drumstick-pickle", // REPLACE with actual image
   },
@@ -63,8 +63,8 @@ export const PRODUCTS: ProductSeed[] = [
     is_vegetarian: true,
     is_featured: true,
     variants: [
-      { weight_grams: 250, label: "250g", price: 17900 },   // ₹179 (disabled/seasonal)
-      { weight_grams: 500, label: "500g", price: 32900 },   // ₹329 (disabled/seasonal)
+      { weight_grams: 250, label: "250g", price: 15900 },   // ₹159
+      { weight_grams: 500, label: "500g", price: 32900 },   // ₹329
     ],
     image_placeholder: "amla-pickle", // REPLACE with actual image
   },
@@ -84,8 +84,8 @@ export const PRODUCTS: ProductSeed[] = [
     is_featured: true,
     contains_garlic: true,
     variants: [
-      { weight_grams: 250, label: "250g", price: 21900 },   // ₹219 ⭐ fan fav
-      { weight_grams: 500, label: "500g", price: 40900 },   // ₹409 ⭐ fan fav
+      { weight_grams: 250, label: "250g", price: 16900 },   // ₹169
+      { weight_grams: 500, label: "500g", price: 32900 },   // ₹329
     ],
     image_placeholder: "pulihora-gongura", // REPLACE with actual image
   },
@@ -104,8 +104,8 @@ export const PRODUCTS: ProductSeed[] = [
     is_vegetarian: true,
     is_featured: true,
     variants: [
-      { weight_grams: 250, label: "250g", price: 17900 },   // ₹179
-      { weight_grams: 500, label: "500g", price: 32900 },   // ₹329
+      { weight_grams: 250, label: "250g", price: 14900 },   // ₹149
+      { weight_grams: 500, label: "500g", price: 28900 },   // ₹289
     ],
     image_placeholder: "lemon-pickle", // REPLACE with actual image
   },
@@ -124,8 +124,8 @@ export const PRODUCTS: ProductSeed[] = [
     is_vegetarian: true,
     is_featured: true,
     variants: [
-      { weight_grams: 250, label: "250g", price: 19900 },   // ₹199
-      { weight_grams: 500, label: "500g", price: 36900 },   // ₹369
+      { weight_grams: 250, label: "250g", price: 15900 },   // ₹159
+      { weight_grams: 500, label: "500g", price: 32900 },   // ₹329
     ],
     image_placeholder: "red-chilli-pickle", // REPLACE with actual image
   },
