@@ -290,8 +290,9 @@ export default function CartDrawer({ onClose }: CartDrawerProps) {
               <div>
                 <span className="font-dm-sans text-xs" style={{ color: "var(--color-grey)" }}>Order Total</span>
                 <p className="font-playfair font-bold text-xl leading-tight" style={{ color: "var(--color-crimson)" }}>
-                  {formatPrice(tot)}
+                  {formatPrice(sub - disc)}
                 </p>
+                <p className="font-dm-sans text-[0.65rem]" style={{ color: "var(--color-grey)" }}>+ delivery at checkout</p>
               </div>
               {disc > 0 && (
                 <div
