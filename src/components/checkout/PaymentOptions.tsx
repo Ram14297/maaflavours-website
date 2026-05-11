@@ -66,8 +66,9 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
   } = useCheckoutStore();
 
   const { items, coupon, total, clearCart } = useCartStore();
-  const [codConfirmed, setCodConfirmed]   = useState(false);
-  const [upiTxnId,    setUpiTxnId]        = useState("");
+  const [codConfirmed,       setCodConfirmed]       = useState(false);
+  const [upiTxnId,           setUpiTxnId]           = useState("");
+  const [confirmingPayment,  setConfirmingPayment]  = useState(false);
 
   const cartTotal = total(address?.state);
   const codTotal  = paymentMethod === "cod" ? cartTotal + COD_CHARGE : cartTotal;
@@ -98,6 +99,7 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
       if (!orderRes.ok) throw new Error(orderData.error || "Failed to create order");
 
       const { orderId, amount } = orderData;
+      console.log("[payment] Order created:", orderId);
 
       // Step 2: Create Cashfree payment session
       const cfRes = await fetch("/api/checkout/cashfree-create", {
@@ -119,9 +121,9 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
       const { paymentSessionId, cfEnv } = cfData;
       if (!paymentSessionId) throw new Error("Could not get payment session. Please try again.");
 
+      console.log("[payment] Cashfree session created, opening modal");
+
       // Step 3: Use Cashfree Drop.js SDK — opens payment as modal overlay on site.
-      // This avoids redirecting to payments.cashfree.com (hosted page) which can
-      // show "client session is invalid" due to merchant account verification.
       const { load } = await import("@cashfreepayments/cashfree-js");
       const cashfree = await load({
         mode: cfEnv === "production" ? "production" : "sandbox",
@@ -134,43 +136,70 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
         redirectTarget: "_modal",
       });
 
+      console.log("[payment] Cashfree modal result:", JSON.stringify(result));
+
       // With UPI, payment happens in a separate app — the modal may close
-      // before the browser receives a success redirect. Poll our order status
-      // and redirect manually if payment was confirmed via webhook.
+      // before the webhook confirms the payment on our server.
+      // Poll for up to 45 seconds (15 × 3s) to give the webhook time to arrive.
       if (!result?.error) {
-        // Modal closed without an explicit error — check if payment went through
         setPlacingOrder(true);
+        setConfirmingPayment(true);
         let confirmed = false;
-        for (let attempt = 0; attempt < 6; attempt++) {
-          await new Promise((r) => setTimeout(r, 2000));
+
+        // Give the webhook a 2-second head start before first poll
+        await new Promise((r) => setTimeout(r, 2000));
+
+        for (let attempt = 0; attempt < 15; attempt++) {
           try {
+            console.log(`[payment] Polling order status, attempt ${attempt + 1}/15`);
             const statusRes = await fetch(`/api/orders/${orderId}`);
             if (statusRes.ok) {
               const statusData = await statusRes.json();
-              if (statusData?.payment_status === "paid") {
+              // API returns { order: { payment_status, ... } }
+              const paymentStatus = statusData?.order?.payment_status;
+              console.log(`[payment] Poll attempt ${attempt + 1}: payment_status=${paymentStatus}`);
+              if (paymentStatus === "paid") {
                 confirmed = true;
                 break;
               }
             }
-          } catch { /* ignore */ }
+          } catch (pollErr) {
+            console.warn("[payment] Poll error:", pollErr);
+          }
+          // Wait 3 seconds between attempts
+          await new Promise((r) => setTimeout(r, 3000));
         }
+
         setPlacingOrder(false);
+        setConfirmingPayment(false);
+
         if (confirmed) {
+          console.log("[payment] Payment confirmed — clearing cart and redirecting");
           clearCart();
           router.push(`/checkout/confirmation?orderId=${orderId}&method=cashfree`);
           return;
         }
-        // If still not confirmed after polling, show a helpful message
-        setOrderError("Payment not confirmed yet. If money was deducted, please contact us on WhatsApp — your order will be processed.");
-        toast.error("Payment status unclear. Please contact us if amount was deducted.");
+
+        // After 45 seconds of polling, payment is genuinely unclear.
+        // Show a reassuring message (not a failure message) — the webhook
+        // may still arrive and the order will be processed.
+        console.warn("[payment] Payment status unclear after 45s of polling for order:", orderId);
+        setOrderError(
+          "Your payment is being verified. If money was deducted, your order is safe — we'll confirm it within a few minutes via SMS. You can also check My Orders."
+        );
+        toast("Payment verification in progress — check My Orders shortly.", { icon: "⏳", duration: 6000 });
       } else {
-        setOrderError(result.error.message || "Payment not completed. Please try again.");
-        toast.error(result.error.message || "Payment cancelled. Please try again.");
+        const errMsg = result.error?.message || "Payment not completed. Please try again.";
+        console.warn("[payment] Cashfree error result:", result.error);
+        setOrderError(errMsg);
+        toast.error(errMsg);
       }
 
     } catch (err: any) {
+      console.error("[payment] Cashfree payment error:", err.message);
       setOrderError(err.message || "Something went wrong");
       setPlacingOrder(false);
+      setConfirmingPayment(false);
       toast.error(err.message || "Something went wrong. Please try again.");
     }
   };
@@ -444,7 +473,13 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
           {isPlacingOrder ? (
             <>
               <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              {paymentMethod === "cod" ? "Placing Order…" : paymentMethod === "phonepe_qr" ? "Confirming Order…" : "Opening Payment…"}
+              {paymentMethod === "cod"
+                ? "Placing Order…"
+                : paymentMethod === "phonepe_qr"
+                ? "Confirming Order…"
+                : confirmingPayment
+                ? "Confirming payment…"
+                : "Opening Payment…"}
             </>
           ) : (
             <>

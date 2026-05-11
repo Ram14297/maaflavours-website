@@ -4,6 +4,7 @@
 // Connects to Zustand store — renders live count without prop drilling
 // Use anywhere in the UI where a cart trigger is needed
 
+import { useEffect, useState } from "react";
 import { ShoppingBag } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
 
@@ -17,7 +18,11 @@ export default function MiniCartIcon({
   className = "",
 }: MiniCartIconProps) {
   const { itemCount, openCart } = useCartStore();
-  const count = itemCount();
+  // Guard against SSR/hydration mismatch: localStorage is client-only.
+  // Without this, server renders count=0 but client reads a non-zero cart.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  const count = mounted ? itemCount() : 0;
 
   return (
     <button
