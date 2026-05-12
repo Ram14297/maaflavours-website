@@ -61,10 +61,11 @@ export async function PATCH(
 
     const updates: Record<string, any> = {};
 
-    if (body.status)        updates.status        = body.status;
-    if (body.trackingId)    updates.tracking_id   = body.trackingId;
-    if (body.courierName)   updates.courier_name  = body.courierName;
-    if (body.trackingUrl)   updates.tracking_url  = body.trackingUrl;
+    if (body.status)          updates.status          = body.status;
+    if (body.paymentStatus)   updates.payment_status  = body.paymentStatus;
+    if (body.trackingId)      updates.tracking_id     = body.trackingId;
+    if (body.courierName)     updates.courier_name    = body.courierName;
+    if (body.trackingUrl)     updates.tracking_url    = body.trackingUrl;
     if (body.internalNotes !== undefined) updates.internal_notes = body.internalNotes;
 
     // Auto-set timestamps
