@@ -401,17 +401,17 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
               </div>
               <div>
                 <label htmlFor="upi-txn-id" className="font-dm-sans text-xs font-semibold block mb-1.5" style={{ color: "var(--color-brown)" }}>
-                  Enter UPI Transaction ID after payment *
+                  Your UPI ID (used to make the payment) *
                 </label>
                 <input id="upi-txn-id" type="text" value={upiTxnId}
                   onChange={(e) => { setUpiTxnId(e.target.value); setOrderError(""); }}
-                  placeholder="e.g. 407612345678"
+                  placeholder="e.g. 9876543210@ybl"
                   className="w-full px-4 py-3 rounded-xl font-dm-sans text-sm outline-none transition-all"
                   style={{ border: "2px solid rgba(95,37,159,0.3)", background: "white", color: "var(--color-brown)" }}
                   onFocus={(e) => (e.target.style.borderColor = "#5F259F")}
                   onBlur={(e)  => (e.target.style.borderColor = "rgba(95,37,159,0.3)")} />
                 <p className="font-dm-sans text-xs mt-1.5" style={{ color: "var(--color-grey)" }}>
-                  Find in your UPI app → Payment History after completing payment.
+                  Open your UPI app → Profile or Settings to find your UPI ID (e.g. 9876543210@ybl, name@gpay).
                 </p>
               </div>
             </div>
