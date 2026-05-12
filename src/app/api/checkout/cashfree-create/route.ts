@@ -71,9 +71,9 @@ export async function POST(request: NextRequest) {
         resolvedEmail = cust?.email || null;
       } catch { /* non-fatal */ }
     }
-    // Cashfree requires a valid email field — use a branded placeholder only
-    // as a last resort so it's clear in the Cashfree dashboard it's a fallback.
-    const finalEmail = resolvedEmail || `order+${mfOrderId.slice(0, 8)}@maaflavours.com`;
+    // Cashfree requires a valid email field — fall back to the business email
+    // so Cashfree receipts/notifications are still deliverable.
+    const finalEmail = resolvedEmail || "maaflavours74@gmail.com";
 
     if (orderErr || !dbOrder) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
