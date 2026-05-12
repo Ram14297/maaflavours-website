@@ -10,6 +10,7 @@ import { create } from "zustand";
 export interface DeliveryAddress {
   full_name: string;
   mobile: string;         // 10 digits (no +91)
+  email: string;          // pre-filled from session — used for Cashfree receipt
   address_line1: string;
   address_line2: string;
   landmark: string;
@@ -55,6 +56,7 @@ interface CheckoutStore {
 const EMPTY_ADDRESS: DeliveryAddress = {
   full_name: "",
   mobile: "",
+  email: "",
   address_line1: "",
   address_line2: "",
   landmark: "",

@@ -122,6 +122,18 @@ export default function AddressForm() {
 
   const pincode = watch("pincode");
 
+  // ─── Pre-fill email from logged-in session (zero effort for customer) ──
+  useEffect(() => {
+    if (address.email) return; // already set — don't overwrite
+    fetch("/api/auth/me")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (d?.user?.email) updateAddress({ email: d.user.email });
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ─── Fetch saved addresses ────────────────────────────────────────────
   useEffect(() => {
     fetch("/api/account/addresses")

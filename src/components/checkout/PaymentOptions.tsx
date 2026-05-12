@@ -110,7 +110,7 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
           amount:        amount || cartTotal,
           customerName:  address.full_name,
           customerPhone: address.mobile,
-          customerEmail: "",
+          customerEmail: address.email || "",
           customerId:    orderId,
         }),
       });
