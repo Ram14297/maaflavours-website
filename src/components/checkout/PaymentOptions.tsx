@@ -214,6 +214,9 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
     setOrderError("");
 
     try {
+      const txnId = upiTxnId.trim();
+      console.log("[payment] PhonePe QR order — UPI txn ID:", txnId);
+
       const res = await fetch("/api/checkout/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -226,14 +229,17 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
           couponCode:      coupon?.code,
           deliveryAddress: address,
           paymentMethod:   "phonepe_qr",
+          // Store UPI txn ID in notes so admin can verify against PhonePe app
+          customerNotes:   `UPI TXN: ${txnId}`,
         }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to place order");
 
+      console.log("[payment] PhonePe QR order confirmed:", data.orderId);
       clearCart();
-      onOrderSuccess(data.orderId, upiTxnId.trim());
+      onOrderSuccess(data.orderId, txnId);
     } catch (err: any) {
       setOrderError(err.message || "Order placement failed");
       toast.error(err.message || "Failed to place order. Try again.");

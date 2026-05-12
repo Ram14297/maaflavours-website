@@ -445,8 +445,42 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // ─── 7. PhonePe QR — manual scan, no gateway processing needed ──────────
+    // ─── 7. PhonePe QR — manual UPI scan ────────────────────────────────────
+    // Customer scans QR, pays, then enters their UPI transaction ID (stored in
+    // customerNotes). We confirm immediately — admin verifies the txn ID in
+    // PhonePe before dispatching. Same post-processing as COD.
     if (paymentMethod === "phonepe_qr") {
+      if (supabaseOrderId && !supabaseOrderId.startsWith("DEV-")) {
+        try {
+          await adminSupa.from("orders").update({
+            status:         "confirmed",
+            payment_status: "paid",
+          }).eq("id", supabaseOrderId);
+          console.log("[create-order] PhonePe QR order confirmed:", supabaseOrderId);
+        } catch (e: any) {
+          console.error("[create-order] PhonePe QR confirm failed:", e.message);
+        }
+
+        // Deduct stock
+        await decrementStock(adminSupa, validatedItems);
+
+        // Notify admin (UPI txn ID is in customerNotes / the order record)
+        await notifyAdmin(
+          adminSupa, supabaseOrderId, deliveryAddress.name, total, "phonepe_qr"
+        ).catch(() => {});
+
+        // Notify customer via SMS
+        await notifyCustomerSMS(
+          deliveryAddress.mobile,
+          msgOrderConfirmed(
+            deliveryAddress.name,
+            shortOrderId(supabaseOrderId),
+            Math.round(total / 100),
+            "phonepe_qr"
+          )
+        ).catch(() => {});
+      }
+
       return NextResponse.json({
         orderId:       supabaseOrderId,
         paymentMethod: "phonepe_qr",
