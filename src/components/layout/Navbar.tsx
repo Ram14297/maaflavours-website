@@ -446,7 +446,7 @@ export default function Navbar({
         <div className="ornament-line-thick mx-5 my-1" />
 
         {/* Bottom actions */}
-        <div className="px-4 pt-3 flex flex-col gap-3">
+        <div className="px-4 pt-3 pb-14 flex flex-col gap-3">
           <Link
             href="/products"
             onClick={() => setMobileOpen(false)}

@@ -170,7 +170,11 @@ export const useCartStore = create<CartStore>()(
         });
       },
 
-      removeItem: (itemId) => set((s) => ({ items: s.items.filter((i) => i.id !== itemId) })),
+      removeItem: (itemId) => {
+        const item = get().items.find((i) => i.id === itemId);
+        set((s) => ({ items: s.items.filter((i) => i.id !== itemId) }));
+        if (item) toast(`${item.name} removed from cart`, { icon: "🗑️" });
+      },
 
       updateQuantity: (itemId, quantity) => {
         if (quantity < 1) { get().removeItem(itemId); return; }

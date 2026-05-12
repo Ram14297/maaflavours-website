@@ -33,6 +33,13 @@ function getGreeting() {
   return "Good evening";
 }
 
+// Client-side only greeting to avoid UTC/IST mismatch on SSR
+function useGreeting() {
+  const [greeting, setGreeting] = useState("Hello");
+  useEffect(() => { setGreeting(getGreeting()); }, []);
+  return greeting;
+}
+
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
     pending:          { label: "Pending",          color: "#C8960C", bg: "rgba(200,150,12,0.1)",    icon: <Clock size={12} /> },
@@ -65,6 +72,7 @@ function OverviewTab({
 }) {
   const firstName = user.name?.split(" ")[0] || "there";
   const initial   = (user.name || "U").charAt(0).toUpperCase();
+  const greeting  = useGreeting();
 
   return (
     <div className="flex flex-col gap-5">
@@ -82,7 +90,7 @@ function OverviewTab({
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="font-dm-sans text-sm" style={{ color: "rgba(232,184,75,0.75)" }}>
-              {getGreeting()},
+              {greeting},
             </p>
             <h1 className="font-playfair font-bold text-3xl mt-0.5 text-white">
               {firstName}!
