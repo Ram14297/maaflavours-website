@@ -122,9 +122,11 @@ export default function AddressForm() {
 
   const pincode = watch("pincode");
 
-  // ─── Pre-fill email from logged-in session (zero effort for customer) ──
+  // ─── Pre-fill email from the currently logged-in session ───────────────
+  // /api/auth/me reads the session cookie which is unique per customer —
+  // so this always returns the email of whoever is logged in right now.
+  // checkoutStore has no localStorage persistence, so no data bleeds between customers.
   useEffect(() => {
-    if (address.email) return; // already set — don't overwrite
     fetch("/api/auth/me")
       .then(r => r.ok ? r.json() : null)
       .then(d => {
