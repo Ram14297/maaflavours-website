@@ -58,6 +58,23 @@ export async function POST(request: NextRequest) {
       .eq("id", mfOrderId)
       .maybeSingle();
 
+    // ── Resolve customer email ──────────────────────────────────────────
+    // Priority: 1) email from body  2) session JWT  3) customers table  4) placeholder
+    let resolvedEmail = customerEmail || session.email || null;
+    if (!resolvedEmail) {
+      try {
+        const { data: cust } = await adminSupaForOrder
+          .from("customers")
+          .select("email")
+          .eq("id", session.userId)
+          .maybeSingle();
+        resolvedEmail = cust?.email || null;
+      } catch { /* non-fatal */ }
+    }
+    // Cashfree requires a valid email field — use a branded placeholder only
+    // as a last resort so it's clear in the Cashfree dashboard it's a fallback.
+    const finalEmail = resolvedEmail || `order+${mfOrderId.slice(0, 8)}@maaflavours.com`;
+
     if (orderErr || !dbOrder) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
@@ -84,7 +101,7 @@ export async function POST(request: NextRequest) {
         customer_id:    `C${(customerId || mfOrderId).replace(/-/g, "").substring(0, 40)}`,
         customer_name:  customerName.substring(0, 100),
         customer_phone: customerPhone.replace(/\D/g, "").slice(-10),
-        customer_email: customerEmail || "customer@maaflavours.com",
+        customer_email: finalEmail,
       },
       order_meta: {
         return_url:   `${siteUrl}/checkout/confirmation?orderId=${mfOrderId}&method=cashfree`,
