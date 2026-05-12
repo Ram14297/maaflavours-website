@@ -116,8 +116,8 @@ export default function OrdersPage() {
   }
 
   // Delete order permanently
-  async function deleteOrder(orderId: string, orderNumber: string, e: React.MouseEvent) {
-    e.preventDefault(); e.stopPropagation();
+  async function deleteOrder(orderId: string, orderNumber: string, e?: React.MouseEvent) {
+    e?.preventDefault(); e?.stopPropagation();
     if (!confirm(`Delete order ${orderNumber}? This cannot be undone.`)) return;
     setDeletingId(orderId);
     const r = await fetch(`/api/admin/orders/${orderId}`, { method: "DELETE" });
@@ -350,7 +350,7 @@ export default function OrdersPage() {
                     variant="ghost"
                     size="sm"
                     title="Delete order"
-                    onClick={(e: React.MouseEvent) => deleteOrder(o.id, o.order_number, e)}
+                    onClick={(e) => deleteOrder(o.id, o.order_number, e)}
                     disabled={deletingId === o.id}
                     style={{ color: "#B71C1C" }}
                   >

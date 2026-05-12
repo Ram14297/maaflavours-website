@@ -50,7 +50,7 @@ export default function PrepPage() {
   const totalJars = items.reduce((s, i) => s + i.total_qty, 0);
 
   return (
-    <AdminPage title="Today's Prep List">
+    <AdminPage>
       {toast && (
         <div
           className="fixed top-4 right-4 z-50 px-4 py-3 rounded-xl font-dm-sans text-sm font-semibold shadow-lg"
@@ -72,12 +72,12 @@ export default function PrepPage() {
             key={s.label}
             className="rounded-xl px-4 py-3"
             style={{
-              background: s.accent ? A.gold + "18" : A.surface,
+              background: s.accent ? A.gold + "18" : A.card,
               border: `1px solid ${s.accent ? A.gold + "40" : A.border}`,
             }}
           >
             <p className="font-dm-sans text-xs mb-0.5" style={{ color: A.grey }}>{s.label}</p>
-            <p className="font-playfair font-bold text-2xl" style={{ color: s.accent ? A.gold : A.text }}>
+            <p className="font-playfair font-bold text-2xl" style={{ color: s.accent ? A.gold : A.brown }}>
               {s.value}
             </p>
           </div>
@@ -91,7 +91,7 @@ export default function PrepPage() {
           style={{ borderColor: A.border }}
         >
           <div>
-            <h2 className="font-playfair font-bold text-base" style={{ color: A.text }}>
+            <h2 className="font-playfair font-bold text-base" style={{ color: A.brown }}>
               Preparation Required
             </h2>
             <p className="font-dm-sans text-xs mt-0.5" style={{ color: A.grey }}>
@@ -116,7 +116,7 @@ export default function PrepPage() {
         ) : items.length === 0 ? (
           <div className="px-5 py-12 text-center">
             <p className="text-3xl mb-2">✅</p>
-            <p className="font-playfair font-bold text-base" style={{ color: A.text }}>All caught up!</p>
+            <p className="font-playfair font-bold text-base" style={{ color: A.brown }}>All caught up!</p>
             <p className="font-dm-sans text-sm mt-1" style={{ color: A.grey }}>
               No confirmed orders pending preparation.
             </p>
@@ -126,7 +126,7 @@ export default function PrepPage() {
             {/* Column headers */}
             <div
               className="grid grid-cols-12 gap-2 px-5 py-2 font-dm-sans text-xs font-semibold uppercase"
-              style={{ color: A.grey, background: A.surface }}
+              style={{ color: A.grey, background: A.card }}
             >
               <div className="col-span-4">Product</div>
               <div className="col-span-2">Size</div>
@@ -142,7 +142,7 @@ export default function PrepPage() {
                 style={{ borderColor: A.border }}
               >
                 <div className="col-span-4">
-                  <p className="font-dm-sans font-semibold text-sm" style={{ color: A.text }}>
+                  <p className="font-dm-sans font-semibold text-sm" style={{ color: A.brown }}>
                     {item.product_name}
                   </p>
                 </div>
@@ -181,7 +181,7 @@ export default function PrepPage() {
               style={{ background: A.gold + "0f" }}
             >
               <div className="col-span-4">
-                <p className="font-dm-sans font-bold text-sm" style={{ color: A.text }}>
+                <p className="font-dm-sans font-bold text-sm" style={{ color: A.brown }}>
                   TOTAL
                 </p>
               </div>
@@ -192,7 +192,7 @@ export default function PrepPage() {
                 </span>
               </div>
               <div className="col-span-2 text-center">
-                <span className="font-dm-sans font-bold text-sm" style={{ color: A.text }}>
+                <span className="font-dm-sans font-bold text-sm" style={{ color: A.brown }}>
                   {orderCount}
                 </span>
               </div>
@@ -206,9 +206,9 @@ export default function PrepPage() {
       {items.length > 0 && (
         <div
           className="mt-3 px-4 py-3 rounded-xl font-dm-sans text-sm"
-          style={{ background: A.surface, border: `1px solid ${A.border}`, color: A.grey }}
+          style={{ background: A.card, border: `1px solid ${A.border}`, color: A.grey }}
         >
-          🏷️ <strong style={{ color: A.text }}>Labels to print: {totalJars}</strong>
+          🏷️ <strong style={{ color: A.brown }}>Labels to print: {totalJars}</strong>
           {" "}— one label per jar across all products above.
         </div>
       )}
