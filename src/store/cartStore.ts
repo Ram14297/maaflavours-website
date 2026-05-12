@@ -173,7 +173,7 @@ export const useCartStore = create<CartStore>()(
       removeItem: (itemId) => {
         const item = get().items.find((i) => i.id === itemId);
         set((s) => ({ items: s.items.filter((i) => i.id !== itemId) }));
-        if (item) toast(`${item.name} removed from cart`, { icon: "🗑️" });
+        if (item) toast(`${item.productName} removed from cart`, { icon: "🗑️" });
       },
 
       updateQuantity: (itemId, quantity) => {
