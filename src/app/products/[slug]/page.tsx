@@ -268,7 +268,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
           ingredients:       p.ingredients       || base?.ingredients       || "",
           shelf_life_days:   p.shelf_life_days   || base?.shelf_life_days   || 180,
           is_vegetarian:     p.is_vegetarian     ?? base?.is_vegetarian     ?? true,
-          contains_garlic:   base?.contains_garlic,
+          contains_garlic:   p.contains_garlic
+                             ?? base?.contains_garlic
+                             ?? ((p.ingredients || base?.ingredients || "").toLowerCase().includes("garlic")),
           product_type:      p.product_type      || "pickle",
           images:            (apiImages && apiImages.length > 0) ? apiImages : [],
           variants: (variants && variants.length > 0)

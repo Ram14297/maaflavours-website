@@ -199,7 +199,7 @@ function PowdersContent() {
                 name:        p.name,
                 subtitle:    p.subtitle   || "",
                 tag:            p.tag        || "",
-                contains_garlic: p.contains_garlic ?? false,
+                contains_garlic: p.contains_garlic ?? ((p.ingredients || "").toLowerCase().includes("garlic")),
                 spice_level: p.spice_level || "medium",
                 is_featured: p.is_featured ?? false,
                 short_description: p.short_description || "",
