@@ -38,9 +38,10 @@ function shell(content: string): string {
         <tr><td style="height:4px;background:linear-gradient(90deg,transparent,${C.gold} 25%,#E8B84B 50%,${C.gold} 75%,transparent);"></td></tr>
 
         <!-- Header -->
-        <tr><td style="background:${C.brown};padding:28px 32px;text-align:center;">
-          <div style="font-size:22px;font-weight:800;color:${C.white};letter-spacing:0.5px;">🫙 Maa Flavours</div>
-          <div style="font-size:12px;color:rgba(232,184,75,0.85);margin-top:4px;letter-spacing:1px;">AUTHENTIC ANDHRA HOMEMADE PICKLES</div>
+        <tr><td style="background:${C.brown};padding:24px 32px;text-align:center;">
+          <img src="https://maaflavours.com/maa-flavours-logo.png" alt="Maa Flavours" width="80" height="80" style="display:block;margin:0 auto 10px;border-radius:50%;object-fit:cover;border:2px solid rgba(200,150,12,0.4);" />
+          <div style="font-size:20px;font-weight:800;color:${C.white};letter-spacing:0.5px;">Maa Flavours</div>
+          <div style="font-size:11px;color:rgba(232,184,75,0.85);margin-top:4px;letter-spacing:1.5px;">AUTHENTIC ANDHRA HOMEMADE PICKLES</div>
         </td></tr>
 
         <!-- Content -->
@@ -51,9 +52,11 @@ function shell(content: string): string {
         <!-- Footer -->
         <tr><td style="background:${C.lightBg};padding:20px 32px;border-top:1px solid rgba(200,150,12,0.15);text-align:center;">
           <p style="margin:0;font-size:12px;color:${C.grey};">
-            Questions? WhatsApp us at <a href="https://wa.me/919701452929" style="color:${C.crimson};text-decoration:none;">+91 97014 52929</a>
-            &nbsp;|&nbsp;
-            <a href="${SITE}/account" style="color:${C.crimson};text-decoration:none;">Track your order</a>
+            <a href="https://wa.me/919701452929" style="color:#25D366;font-weight:700;text-decoration:none;">💬 WhatsApp</a>
+            &nbsp;&nbsp;·&nbsp;&nbsp;
+            <a href="tel:+919701452929" style="color:${C.crimson};font-weight:700;text-decoration:none;">📞 Call +91 97014 52929</a>
+            &nbsp;&nbsp;·&nbsp;&nbsp;
+            <a href="${SITE}/account/orders" style="color:${C.crimson};text-decoration:none;">Track Order</a>
           </p>
           <p style="margin:8px 0 0;font-size:11px;color:#aaa;">
             Maa Flavours, Ongole, Andhra Pradesh — 523001
@@ -189,7 +192,7 @@ export async function sendOrderConfirmedEmail(args: SendOrderConfirmedArgs): Pro
           <td style="font-size:13px;font-weight:600;color:${C.brown};text-align:right;padding-top:8px;">${methodLabel}</td>
         </tr>
         <tr>
-          <td style="font-size:13px;color:${C.grey};padding-top:8px;">Delivery to</td>
+          <td style="font-size:13px;color:${C.grey};padding-top:8px;">Deliver to</td>
           <td style="font-size:13px;color:${C.brown};text-align:right;padding-top:8px;max-width:220px;">${address}</td>
         </tr>
       </table>
@@ -206,15 +209,16 @@ export async function sendOrderConfirmedEmail(args: SendOrderConfirmedArgs): Pro
       </tr>
     </table>
 
-    <!-- Delivery note -->
-    <div style="background:rgba(200,150,12,0.06);border-radius:10px;padding:14px 16px;margin-top:24px;border:1px solid rgba(200,150,12,0.2);">
-      <p style="margin:0;font-size:13px;color:${C.brown};line-height:1.6;">
-        🚚 <strong>Delivery in 5–7 working days</strong> via trusted courier partners.
-        Fragile items are bubble-wrapped for safe transit. We'll send you a tracking number once your order ships!
+    <!-- What happens next -->
+    <div style="background:rgba(200,150,12,0.06);border-radius:10px;padding:16px 20px;margin-top:24px;border:1px solid rgba(200,150,12,0.2);">
+      <p style="margin:0 0 10px;font-size:13px;font-weight:700;color:${C.brown};">📦 What happens next?</p>
+      <p style="margin:0;font-size:13px;color:${C.brown};line-height:1.8;">
+        1️⃣ We'll carefully pack your pickles<br/>
+        2️⃣ Hand it over to our courier partner<br/>
+        3️⃣ You'll get a <strong>shipping email with tracking ID</strong> the moment it's dispatched
       </p>
+      <p style="margin:10px 0 0;font-size:12px;color:${C.grey};">Delivery in 5–7 working days · Fragile items are bubble-wrapped for safe transit.</p>
     </div>
-
-    ${btn("Track Your Order →", `${SITE}/account`)}
   `);
 
   await send(to, `Order Confirmed — ${orderNumber} | Maa Flavours`, html);

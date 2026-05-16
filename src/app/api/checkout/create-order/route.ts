@@ -438,7 +438,7 @@ export async function POST(request: NextRequest) {
         if (customerEmail) {
           const { data: orderRow } = await adminSupa
             .from("orders").select("order_number").eq("id", supabaseOrderId).maybeSingle();
-          const addrLine = [deliveryAddress.address_line1, deliveryAddress.city, deliveryAddress.state].filter(Boolean).join(", ");
+          const addrLine = [deliveryAddress.address_line1, deliveryAddress.address_line2, deliveryAddress.landmark, deliveryAddress.city, deliveryAddress.state, deliveryAddress.pincode].filter(Boolean).join(", ");
           await sendOrderConfirmedEmail({
             to:          customerEmail,
             name:        deliveryAddress.name,
@@ -509,7 +509,7 @@ export async function POST(request: NextRequest) {
         if (customerEmailQr) {
           const { data: orderRowQr } = await adminSupa
             .from("orders").select("order_number").eq("id", supabaseOrderId).maybeSingle();
-          const addrLineQr = [deliveryAddress.address_line1, deliveryAddress.city, deliveryAddress.state].filter(Boolean).join(", ");
+          const addrLineQr = [deliveryAddress.address_line1, deliveryAddress.address_line2, deliveryAddress.landmark, deliveryAddress.city, deliveryAddress.state, deliveryAddress.pincode].filter(Boolean).join(", ");
           await sendOrderConfirmedEmail({
             to:          customerEmailQr,
             name:        deliveryAddress.name,

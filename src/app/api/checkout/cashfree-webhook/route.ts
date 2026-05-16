@@ -243,7 +243,7 @@ async function notifyCustomerOnPayment(
       .select("product_name, variant_label, quantity, total_price")
       .eq("order_id", orderId);
 
-    const addrLine = [addr.address_line1, addr.city, addr.state].filter(Boolean).join(", ");
+    const addrLine = [addr.address_line1, addr.address_line2, addr.landmark, addr.city, addr.state, addr.pincode].filter(Boolean).join(", ");
     await sendOrderConfirmedEmail({
       to:          email,
       name,
