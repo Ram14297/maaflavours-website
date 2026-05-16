@@ -39,7 +39,7 @@ type KPIs = {
   revenueLastMonth:      number;
   revenueGrowthPercent:  number;
   totalOrders:           number;
-  pendingOrders:         number;
+  newOrders:             number;   // confirmed, waiting to be prepared
   processingOrders:      number;
   shippedOrders:         number;
   totalCustomers:        number;
@@ -60,12 +60,26 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [refresh, setRefresh] = useState(0);
 
+  // Prep summary (what to make today)
+  const [prepItems,   setPrepItems]   = useState<{ product_name:string; variant_label:string; total_qty:number }[]>([]);
+  const [prepCount,   setPrepCount]   = useState(0);
+  const [prepLoading, setPrepLoading] = useState(true);
+
   useEffect(() => {
     setLoading(true);
     fetch("/api/admin/dashboard")
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false); })
       .catch(() => setLoading(false));
+  }, [refresh]);
+
+  useEffect(() => {
+    setPrepLoading(true);
+    fetch("/api/admin/prep-summary")
+      .then(r => r.json())
+      .then(d => { setPrepItems(d.items || []); setPrepCount(d.order_count || 0); })
+      .catch(() => {})
+      .finally(() => setPrepLoading(false));
   }, [refresh]);
 
   const kpis = data?.kpis;
@@ -110,7 +124,7 @@ export default function DashboardPage() {
         <StatCard
           title="Total Orders"
           value={kpis ? kpis.totalOrders : "—"}
-          sub={kpis ? `${kpis.pendingOrders} pending · ${kpis.processingOrders} processing` : ""}
+          sub={kpis ? `${kpis.newOrders} new · ${kpis.processingOrders} packing · ${kpis.shippedOrders} shipped` : ""}
           loading={loading}
           accent="#4A2C0A"
           icon={<OrderIcon/>}
@@ -125,20 +139,34 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* ── Alert strip: pending orders + low stock ── */}
-      {!loading && ((kpis?.pendingOrders ?? 0) > 0 || (kpis?.lowStockCount ?? 0) > 0) && (
+      {/* ── Alert strip: new orders to process + prep needed + low stock ── */}
+      {!loading && ((kpis?.newOrders ?? 0) > 0 || (kpis?.lowStockCount ?? 0) > 0 || prepItems.length > 0) && (
         <div className="flex flex-wrap gap-3">
-          {(kpis?.pendingOrders ?? 0) > 0 && (
-            <Link href="/admin/orders?status=pending">
+          {(kpis?.newOrders ?? 0) > 0 && (
+            <Link href="/admin/orders?status=confirmed">
               <div
                 className="flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-shadow hover:shadow-sm"
                 style={{ background: "rgba(200,150,12,0.08)", border: "1px solid rgba(200,150,12,0.3)" }}
               >
-                <span style={{ color: "#B8750A" }}>⚡</span>
+                <span style={{ color: "#B8750A" }}>🆕</span>
                 <span style={{ color: "#B8750A", fontSize: 13, fontWeight: 600 }}>
-                  {kpis?.pendingOrders} pending order{kpis?.pendingOrders !== 1 ? "s" : ""} need attention
+                  {kpis?.newOrders} new order{kpis?.newOrders !== 1 ? "s" : ""} — ready to prepare
                 </span>
                 <span style={{ color: "#B8750A", fontSize: 12 }}>→</span>
+              </div>
+            </Link>
+          )}
+          {!prepLoading && prepItems.length > 0 && (
+            <Link href="/admin/prep">
+              <div
+                className="flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-shadow hover:shadow-sm"
+                style={{ background: "rgba(74,124,89,0.07)", border: "1px solid rgba(74,124,89,0.3)" }}
+              >
+                <span style={{ color: "#4A7C59" }}>🥘</span>
+                <span style={{ color: "#4A7C59", fontSize: 13, fontWeight: 600 }}>
+                  {prepItems.reduce((s, i) => s + i.total_qty, 0)} jars to prepare across {prepCount} order{prepCount !== 1 ? "s" : ""}
+                </span>
+                <span style={{ color: "#4A7C59", fontSize: 12 }}>→</span>
               </div>
             </Link>
           )}
@@ -157,6 +185,55 @@ export default function DashboardPage() {
             </Link>
           )}
         </div>
+      )}
+
+      {/* ── Today's Prep — inline summary ── */}
+      {(prepLoading || prepItems.length > 0) && (
+        <Card
+          title="🥘 Today's Prep List"
+          subtitle={prepCount > 0 ? `${prepCount} confirmed order${prepCount !== 1 ? "s" : ""} · ${prepItems.reduce((s, i) => s + i.total_qty, 0)} jars total` : "No orders pending preparation"}
+          action={<Link href="/admin/prep"><Btn variant="ghost" size="sm">Full List →</Btn></Link>}
+        >
+          {prepLoading ? (
+            <div className="space-y-2">
+              {[1,2,3].map(i => <div key={i} className="h-8 rounded animate-pulse" style={{ background: A.cream }}/>)}
+            </div>
+          ) : prepItems.length === 0 ? (
+            <div className="py-4 text-center">
+              <p className="text-2xl mb-1">✅</p>
+              <p style={{ color: A.grey, fontSize: 13 }}>All caught up — no jars to prepare right now</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {prepItems.map((item, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between px-3 py-2.5 rounded-lg"
+                  style={{ background: A.cream, border: `1px solid ${A.border}` }}
+                >
+                  <div className="flex items-center gap-3">
+                    <span style={{ fontSize: 18 }}>🫙</span>
+                    <div>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: A.brown }}>{item.product_name}</p>
+                      <p style={{ fontSize: 11, color: A.grey }}>{item.variant_label}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p style={{ fontSize: 22, fontWeight: 700, color: A.gold, lineHeight: 1 }}>{item.total_qty}</p>
+                    <p style={{ fontSize: 10, color: A.grey }}>jars</p>
+                  </div>
+                </div>
+              ))}
+              <div
+                className="flex items-center justify-between px-3 py-2 rounded-lg mt-1"
+                style={{ background: A.gold + "18", border: `1px solid ${A.gold}40` }}
+              >
+                <p style={{ fontSize: 12, fontWeight: 700, color: A.brown }}>TOTAL TO PREPARE</p>
+                <p style={{ fontSize: 20, fontWeight: 700, color: A.gold }}>{prepItems.reduce((s, i) => s + i.total_qty, 0)} jars</p>
+              </div>
+            </div>
+          )}
+        </Card>
       )}
 
       {/* ── Charts row ── */}
@@ -381,18 +458,17 @@ export default function DashboardPage() {
 // ─────────────────────────────────────────────────────────────────────────────
 function OrderStatusDonut({ data }: { data: DashData | null }) {
   const statusCounts = [
-    "pending","confirmed","processing","shipped","delivered","cancelled",
+    "confirmed","processing","shipped","delivered","cancelled",
   ].map(s => {
     const kpi = data?.kpis;
     const counts: Record<string, number> = {
-      pending:   kpi?.pendingOrders    || 0,
-      confirmed: kpi?.processingOrders || 0,
-      processing: 0,
-      shipped:   kpi?.shippedOrders    || 0,
-      delivered: 0,
-      cancelled: 0,
+      confirmed:  kpi?.newOrders        || 0,
+      processing: kpi?.processingOrders || 0,
+      shipped:    kpi?.shippedOrders    || 0,
+      delivered:  0,
+      cancelled:  0,
     };
-    return { name: s.charAt(0).toUpperCase() + s.slice(1), value: counts[s], fill: STATUS_COLOURS[s] };
+    return { name: s === "confirmed" ? "New" : s.charAt(0).toUpperCase() + s.slice(1), value: counts[s], fill: STATUS_COLOURS[s] };
   }).filter(d => d.value > 0);
 
   if (statusCounts.length === 0) {
@@ -466,12 +542,12 @@ function TopProductsChart({ products }: { products: { name: string; revenue: num
 
 // ─── Quick actions config ─────────────────────────────────────────────────────
 const QUICK_ACTIONS = [
-  { href:"/admin/orders?status=pending", icon:"📋", label:"Pending Orders",   badge: (k?: KPIs) => k?.pendingOrders || 0 },
-  { href:"/admin/products/new",          icon:"➕", label:"Add Product",      badge: null },
-  { href:"/admin/inventory",             icon:"📦", label:"Stock Levels",     badge: (k?: KPIs) => k?.lowStockCount || 0 },
-  { href:"/admin/coupons",               icon:"🏷️",  label:"Coupons",          badge: null },
-  { href:"/admin/expenses",              icon:"💸", label:"Add Expense",      badge: null },
-  { href:"/admin/analytics",             icon:"📊", label:"Analytics",        badge: null },
+  { href:"/admin/orders?status=confirmed", icon:"🆕", label:"New Orders",      badge: (k?: KPIs) => k?.newOrders || 0 },
+  { href:"/admin/prep",                    icon:"🥘", label:"Today's Prep",    badge: null },
+  { href:"/admin/inventory",               icon:"📦", label:"Stock Levels",    badge: (k?: KPIs) => k?.lowStockCount || 0 },
+  { href:"/admin/products/new",            icon:"➕", label:"Add Product",     badge: null },
+  { href:"/admin/expenses",                icon:"💸", label:"Add Expense",     badge: null },
+  { href:"/admin/analytics",               icon:"📊", label:"Analytics",       badge: null },
 ];
 
 // ─── Tiny icon components ─────────────────────────────────────────────────────

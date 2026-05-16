@@ -28,7 +28,16 @@ export async function GET(req: NextRequest) {
       )
       .order("created_at", { ascending: false });
 
-    if (status)  query = query.eq("status", status);
+    if (status) {
+      query = query.eq("status", status);
+    } else {
+      // By default hide ghost/abandoned payment orders (status=pending means
+      // the customer started Cashfree checkout but never completed payment).
+      // COD and PhonePe QR orders jump straight to 'confirmed', so 'pending'
+      // always means an unfinished online payment — not a real order to act on.
+      // Admin can still see them by explicitly selecting status=pending filter.
+      query = query.neq("status", "pending");
+    }
     if (payment) query = query.eq("payment_method", payment);
     if (search) {
       // Strip PostgREST-significant chars to prevent the user-supplied

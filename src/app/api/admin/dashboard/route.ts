@@ -58,8 +58,8 @@ export async function GET(req: NextRequest) {
         .gte("created_at", lastMonth)
         .lte("created_at", lastMonthEnd),
 
-      // Order counts by status
-      supabase.from("orders").select("status"),
+      // Order counts by status — exclude ghost/abandoned payment orders
+      supabase.from("orders").select("status").neq("status", "pending"),
 
       // Total customers
       supabase.from("customers").select("id", { count: "exact", head: true }),
@@ -68,9 +68,10 @@ export async function GET(req: NextRequest) {
       supabase.from("customers").select("id", { count: "exact", head: true })
         .gte("created_at", startOfMonth),
 
-      // Recent 10 orders
+      // Recent 10 real orders (exclude ghost/abandoned payment records)
       supabase.from("orders_summary")
         .select("id, order_number, customer_name, total, status, payment_method, created_at")
+        .neq("status", "pending")
         .order("created_at", { ascending: false })
         .limit(10),
 
@@ -147,9 +148,11 @@ export async function GET(req: NextRequest) {
           ? Math.round(((revMonthPaise - revLastMonthPaise) / revLastMonthPaise) * 100)
           : 100,
         totalOrders:           Object.values(orderStatusCounts).reduce((a, b) => a + b, 0),
-        pendingOrders:         orderStatusCounts["pending"]    || 0,
-        processingOrders:      (orderStatusCounts["confirmed"] || 0) + (orderStatusCounts["processing"] || 0) + (orderStatusCounts["packed"] || 0),
-        shippedOrders:         (orderStatusCounts["shipped"]   || 0) + (orderStatusCounts["out_for_delivery"] || 0),
+        // newOrders = confirmed orders waiting to be prepared/packed (the real "act now" count)
+        // (ghost/abandoned Cashfree pending orders are excluded from orderStatusCounts above)
+        newOrders:             orderStatusCounts["confirmed"]   || 0,
+        processingOrders:      (orderStatusCounts["processing"] || 0) + (orderStatusCounts["packed"] || 0),
+        shippedOrders:         (orderStatusCounts["shipped"]    || 0) + (orderStatusCounts["out_for_delivery"] || 0),
         totalCustomers:        (totalCustomers as any)?.count || 0,
         newCustomersThisMonth: (newCustomers   as any)?.count || 0,
         lowStockCount:         (lowStock || []).length,

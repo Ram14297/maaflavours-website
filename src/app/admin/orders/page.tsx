@@ -216,8 +216,9 @@ export default function OrdersPage() {
           <div className="flex flex-wrap gap-2">
             <p style={{ color:A.grey, fontSize:11, alignSelf:"center" }}>Quick filter:</p>
             {[
-              { label:"⚡ Pending",        value:"pending"          },
-              { label:"📦 Processing",     value:"processing"       },
+              { label:"🆕 New Orders",     value:"confirmed"        },
+              { label:"🔄 Processing",     value:"processing"       },
+              { label:"📦 Packed",         value:"packed"           },
               { label:"🚚 Shipped",        value:"shipped"          },
               { label:"✅ Delivered",      value:"delivered"        },
               { label:"❌ Cancelled",      value:"cancelled"        },
@@ -375,6 +376,7 @@ export default function OrdersPage() {
         <p style={{ color:A.grey, fontSize:11 }}>
           💡 Click <strong>→ status</strong> buttons for one-click status advancement.
           Click an order number to see full detail & update.
+          &nbsp;·&nbsp; Abandoned/incomplete online payments are hidden by default — select <em>status filter → Pending</em> if you need to review them.
         </p>
       </div>
     </AdminPage>
