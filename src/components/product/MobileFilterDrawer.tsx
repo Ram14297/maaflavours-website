@@ -5,6 +5,7 @@
 // Contains all the same filters as the desktop sidebar
 
 import { useEffect } from "react";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import { X, Check } from "lucide-react";
 import {
   WEIGHT_OPTIONS,
@@ -62,11 +63,8 @@ export default function MobileFilterDrawer({
   onClearAll,
   resultCount,
 }: MobileFilterDrawerProps) {
-  // ─── Lock body scroll when open ─────────────────────────────────────
-  useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [isOpen]);
+  // ─── Lock body scroll when open (iOS-safe) ─────────────────────────
+  useBodyScrollLock(isOpen);
 
   if (!isOpen) return null;
 

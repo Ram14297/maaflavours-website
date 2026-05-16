@@ -136,6 +136,14 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
         redirectTarget: "_modal",
       });
 
+      // Re-assert our favicon — Cashfree's modal (an iframe) can cause iOS Safari
+      // to temporarily cache Cashfree's favicon against our URL.
+      try {
+        document.querySelectorAll<HTMLLinkElement>("link[rel*='icon']").forEach(el => {
+          const h = el.href; el.href = ""; requestAnimationFrame(() => { el.href = h; });
+        });
+      } catch { /* non-fatal */ }
+
       console.log("[payment] Cashfree modal result:", JSON.stringify(result));
 
       // With UPI, payment happens in a separate app — the modal may close

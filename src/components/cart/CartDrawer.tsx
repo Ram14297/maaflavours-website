@@ -6,6 +6,7 @@
 // Connected to Zustand cartStore for all state
 
 import { useEffect, useRef } from "react";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import Link from "next/link";
 import { X, ShoppingBag, Trash2, ArrowRight, Lock } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
@@ -63,20 +64,7 @@ export default function CartDrawer({ onClose }: CartDrawerProps) {
   }, []);
 
   // ─── Lock body scroll (iOS-safe) ──────────────────────────────────────
-  useEffect(() => {
-    const scrollY = window.scrollY;
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = "100%";
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.width = "";
-      document.body.style.overflow = "";
-      window.scrollTo(0, scrollY);
-    };
-  }, []);
+  useBodyScrollLock(true);
 
   // ─── Close on Escape ──────────────────────────────────────────────────
   useEffect(() => {

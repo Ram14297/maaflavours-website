@@ -6,6 +6,7 @@
 // Account: fetches /api/auth/me on mount → shows user initial + dropdown if logged in
 
 import { useState, useEffect, useRef } from "react";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -98,11 +99,8 @@ export default function Navbar({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // ─── Lock body scroll when mobile menu open ───────────────────────────
-  useEffect(() => {
-    document.body.style.overflow = mobileOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [mobileOpen]);
+  // ─── Lock body scroll when mobile menu open (iOS-safe) ───────────────
+  useBodyScrollLock(mobileOpen);
 
   // ─── Effective logged-in state ────────────────────────────────────────
   // Props override takes priority (homepage OTP modal flow)

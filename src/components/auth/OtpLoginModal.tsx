@@ -10,6 +10,7 @@
 import {
   useState, useEffect, useRef, useCallback,
 } from "react";
+import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import {
   X, Mail, ArrowRight, CheckCircle2, User, Phone, ShieldCheck,
 } from "lucide-react";
@@ -79,12 +80,8 @@ export default function OtpLoginModal({
   const emailRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
 
-  // ─── Body scroll lock ────────────────────────────────────────────────
-  useEffect(() => {
-    if (!isOpen) return;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
-  }, [isOpen]);
+  // ─── Body scroll lock (iOS-safe) ────────────────────────────────────
+  useBodyScrollLock(isOpen);
 
   // ─── Auto-focus on step change ───────────────────────────────────────
   useEffect(() => {
