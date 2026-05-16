@@ -122,14 +122,22 @@ export default function ProfilePage() {
                   </span>
                 </div>
                 <p className="font-dm-sans text-xs mt-1" style={{ color: "var(--color-grey)" }}>
-                  Mobile number cannot be changed — it&apos;s your login credential
+                  Mobile number cannot be changed — contact support to update
                 </p>
               </>
             ) : (
               <>
+                {/* Prompt banner when mobile is missing */}
+                <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl mb-2"
+                  style={{ background: "rgba(200,150,12,0.07)", border: "1px solid rgba(200,150,12,0.2)" }}>
+                  <span className="text-sm flex-shrink-0">📱</span>
+                  <p className="font-dm-sans text-xs" style={{ color: "var(--color-brown)" }}>
+                    Add your mobile number to receive <strong>order updates via SMS</strong> and for faster checkout.
+                  </p>
+                </div>
                 <div className="flex items-center rounded-xl overflow-hidden"
-                  style={{ border: `2px solid ${mobileError ? "#C0272D" : "rgba(200,150,12,0.25)"}` }}>
-                  <span className="px-4 py-3.5 font-dm-sans text-sm font-medium select-none"
+                  style={{ border: `2px solid ${mobileError ? "#C0272D" : "rgba(200,150,12,0.35)"}` }}>
+                  <span className="px-4 py-3.5 font-dm-sans text-sm font-semibold select-none"
                     style={{ background: "var(--color-cream)", color: "var(--color-brown)", borderRight: "1px solid rgba(200,150,12,0.2)" }}>
                     +91
                   </span>
@@ -137,17 +145,15 @@ export default function ProfilePage() {
                     type="tel"
                     inputMode="numeric"
                     maxLength={10}
-                    placeholder="10-digit mobile number"
+                    placeholder="Enter your 10-digit mobile"
                     value={mobile}
                     onChange={e => { setMobile(e.target.value.replace(/\D/g, "")); setMobileError(""); }}
                     className="flex-1 px-4 py-3.5 font-dm-sans text-base outline-none bg-white"
                     style={{ color: "var(--color-brown)" }}
+                    autoFocus
                   />
                 </div>
-                {mobileError && <p className="font-dm-sans text-xs mt-1" style={{ color: "#C0272D" }}>{mobileError}</p>}
-                <p className="font-dm-sans text-xs mt-1" style={{ color: "var(--color-grey)" }}>
-                  Add your mobile number for faster checkout
-                </p>
+                {mobileError && <p className="font-dm-sans text-xs mt-1" style={{ color: "#C0272D" }}>⚠️ {mobileError}</p>}
               </>
             )}
           </div>
