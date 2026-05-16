@@ -209,6 +209,11 @@ export default function OrdersPage() {
               <Btn variant="secondary" size="sm" loading={exporting} onClick={exportCSV}>
                 📥 Export CSV
               </Btn>
+              <Link href="/admin/orders/new">
+                <Btn variant="primary" size="sm">
+                  ✍️ Manual Order
+                </Btn>
+              </Link>
             </div>
           </div>
 
@@ -386,9 +391,13 @@ export default function OrdersPage() {
 // ─── Payment Method Badge ─────────────────────────────────────────────────────
 function MethodBadge({ method }: { method?: string }) {
   const MAP: Record<string, { icon:string; label:string; bg:string; color:string }> = {
-    cashfree:   { icon:"🔵", label:"Cashfree",    bg:"rgba(200,150,12,0.08)",  color:"#B8750A" },
-    phonepe_qr: { icon:"🟣", label:"PhonePe QR",  bg:"rgba(74,44,10,0.08)",    color:"#4A2C0A" },
-    cod:        { icon:"💵", label:"COD",          bg:"rgba(46,125,50,0.08)",   color:"#2E7D32" },
+    cashfree:      { icon:"🔵", label:"Cashfree",      bg:"rgba(200,150,12,0.08)",  color:"#B8750A" },
+    phonepe_qr:    { icon:"🟣", label:"PhonePe QR",    bg:"rgba(74,44,10,0.08)",    color:"#4A2C0A" },
+    cod:           { icon:"🚚", label:"COD",            bg:"rgba(46,125,50,0.08)",   color:"#2E7D32" },
+    cash:          { icon:"💵", label:"Cash",           bg:"rgba(46,125,50,0.08)",   color:"#2E7D32" },
+    upi:           { icon:"📲", label:"UPI",            bg:"rgba(74,44,10,0.08)",    color:"#4A2C0A" },
+    whatsapp_pay:  { icon:"💚", label:"WhatsApp Pay",   bg:"rgba(37,211,102,0.08)",  color:"#128C7E" },
+    bank_transfer: { icon:"🏦", label:"Bank Transfer",  bg:"rgba(74,44,10,0.08)",    color:"#4A2C0A" },
   };
   const m = MAP[method || ""] || { icon:"💳", label:method?.replace(/_/g," ") || "—", bg:"rgba(107,107,107,0.08)", color:"#6B6B6B" };
   return (

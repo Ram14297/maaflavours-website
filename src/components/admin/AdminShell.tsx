@@ -23,8 +23,9 @@ const NAV_SECTIONS = [
   {
     label: "Commerce",
     items: [
-      { href: "/admin/orders",    label: "Orders",     icon: IconOrders     },
-      { href: "/admin/prep",      label: "Prep List",  icon: IconPrep       },
+      { href: "/admin/orders",        label: "Orders",        icon: IconOrders     },
+      { href: "/admin/orders/new",    label: "Manual Order",  icon: IconNewOrder   },
+      { href: "/admin/prep",          label: "Prep List",     icon: IconPrep       },
       { href: "/admin/products",  label: "Products",   icon: IconProducts   },
       { href: "/admin/inventory", label: "Inventory",  icon: IconInventory  },
       { href: "/admin/coupons",   label: "Coupons",    icon: IconCoupons    },
@@ -480,7 +481,8 @@ function getPageTitle(pathname: string): string {
   const map: Record<string, string> = {
     "/admin/dashboard": "Dashboard",
     "/admin/analytics": "Analytics",
-    "/admin/orders":    "Orders",
+    "/admin/orders":        "Orders",
+    "/admin/orders/new":    "New Manual Order",
     "/admin/prep":      "Prep List",
     "/admin/products":  "Products",
     "/admin/inventory": "Inventory",
@@ -516,6 +518,13 @@ function IconAnalytics({ size = 15, style }: { size?: number; style?: React.CSSP
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" style={style}>
       <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    </svg>
+  );
+}
+function IconNewOrder({ size = 15, style }: { size?: number; style?: React.CSSProperties }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" style={style}>
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
     </svg>
   );
 }
