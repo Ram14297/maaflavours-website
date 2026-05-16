@@ -176,8 +176,7 @@ export default function OtpLoginModal({
         return;
       }
 
-      if (data.isNewUser || !data.user?.mobile) {
-        // New user OR existing user with no mobile saved — collect profile details
+      if (data.isNewUser) {
         setStep("profile");
       } else {
         const user = { name: data.user?.name || "Customer", email: email.trim(), isNewUser: false };

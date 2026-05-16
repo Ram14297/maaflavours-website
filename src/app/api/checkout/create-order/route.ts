@@ -432,6 +432,30 @@ export async function POST(request: NextRequest) {
             });
           }
         } catch { /* non-fatal — never block order completion */ }
+
+        // ── Sync mobile to customer profile ──────────────────────────────
+        // The address form always captures the customer's mobile. If their
+        // profile doesn't have one yet (placeholder or null), update it now
+        // so it shows correctly in My Account → Profile without requiring
+        // any extra steps from the customer.
+        try {
+          const { data: customerRow } = await adminSupa
+            .from("customers")
+            .select("mobile")
+            .eq("id", session.userId)
+            .maybeSingle();
+
+          const needsUpdate =
+            !customerRow?.mobile ||
+            customerRow.mobile.startsWith("_ph_");
+
+          if (needsUpdate) {
+            await adminSupa
+              .from("customers")
+              .update({ mobile: deliveryAddress.mobile })
+              .eq("id", session.userId);
+          }
+        } catch { /* non-fatal */ }
       }
 
     } catch (dbErr: any) {
