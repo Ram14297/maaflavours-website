@@ -14,6 +14,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "crypto";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { notifyCustomerSMS, msgOrderConfirmed, shortOrderId } from "@/lib/notify-customer";
+import { sendOrderConfirmedEmail } from "@/lib/email";
 
 function verifyCashfreeSignature(
   rawBody: string,
@@ -216,7 +217,7 @@ async function notifyCustomerOnPayment(
 ) {
   const { data: order } = await supabase
     .from("orders")
-    .select("total, shipping_address, payment_method")
+    .select("total, shipping_address, payment_method, customer_email, order_number")
     .eq("id", orderId)
     .single();
 
@@ -227,12 +228,38 @@ async function notifyCustomerOnPayment(
   const name    = addr.full_name || addr.name || "Customer";
   const totalRs = Math.round((order.total ?? 0) / 100);
 
-  if (!mobile) return;
+  if (mobile) {
+    await notifyCustomerSMS(
+      mobile,
+      msgOrderConfirmed(name, shortOrderId(orderId), totalRs, order.payment_method)
+    );
+  }
 
-  await notifyCustomerSMS(
-    mobile,
-    msgOrderConfirmed(name, shortOrderId(orderId), totalRs, order.payment_method)
-  );
+  // ── Email notification ────────────────────────────────────────────────────
+  const email = order.customer_email || addr.email || "";
+  if (email) {
+    const { data: items } = await supabase
+      .from("order_items")
+      .select("product_name, variant_label, quantity, total_price")
+      .eq("order_id", orderId);
+
+    const addrLine = [addr.address_line1, addr.city, addr.state].filter(Boolean).join(", ");
+    await sendOrderConfirmedEmail({
+      to:          email,
+      name,
+      orderNumber: order.order_number || shortOrderId(orderId),
+      orderId,
+      items:       (items || []).map(i => ({
+        product_name:  i.product_name,
+        variant_label: i.variant_label,
+        quantity:      i.quantity,
+        total_price:   i.total_price,
+      })),
+      total:   order.total,
+      method:  order.payment_method,
+      address: addrLine,
+    }).catch(() => {});
+  }
 }
 
 // ─── Admin notification ────────────────────────────────────────────────────────

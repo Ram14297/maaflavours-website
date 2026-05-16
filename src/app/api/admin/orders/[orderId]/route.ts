@@ -12,6 +12,11 @@ import {
   msgOrderPacked, msgOrderShipped,
   msgOrderOutForDelivery, msgOrderDelivered, msgOrderCancelled,
 } from "@/lib/notify-customer";
+import {
+  sendOrderShippedEmail,
+  sendOrderDeliveredEmail,
+  sendOrderCancelledEmail,
+} from "@/lib/email";
 
 export async function GET(
   req: NextRequest,
@@ -120,20 +125,20 @@ async function notifyCustomerOnStatusChange(
 ) {
   const { data: order } = await supabase
     .from("orders")
-    .select("shipping_address, payment_method, payment_status, total")
+    .select("shipping_address, payment_method, payment_status, total, customer_email, order_number")
     .eq("id", orderId)
     .single();
 
   if (!order?.shipping_address) return;
 
-  const addr     = order.shipping_address as any;
-  const mobile   = addr.mobile || addr.phone || "";
-  const name     = addr.full_name || addr.name || "Customer";
-  const sid      = shortOrderId(orderId);
-  const totalRs  = Math.round((order.total ?? 0) / 100);
+  const addr      = order.shipping_address as any;
+  const mobile    = addr.mobile || addr.phone || "";
+  const name      = addr.full_name || addr.name || "Customer";
+  const email     = order.customer_email || addr.email || "";
+  const sid       = shortOrderId(orderId);
+  const orderNum  = order.order_number || sid;
+  const totalRs   = Math.round((order.total ?? 0) / 100);
   const isPrepaid = order.payment_method !== "cod" && order.payment_status === "paid";
-
-  if (!mobile) return;
 
   let message: string | null = null;
 
@@ -143,21 +148,24 @@ async function notifyCustomerOnStatusChange(
       break;
     case "shipped":
       message = msgOrderShipped(name, sid, courier || "Courier", trackingId || "—");
+      if (email) await sendOrderShippedEmail({ to: email, name, orderNumber: orderNum, orderId, courier: courier || "Courier", trackingId: trackingId || "—" }).catch(() => {});
       break;
     case "out_for_delivery":
       message = msgOrderOutForDelivery(name, sid);
       break;
     case "delivered":
       message = msgOrderDelivered(name, sid);
+      if (email) await sendOrderDeliveredEmail({ to: email, name, orderNumber: orderNum, orderId }).catch(() => {});
       break;
     case "cancelled":
       message = msgOrderCancelled(name, sid, isPrepaid, totalRs);
+      if (email) await sendOrderCancelledEmail({ to: email, name, orderNumber: orderNum, orderId, total: order.total, isPrepaid }).catch(() => {});
       break;
     default:
-      return; // No SMS for pending/confirmed — already sent on order placement
+      return; // No notification for pending/confirmed — already sent on order placement
   }
 
-  if (message) await notifyCustomerSMS(mobile, message);
+  if (mobile && message) await notifyCustomerSMS(mobile, message);
 }
 
 export async function DELETE(

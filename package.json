@@ -35,9 +35,11 @@
     "react-hot-toast": "^2.4.1",
     "react-pdf": "^9.1.0",
     "recharts": "^2.12.7",
+    "resend": "^6.12.3",
     "sharp": "^0.33.4",
     "tailwind-merge": "^2.4.0",
     "twilio": "^5.2.3",
+    "vercel": "^52.2.1",
     "zod": "^3.23.8",
     "zustand": "^4.5.4"
   },

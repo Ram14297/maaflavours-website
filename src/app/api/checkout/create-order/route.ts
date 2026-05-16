@@ -26,6 +26,7 @@ import { z } from "zod";
 import { PRODUCTS } from "@/lib/constants/products";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { notifyCustomerSMS, msgOrderConfirmed, shortOrderId } from "@/lib/notify-customer";
+import { sendOrderConfirmedEmail } from "@/lib/email";
 import { verifyCustomerSession } from "@/lib/customer-auth";
 import { isAllowedOrigin } from "@/lib/origin-check";
 
@@ -431,6 +432,29 @@ export async function POST(request: NextRequest) {
             "cod"
           )
         );
+
+        // ── Notify customer via Email ──────────────────────────────────────
+        const customerEmail = session?.email || "";
+        if (customerEmail) {
+          const { data: orderRow } = await adminSupa
+            .from("orders").select("order_number").eq("id", supabaseOrderId).maybeSingle();
+          const addrLine = [deliveryAddress.address_line1, deliveryAddress.city, deliveryAddress.state].filter(Boolean).join(", ");
+          await sendOrderConfirmedEmail({
+            to:          customerEmail,
+            name:        deliveryAddress.name,
+            orderNumber: orderRow?.order_number || shortOrderId(supabaseOrderId),
+            orderId:     supabaseOrderId,
+            items:       validatedItems.map(i => ({
+              product_name:  i.productName,
+              variant_label: i.variantLabel,
+              quantity:      i.quantity,
+              total_price:   i.totalPrice,
+            })),
+            total,
+            method:  "cod",
+            address: addrLine,
+          }).catch(() => {});
+        }
       }
 
       return NextResponse.json({
@@ -479,6 +503,29 @@ export async function POST(request: NextRequest) {
             "phonepe_qr"
           )
         ).catch(() => {});
+
+        // ── Notify customer via Email ──────────────────────────────────────
+        const customerEmailQr = session?.email || "";
+        if (customerEmailQr) {
+          const { data: orderRowQr } = await adminSupa
+            .from("orders").select("order_number").eq("id", supabaseOrderId).maybeSingle();
+          const addrLineQr = [deliveryAddress.address_line1, deliveryAddress.city, deliveryAddress.state].filter(Boolean).join(", ");
+          await sendOrderConfirmedEmail({
+            to:          customerEmailQr,
+            name:        deliveryAddress.name,
+            orderNumber: orderRowQr?.order_number || shortOrderId(supabaseOrderId),
+            orderId:     supabaseOrderId,
+            items:       validatedItems.map(i => ({
+              product_name:  i.productName,
+              variant_label: i.variantLabel,
+              quantity:      i.quantity,
+              total_price:   i.totalPrice,
+            })),
+            total,
+            method:  "phonepe_qr",
+            address: addrLineQr,
+          }).catch(() => {});
+        }
       }
 
       return NextResponse.json({
