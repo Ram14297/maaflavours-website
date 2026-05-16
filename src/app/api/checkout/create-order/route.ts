@@ -396,12 +396,43 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Note: we deliberately do NOT auto-save the delivery address to the
-      // customer's saved-addresses list here. The previous version did, which
-      // — combined with the (now-fixed) forgeable session cookie — meant an
-      // attacker could plant arbitrary addresses on a victim's account.
-      // The checkout UI offers an explicit "Save this address" option for
-      // users who want to keep the address for later orders.
+      // ── Auto-save delivery address for authenticated customers ──────────
+      // Skipped for guests (no real customer_id) and DEV orders.
+      // Duplicate check: if the same address_line1 + pincode already exists
+      // for this customer, we skip the insert to avoid cluttering saved
+      // addresses with repeated orders to the same location.
+      if (session?.userId && !supabaseOrderId?.startsWith("DEV-")) {
+        try {
+          const { data: existingAddr } = await adminSupa
+            .from("customer_addresses")
+            .select("id")
+            .eq("customer_id", session.userId)
+            .eq("address_line1", deliveryAddress.address_line1)
+            .eq("pincode", deliveryAddress.pincode)
+            .maybeSingle();
+
+          if (!existingAddr) {
+            // First address for this customer → make it the default
+            const { count: addrCount } = await adminSupa
+              .from("customer_addresses")
+              .select("id", { count: "exact", head: true })
+              .eq("customer_id", session.userId);
+
+            await adminSupa.from("customer_addresses").insert({
+              customer_id:   session.userId,
+              name:          deliveryAddress.name,
+              mobile:        deliveryAddress.mobile,
+              address_line1: deliveryAddress.address_line1,
+              address_line2: deliveryAddress.address_line2 || null,
+              landmark:      deliveryAddress.landmark      || null,
+              city:          deliveryAddress.city,
+              state:         deliveryAddress.state,
+              pincode:       deliveryAddress.pincode,
+              is_default:    addrCount === 0,
+            });
+          }
+        } catch { /* non-fatal — never block order completion */ }
+      }
 
     } catch (dbErr: any) {
       // DB not configured — use timestamp ID for dev

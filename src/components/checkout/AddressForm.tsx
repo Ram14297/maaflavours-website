@@ -122,26 +122,41 @@ export default function AddressForm() {
 
   const pincode = watch("pincode");
 
-  // ─── Pre-fill email from the currently logged-in session ───────────────
-  // /api/auth/me reads the session cookie which is unique per customer —
-  // so this always returns the email of whoever is logged in right now.
-  // checkoutStore has no localStorage persistence, so no data bleeds between customers.
+  // ─── Pre-fill from profile + auto-select default saved address ──────────────
+  // Both fetches run in parallel. If the customer has a saved address we
+  // auto-fill the entire form (zero typing for returning customers). If not,
+  // we still pre-fill name + mobile from their profile so they only need
+  // to type the address lines and pincode.
   useEffect(() => {
-    fetch("/api/auth/me")
-      .then(r => r.ok ? r.json() : null)
-      .then(d => {
-        if (d?.user?.email) updateAddress({ email: d.user.email });
-      })
-      .catch(() => {});
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    Promise.all([
+      fetch("/api/auth/me").then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch("/api/account/addresses").then(r => r.json()).catch(() => ({ addresses: [] })),
+    ]).then(([meData, addrData]) => {
+      // Always store email in checkout store (used for order confirmation email)
+      if (meData?.user?.email) updateAddress({ email: meData.user.email });
 
-  // ─── Fetch saved addresses ────────────────────────────────────────────
-  useEffect(() => {
-    fetch("/api/account/addresses")
-      .then(r => r.json())
-      .then(d => { if (d.addresses?.length) setSavedAddresses(d.addresses); })
-      .catch(() => {});
+      const addresses: SavedAddress[] = addrData?.addresses || [];
+      setSavedAddresses(addresses);
+
+      // Auto-select default address, or first saved address if none is marked default
+      const autoFill = addresses.find(a => a.is_default) ?? addresses[0] ?? null;
+      if (autoFill) {
+        setSelectedSavedId(autoFill.id);
+        setValue("full_name",     autoFill.full_name,       { shouldValidate: true });
+        setValue("mobile",        autoFill.mobile,          { shouldValidate: true });
+        setValue("address_line1", autoFill.address_line1,   { shouldValidate: true });
+        setValue("address_line2", autoFill.address_line2 || "");
+        setValue("landmark",      autoFill.landmark || "");
+        setValue("pincode",       autoFill.pincode,         { shouldValidate: true });
+        setValue("city",          autoFill.city,            { shouldValidate: true });
+        setValue("state",         autoFill.state,           { shouldValidate: true });
+      } else if (meData?.user) {
+        // No saved address yet — pre-fill name + mobile from profile
+        if (meData.user.name)   setValue("full_name", meData.user.name,   { shouldValidate: false });
+        if (meData.user.mobile) setValue("mobile",    meData.user.mobile, { shouldValidate: false });
+      }
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ─── Fill form from saved address ────────────────────────────────────
