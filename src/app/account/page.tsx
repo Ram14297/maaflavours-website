@@ -115,10 +115,9 @@ function OverviewTab({
 
       {/* Quick links */}
       {[
-        { icon: Package,   label: "My Orders",        desc: "Track & manage orders",       href: null,       tab: "orders"    as Tab },
-        { icon: User,      label: "Edit Profile",      desc: "Update name & email",         href: null,       tab: "profile"   as Tab },
-        { icon: MapPin,    label: "Saved Addresses",   desc: "Manage delivery locations",   href: null,       tab: "addresses" as Tab },
-        { icon: ShoppingBag, label: "Browse Pickles", desc: "Shop all 6 Andhra varieties", href: "/products", tab: null },
+        { icon: Package,   label: "My Orders",        desc: "Track & manage orders",       href: null, tab: "orders"    as Tab },
+        { icon: User,      label: "Edit Profile",      desc: "Update name & email",         href: null, tab: "profile"   as Tab },
+        { icon: MapPin,    label: "Saved Addresses",   desc: "Manage delivery locations",   href: null, tab: "addresses" as Tab },
       ].map(({ icon: Icon, label, desc, href, tab }) => {
         const itemStyle = { background: "white", border: "1px solid rgba(200,150,12,0.12)" };
         const inner = (
