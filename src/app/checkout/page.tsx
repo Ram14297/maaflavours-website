@@ -7,6 +7,7 @@
 
 import { useState, useCallback, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ShoppingBag, Lock } from "lucide-react";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
@@ -18,6 +19,8 @@ import OrderReviewStep from "@/components/checkout/OrderReviewStep";
 import OrderSummaryPanel from "@/components/checkout/OrderSummaryPanel";
 import { useCheckoutStore } from "@/store/checkoutStore";
 import { useCartStore } from "@/store/cartStore";
+
+const OtpLoginModal = dynamic(() => import("@/components/auth/OtpLoginModal"), { ssr: false });
 
 // ─── Empty cart guard ───────────────────────────────────────────────────────
 function EmptyCartRedirect() {
@@ -54,12 +57,20 @@ function CheckoutContent() {
   const [loginOpen, setLoginOpen] = useState(false);
 
   // ─── Hydration guard ──────────────────────────────────────────────────────
-  // Zustand persist reads from localStorage (client-only). Without this the
-  // server renders items=[] → EmptyCartRedirect, client sees real items →
-  // React hydration mismatch #418/#423 → blank page.
-  // Fix: all hooks must be declared BEFORE any conditional returns.
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+
+  // ─── Login gate: check on entry, not mid-payment ──────────────────────────
+  // Show OTP modal immediately if the customer isn't logged in.
+  // By the time they fill address + choose payment, they're already authenticated
+  // — zero interruption when they click Pay.
+  useEffect(() => {
+    if (!mounted) return;
+    fetch("/api/auth/me")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (!d?.user?.email) setLoginOpen(true); })
+      .catch(() => {});
+  }, [mounted]);
 
   // ─── All callbacks declared unconditionally (Rules of Hooks) ─────────────
   const handleOrderSuccess = useCallback(
@@ -234,6 +245,13 @@ function CheckoutContent() {
           </Link>
         ))}
       </div>
+
+      {/* OTP Login Modal — shown at entry if customer is not logged in */}
+      <OtpLoginModal
+        isOpen={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        onSuccess={() => setLoginOpen(false)}
+      />
     </div>
   );
 }

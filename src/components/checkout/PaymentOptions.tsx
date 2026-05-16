@@ -3,8 +3,7 @@
 // Maa Flavours — Payment Method Selection
 // Cashfree (UPI / Card / Net Banking) | PhonePe QR (manual) | COD
 
-import { useState, useRef } from "react";
-import dynamic from "next/dynamic";
+import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Banknote, ChevronLeft, Lock, CheckCircle2 } from "lucide-react";
@@ -12,8 +11,6 @@ import { useCheckoutStore, PaymentMethod } from "@/store/checkoutStore";
 import { useCartStore } from "@/store/cartStore";
 import { formatPrice } from "@/lib/utils";
 import toast from "react-hot-toast";
-
-const OtpLoginModal = dynamic(() => import("@/components/auth/OtpLoginModal"), { ssr: false });
 
 const COD_CHARGE = 5000; // ₹50 in paise
 
@@ -72,8 +69,6 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
   const [codConfirmed,       setCodConfirmed]       = useState(false);
   const [upiTxnId,           setUpiTxnId]           = useState("");
   const [confirmingPayment,  setConfirmingPayment]  = useState(false);
-  const [loginModalOpen,     setLoginModalOpen]     = useState(false);
-  const pendingPaymentRef = useRef<(() => void) | null>(null);
 
   const cartTotal = total(address?.state);
   const codTotal  = paymentMethod === "cod" ? cartTotal + COD_CHARGE : cartTotal;
@@ -287,35 +282,16 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
     }
   };
 
-  // ─── Login gate: ensure customer is logged in before placing order ──────────
-  // Without this, orders are saved under a guest-TIMESTAMP ID and never appear
-  // in the customer's My Orders page.
-  const handlePlaceOrder = async () => {
-    const proceed = () => {
-      if (paymentMethod === "cashfree")        handleCashfreePayment();
-      else if (paymentMethod === "phonepe_qr") handlePhonePeQR();
-      else if (paymentMethod === "cod")        handleCOD();
-    };
-
-    try {
-      const res = await fetch("/api/auth/me");
-      const data = res.ok ? await res.json() : null;
-      if (data?.user?.email) {
-        // Already logged in — proceed directly
-        proceed();
-      } else {
-        // Not logged in — show OTP login modal, then proceed on success
-        pendingPaymentRef.current = proceed;
-        setLoginModalOpen(true);
-      }
-    } catch {
-      // Network error — still try to proceed
-      proceed();
-    }
+  // ─── Payment dispatcher ───────────────────────────────────────────────────
+  // Login is guaranteed by checkout/page.tsx which shows the OTP modal at
+  // entry. By the time the customer reaches this step, they are authenticated.
+  const handlePlaceOrder = () => {
+    if (paymentMethod === "cashfree")        handleCashfreePayment();
+    else if (paymentMethod === "phonepe_qr") handlePhonePeQR();
+    else if (paymentMethod === "cod")        handleCOD();
   };
 
   return (
-    <>
     <div className="rounded-2xl overflow-hidden"
       style={{ background: "white", border: "1px solid rgba(200,150,12,0.15)", boxShadow: "0 2px 16px rgba(74,44,10,0.06)" }}>
       {/* Gold top ornament */}
@@ -537,24 +513,5 @@ export default function PaymentOptions({ onOrderSuccess }: PaymentOptionsProps) 
         </div>
       </div>
     </div>
-
-    {/* ─── Login gate modal ─────────────────────────────────────────────────── */}
-    {loginModalOpen && (
-      <OtpLoginModal
-        isOpen={loginModalOpen}
-        onClose={() => setLoginModalOpen(false)}
-        onSuccess={() => {
-          setLoginModalOpen(false);
-          // Small delay so session cookie is set before we call create-order
-          setTimeout(() => {
-            if (pendingPaymentRef.current) {
-              pendingPaymentRef.current();
-              pendingPaymentRef.current = null;
-            }
-          }, 300);
-        }}
-      />
-    )}
-    </>
   );
 }
