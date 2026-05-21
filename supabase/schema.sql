@@ -62,7 +62,8 @@ EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 DO $$ BEGIN
   CREATE TYPE payment_method_enum AS ENUM (
     'razorpay_upi', 'razorpay_card', 'razorpay_netbanking', 'cod',
-    'cashfree', 'phonepe', 'phonepe_qr'
+    'cashfree', 'phonepe', 'phonepe_qr',
+    'upi', 'cash', 'whatsapp_pay', 'bank_transfer'
   );
 EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
