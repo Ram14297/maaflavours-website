@@ -19,6 +19,7 @@ interface ProductImageGalleryProps {
   productSlug: string;
   images?: GalleryImage[];
   emoji?: string; // placeholder emoji until real images added
+  isSoldOut?: boolean;
 }
 
 // ─── Placeholder thumbnails (one per "angle") ─────────────────────────────
@@ -36,6 +37,7 @@ export default function ProductImageGallery({
   productSlug,
   images,
   emoji = "🫙",
+  isSoldOut = false,
 }: ProductImageGalleryProps) {
   const galleryImages = images?.length
     ? images
@@ -80,12 +82,12 @@ export default function ProductImageGallery({
             "linear-gradient(135deg, var(--color-cream) 0%, var(--color-cream-dark) 60%, #E0D4BC 100%)",
           border: "2px solid rgba(200,150,12,0.15)",
           boxShadow: "0 4px 32px rgba(74,44,10,0.1)",
-          cursor: zoomed ? "zoom-out" : "zoom-in",
+          cursor: isSoldOut ? "default" : zoomed ? "zoom-out" : "zoom-in",
         }}
-        onMouseEnter={() => setZoomed(true)}
+        onMouseEnter={() => !isSoldOut && setZoomed(true)}
         onMouseLeave={() => setZoomed(false)}
-        onMouseMove={handleMouseMove}
-        onClick={() => setZoomed((z) => !z)}
+        onMouseMove={!isSoldOut ? handleMouseMove : undefined}
+        onClick={() => !isSoldOut && setZoomed((z) => !z)}
         onKeyDown={handleKeyDown}
         tabIndex={0}
         role="img"
@@ -103,10 +105,11 @@ export default function ProductImageGallery({
         {/* ─── Main image ───────────────────────────────────────────────── */}
         {active.url ? (
           <div
-            className="absolute inset-0 transition-transform duration-300"
+            className="absolute inset-0 transition-all duration-300"
             style={{
               transformOrigin: `${mousePos.x}% ${mousePos.y}%`,
-              transform: zoomed ? "scale(1.5)" : "scale(1)",
+              transform: isSoldOut ? "scale(1)" : zoomed ? "scale(1.5)" : "scale(1)",
+              filter: isSoldOut ? "blur(4px) brightness(0.6)" : undefined,
             }}
           >
             <Image
@@ -120,10 +123,11 @@ export default function ProductImageGallery({
           </div>
         ) : (
           <div
-            className="absolute inset-0 flex flex-col items-center justify-center gap-3 transition-transform duration-300"
+            className="absolute inset-0 flex flex-col items-center justify-center gap-3 transition-all duration-300"
             style={{
               transformOrigin: `${mousePos.x}% ${mousePos.y}%`,
-              transform: zoomed ? "scale(1.5)" : "scale(1)",
+              transform: isSoldOut ? "scale(1)" : zoomed ? "scale(1.5)" : "scale(1)",
+              filter: isSoldOut ? "blur(3px) brightness(0.6)" : undefined,
             }}
           >
             <span
@@ -143,6 +147,33 @@ export default function ProductImageGallery({
           </div>
         )}
 
+        {/* Sold Out overlay — product detail page */}
+        {isSoldOut && (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 pointer-events-none">
+            <span
+              className="font-dm-sans font-extrabold text-lg sm:text-xl uppercase px-8 py-3 rounded-full shadow-2xl"
+              style={{
+                background: "var(--color-crimson)",
+                color: "white",
+                letterSpacing: "0.18em",
+                boxShadow: "0 6px 32px rgba(192,39,45,0.5), 0 2px 8px rgba(0,0,0,0.3)",
+              }}
+            >
+              Sold Out
+            </span>
+            <span
+              className="font-dm-sans text-xs font-semibold px-4 py-1.5 rounded-full"
+              style={{
+                background: "rgba(255,255,255,0.92)",
+                color: "var(--color-brown)",
+                letterSpacing: "0.04em",
+              }}
+            >
+              We'll notify you when it's back
+            </span>
+          </div>
+        )}
+
         {/* Gold corner ornaments */}
         <span className="corner-tl" />
         <span className="corner-tr" />
@@ -150,7 +181,7 @@ export default function ProductImageGallery({
         <span className="corner-br" />
 
         {/* Zoom hint */}
-        {!zoomed && (
+        {!zoomed && !isSoldOut && (
           <div
             className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full font-dm-sans text-xs font-medium z-10"
             style={{

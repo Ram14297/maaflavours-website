@@ -367,6 +367,9 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
   const product = liveProduct;
   const emoji   = PRODUCT_EMOJIS[slug] || "🫙";
 
+  // Sold out when every variant has zero stock
+  const isProductSoldOut = product.variants.every((v) => (v.stock_quantity ?? 0) === 0);
+
   return (
     <div
       className="min-h-screen flex flex-col"
@@ -390,6 +393,7 @@ export default function ProductDetailPage({ params }: ProductDetailPageProps) {
                 productSlug={product.slug}
                 images={product.images}
                 emoji={emoji}
+                isSoldOut={isProductSoldOut}
               />
             </div>
 
