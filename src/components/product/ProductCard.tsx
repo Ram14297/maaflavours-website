@@ -36,6 +36,7 @@ export default function ProductCard({
 
   const selectedVariant = product.variants[selectedVariantIndex];
   const addItem = useCartStore((s) => s.addItem);
+  const isSoldOut = (product as any).is_out_of_stock === true;
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation(); // prevent click from bubbling to parent <Link>
@@ -92,11 +93,15 @@ export default function ProductCard({
               src={imageUrl}
               alt={product.name}
               fill
-              className="object-cover"
+              className="object-cover transition-all duration-300"
               sizes="192px"
+              style={isSoldOut ? { filter: "blur(3px) brightness(0.65)" } : undefined}
             />
           ) : (
-            <div className="text-center py-6 px-4">
+            <div
+              className="text-center py-6 px-4 transition-all duration-300"
+              style={isSoldOut ? { filter: "blur(2px) brightness(0.65)" } : undefined}
+            >
               <span className="text-4xl block mb-1">🫙</span>
               <span className="font-dm-sans text-xs" style={{ color: "var(--color-grey)" }}>
                 Product Image
@@ -110,6 +115,23 @@ export default function ProductCard({
           >
             <span className="block w-2.5 h-2.5 rounded-full" style={{ background: "#2E7D32" }} />
           </div>
+
+          {/* Sold Out overlay — list view */}
+          {isSoldOut && (
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1.5">
+              <span
+                className="font-dm-sans font-extrabold text-xs uppercase px-3 py-1.5 rounded-full shadow-lg"
+                style={{
+                  background: "var(--color-crimson)",
+                  color: "white",
+                  letterSpacing: "0.16em",
+                  boxShadow: "0 3px 12px rgba(192,39,45,0.45)",
+                }}
+              >
+                Sold Out
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -221,23 +243,36 @@ export default function ProductCard({
             </div>
 
             {/* Add to cart */}
-            <button
-              onClick={handleAddToCart}
-              disabled={adding}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl font-dm-sans text-sm font-semibold transition-all duration-200 disabled:opacity-60 flex-shrink-0"
-              style={{
-                background: "var(--color-brown)",
-                color: "white",
-                boxShadow: "0 2px 8px rgba(74,44,10,0.2)",
-              }}
-            >
-              {adding ? (
-                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <ShoppingBag size={16} />
-              )}
-              {adding ? "Adding..." : "Add to Cart"}
-            </button>
+            {isSoldOut ? (
+              <div
+                className="flex items-center gap-2 px-4 py-2 rounded-xl font-dm-sans text-sm font-semibold flex-shrink-0 cursor-not-allowed select-none"
+                style={{
+                  background: "var(--color-cream)",
+                  color: "var(--color-grey)",
+                  border: "1.5px solid rgba(200,150,12,0.2)",
+                }}
+              >
+                Sold Out
+              </div>
+            ) : (
+              <button
+                onClick={handleAddToCart}
+                disabled={adding}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl font-dm-sans text-sm font-semibold transition-all duration-200 disabled:opacity-60 flex-shrink-0"
+                style={{
+                  background: "var(--color-brown)",
+                  color: "white",
+                  boxShadow: "0 2px 8px rgba(74,44,10,0.2)",
+                }}
+              >
+                {adding ? (
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <ShoppingBag size={16} />
+                )}
+                {adding ? "Adding..." : "Add to Cart"}
+              </button>
+            )}
           </div>
         </div>
       </Link>
@@ -285,11 +320,15 @@ export default function ProductCard({
             src={imageUrl}
             alt={product.name}
             fill
-            className="object-cover"
+            className="object-cover transition-all duration-300"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            style={isSoldOut ? { filter: "blur(3px) brightness(0.65)" } : undefined}
           />
         ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center gap-1 transition-all duration-300"
+            style={isSoldOut ? { filter: "blur(2px) brightness(0.65)" } : undefined}
+          >
             <span
               className="text-5xl"
               style={{
@@ -375,19 +414,47 @@ export default function ProductCard({
         </button>
 
         {/* Quick view label — decorative only, never intercepts clicks */}
-        <div
-          className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full font-dm-sans text-xs font-semibold transition-all duration-200 z-20 pointer-events-none"
-          style={{
-            background: "rgba(74,44,10,0.85)",
-            color: "white",
-            backdropFilter: "blur(4px)",
-            opacity: imageHovered ? 1 : 0,
-            transform: imageHovered ? "translateY(0)" : "translateY(4px)",
-          }}
-        >
-          <Eye size={12} />
-          Quick View
-        </div>
+        {!isSoldOut && (
+          <div
+            className="absolute bottom-2.5 left-2.5 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full font-dm-sans text-xs font-semibold transition-all duration-200 z-20 pointer-events-none"
+            style={{
+              background: "rgba(74,44,10,0.85)",
+              color: "white",
+              backdropFilter: "blur(4px)",
+              opacity: imageHovered ? 1 : 0,
+              transform: imageHovered ? "translateY(0)" : "translateY(4px)",
+            }}
+          >
+            <Eye size={12} />
+            Quick View
+          </div>
+        )}
+
+        {/* Sold Out overlay */}
+        {isSoldOut && (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-2">
+            <span
+              className="font-dm-sans font-extrabold text-sm sm:text-base uppercase px-5 py-2 rounded-full shadow-lg"
+              style={{
+                background: "var(--color-crimson)",
+                color: "white",
+                letterSpacing: "0.18em",
+                boxShadow: "0 4px 18px rgba(192,39,45,0.45), 0 1px 4px rgba(0,0,0,0.3)",
+              }}
+            >
+              Sold Out
+            </span>
+            <span
+              className="font-dm-sans text-[0.65rem] font-medium px-3 py-1 rounded-full"
+              style={{
+                background: "rgba(255,255,255,0.9)",
+                color: "var(--color-brown)",
+              }}
+            >
+              Notify me when available
+            </span>
+          </div>
+        )}
       </div>
 
       {/* ─── Card Content ────────────────────────────────────────────────── */}
@@ -479,28 +546,41 @@ export default function ProductCard({
             </div>
           </div>
 
-          <button
-            onClick={handleAddToCart}
-            disabled={adding}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-dm-sans text-xs font-semibold transition-all duration-200 disabled:opacity-60"
-            style={{
-              background: adding ? "var(--color-gold)" : "var(--color-brown)",
-              color: "white",
-              boxShadow: "0 2px 6px rgba(74,44,10,0.2)",
-            }}
-          >
-            {adding ? (
-              <>
-                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Adding...
-              </>
-            ) : (
-              <>
-                <ShoppingBag size={13} />
-                Add to Cart
-              </>
-            )}
-          </button>
+          {isSoldOut ? (
+            <div
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-dm-sans text-xs font-semibold cursor-not-allowed select-none"
+              style={{
+                background: "var(--color-cream)",
+                color: "var(--color-grey)",
+                border: "1.5px solid rgba(200,150,12,0.2)",
+              }}
+            >
+              Sold Out
+            </div>
+          ) : (
+            <button
+              onClick={handleAddToCart}
+              disabled={adding}
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl font-dm-sans text-xs font-semibold transition-all duration-200 disabled:opacity-60"
+              style={{
+                background: adding ? "var(--color-gold)" : "var(--color-brown)",
+                color: "white",
+                boxShadow: "0 2px 6px rgba(74,44,10,0.2)",
+              }}
+            >
+              {adding ? (
+                <>
+                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                <>
+                  <ShoppingBag size={13} />
+                  Add to Cart
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
 

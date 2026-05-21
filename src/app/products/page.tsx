@@ -159,6 +159,7 @@ function ProductsContent() {
             is_featured: p.is_featured ?? base?.is_featured ?? false,
             primary_image_url: p.primary_image_url || null,
             product_type: p.product_type || "pickle",
+            is_out_of_stock: p.is_out_of_stock ?? false,
             variants: p.variants.map((v: any) => ({
               weight_grams:     v.weight_grams,
               label:            v.label,
