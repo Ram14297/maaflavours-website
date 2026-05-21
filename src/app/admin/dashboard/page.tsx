@@ -87,17 +87,18 @@ export default function DashboardPage() {
   return (
     <AdminPage>
       {/* ── Header row ── */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <p style={{ color: A.grey, fontSize: 12 }}>
-            {new Date().toLocaleDateString("en-IN", { weekday:"long", day:"numeric", month:"long", year:"numeric" })} · IST
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p style={{ color: A.grey, fontSize: 11 }}>
+            {new Date().toLocaleDateString("en-IN", { weekday:"long", day:"numeric", month:"short", year:"numeric" })} · IST
           </p>
-          <h1 style={{ fontFamily:"'Playfair Display',serif", color: A.brown, fontSize: 22, fontWeight: 700, lineHeight:1.2 }}>
-            Good morning 👋 Here's your store snapshot
+          <h1 style={{ fontFamily:"'Playfair Display',serif", color: A.brown, fontSize: 18, fontWeight: 700, lineHeight:1.2 }}>
+            Good morning 👋 Store snapshot
           </h1>
         </div>
         <Btn variant="ghost" size="sm" onClick={() => setRefresh(r => r+1)}>
-          <RefreshIcon/> Refresh
+          <RefreshIcon/>
+          <span className="hidden sm:inline">Refresh</span>
         </Btn>
       </div>
 
@@ -141,46 +142,46 @@ export default function DashboardPage() {
 
       {/* ── Alert strip: new orders to process + prep needed + low stock ── */}
       {!loading && ((kpis?.newOrders ?? 0) > 0 || (kpis?.lowStockCount ?? 0) > 0 || prepItems.length > 0) && (
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
           {(kpis?.newOrders ?? 0) > 0 && (
-            <Link href="/admin/orders?status=confirmed">
+            <Link href="/admin/orders?status=confirmed" className="w-full sm:w-auto">
               <div
-                className="flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-shadow hover:shadow-sm"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-shadow hover:shadow-sm"
                 style={{ background: "rgba(200,150,12,0.08)", border: "1px solid rgba(200,150,12,0.3)" }}
               >
                 <span style={{ color: "#B8750A" }}>🆕</span>
-                <span style={{ color: "#B8750A", fontSize: 13, fontWeight: 600 }}>
+                <span style={{ color: "#B8750A", fontSize: 13, fontWeight: 600, flex: 1 }}>
                   {kpis?.newOrders} new order{kpis?.newOrders !== 1 ? "s" : ""} — ready to prepare
                 </span>
-                <span style={{ color: "#B8750A", fontSize: 12 }}>→</span>
+                <span style={{ color: "#B8750A", fontSize: 13 }}>→</span>
               </div>
             </Link>
           )}
           {!prepLoading && prepItems.length > 0 && (
-            <Link href="/admin/prep">
+            <Link href="/admin/prep" className="w-full sm:w-auto">
               <div
-                className="flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-shadow hover:shadow-sm"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-shadow hover:shadow-sm"
                 style={{ background: "rgba(74,124,89,0.07)", border: "1px solid rgba(74,124,89,0.3)" }}
               >
                 <span style={{ color: "#4A7C59" }}>🥘</span>
-                <span style={{ color: "#4A7C59", fontSize: 13, fontWeight: 600 }}>
+                <span style={{ color: "#4A7C59", fontSize: 13, fontWeight: 600, flex: 1 }}>
                   {prepItems.reduce((s, i) => s + i.total_qty, 0)} jars to prepare across {prepCount} order{prepCount !== 1 ? "s" : ""}
                 </span>
-                <span style={{ color: "#4A7C59", fontSize: 12 }}>→</span>
+                <span style={{ color: "#4A7C59", fontSize: 13 }}>→</span>
               </div>
             </Link>
           )}
           {(kpis?.lowStockCount ?? 0) > 0 && (
-            <Link href="/admin/inventory">
+            <Link href="/admin/inventory" className="w-full sm:w-auto">
               <div
-                className="flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-shadow hover:shadow-sm"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-lg cursor-pointer transition-shadow hover:shadow-sm"
                 style={{ background: "rgba(192,39,45,0.06)", border: "1px solid rgba(192,39,45,0.25)" }}
               >
                 <span style={{ color: "#C0272D" }}>📦</span>
-                <span style={{ color: "#C0272D", fontSize: 13, fontWeight: 600 }}>
+                <span style={{ color: "#C0272D", fontSize: 13, fontWeight: 600, flex: 1 }}>
                   {kpis?.lowStockCount} variant{kpis?.lowStockCount !== 1 ? "s" : ""} running low on stock
                 </span>
-                <span style={{ color: "#C0272D", fontSize: 12 }}>→</span>
+                <span style={{ color: "#C0272D", fontSize: 13 }}>→</span>
               </div>
             </Link>
           )}
@@ -204,40 +205,38 @@ export default function DashboardPage() {
               <p style={{ color: A.grey, fontSize: 13 }}>All caught up — no jars to prepare right now</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {prepItems.map((item, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-between px-3 py-2.5 rounded-lg"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg"
                   style={{ background: A.cream, border: `1px solid ${A.border}` }}
                 >
-                  <div className="flex items-center gap-3">
-                    <span style={{ fontSize: 18 }}>🫙</span>
-                    <div>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: A.brown }}>{item.product_name}</p>
-                      <p style={{ fontSize: 11, color: A.grey }}>{item.variant_label}</p>
-                    </div>
+                  <span style={{ fontSize: 16, flexShrink: 0 }}>🫙</span>
+                  <div className="flex-1 min-w-0">
+                    <p style={{ fontSize: 13, fontWeight: 600, color: A.brown }} className="truncate">{item.product_name}</p>
+                    <p style={{ fontSize: 11, color: A.grey }} className="truncate">{item.variant_label}</p>
                   </div>
-                  <div className="text-right">
-                    <p style={{ fontSize: 22, fontWeight: 700, color: A.gold, lineHeight: 1 }}>{item.total_qty}</p>
-                    <p style={{ fontSize: 10, color: A.grey }}>jars</p>
+                  <div className="shrink-0 flex items-baseline gap-1">
+                    <span style={{ fontSize: 20, fontWeight: 700, color: A.gold, lineHeight: 1 }}>{item.total_qty}</span>
+                    <span style={{ fontSize: 10, color: A.grey }}>jars</span>
                   </div>
                 </div>
               ))}
               <div
-                className="flex items-center justify-between px-3 py-2 rounded-lg mt-1"
+                className="flex items-center justify-between px-3 py-2 rounded-lg"
                 style={{ background: A.gold + "18", border: `1px solid ${A.gold}40` }}
               >
-                <p style={{ fontSize: 12, fontWeight: 700, color: A.brown }}>TOTAL TO PREPARE</p>
-                <p style={{ fontSize: 20, fontWeight: 700, color: A.gold }}>{prepItems.reduce((s, i) => s + i.total_qty, 0)} jars</p>
+                <p style={{ fontSize: 12, fontWeight: 700, color: A.brown }}>TOTAL</p>
+                <p style={{ fontSize: 18, fontWeight: 700, color: A.gold }}>{prepItems.reduce((s, i) => s + i.total_qty, 0)} jars</p>
               </div>
             </div>
           )}
         </Card>
       )}
 
-      {/* ── Charts row ── */}
-      <div className="grid xl:grid-cols-3 gap-5">
+      {/* ── Charts row — hidden on mobile (too complex on small screens) ── */}
+      <div className="hidden sm:grid xl:grid-cols-3 gap-5">
 
         {/* Weekly Revenue Area Chart (spans 2 cols) */}
         <div className="xl:col-span-2">
@@ -312,46 +311,97 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Bottom row ── */}
-      <div className="grid xl:grid-cols-3 gap-5">
+      <div className="grid xl:grid-cols-3 gap-4 sm:gap-5">
 
         {/* Recent Orders (2 cols) */}
         <div className="xl:col-span-2">
           <Card
             title="Recent Orders"
             noPad
-            action={<Link href="/admin/orders"><Btn variant="ghost" size="sm">All Orders →</Btn></Link>}
+            action={<Link href="/admin/orders"><Btn variant="ghost" size="sm">All →</Btn></Link>}
           >
-            <Table
-              loading={loading}
-              columns={[
-                { key:"order",    label:"Order #"                  },
-                { key:"customer", label:"Customer"                 },
-                { key:"amount",   label:"Amount",  align:"right"  },
-                { key:"method",   label:"Method"                   },
-                { key:"status",   label:"Status"                   },
-                { key:"date",     label:"Date"                     },
-                { key:"action",   label:"",        width:"60px"   },
-              ]}
-              rows={(data?.recentOrders || []).slice(0,8).map((o: any) => ({
-                order:    (
-                  <span style={{ fontFamily:"'DM Sans',monospace", fontWeight:700, fontSize:12, color:A.brown }}>
-                    {o.order_number}
-                  </span>
-                ),
-                customer: (
-                  <div>
-                    <p style={{ fontSize:12, fontWeight:500, color:A.brown }}>{o.customer_name || "Guest"}</p>
-                    <p style={{ fontSize:10, color:A.grey }}>{o.customer_mobile}</p>
-                  </div>
-                ),
-                amount:   <span style={{ fontWeight:700, fontSize:13 }}>{fmtRupee(o.total)}</span>,
-                method:   <span style={{ fontSize:11, color:A.grey, textTransform:"capitalize" }}>{o.payment_method?.replace(/_/g," ")}</span>,
-                status:   <StatusBadge status={o.status}/>,
-                date:     <span style={{ fontSize:11, color:A.grey }}>{fmtDate(o.created_at)}</span>,
-                action:   <Link href={`/admin/orders/${o.id}`}><Btn variant="ghost" size="sm">→</Btn></Link>,
-              }))}
-              emptyMessage="No orders yet"
-            />
+            {/* ── Mobile: compact card list ── */}
+            <div className="sm:hidden">
+              {loading ? (
+                <div className="divide-y" style={{ borderColor: A.border }}>
+                  {[1,2,3,4].map(i => (
+                    <div key={i} className="flex items-center justify-between px-4 py-3 animate-pulse">
+                      <div>
+                        <div className="h-3 w-20 rounded mb-1" style={{ background: A.cream }}/>
+                        <div className="h-3 w-28 rounded" style={{ background: A.cream }}/>
+                      </div>
+                      <div className="text-right">
+                        <div className="h-4 w-16 rounded mb-1" style={{ background: A.cream }}/>
+                        <div className="h-3 w-12 rounded" style={{ background: A.cream }}/>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (data?.recentOrders || []).length === 0 ? (
+                <p style={{ color: A.grey, fontSize: 13, textAlign: "center", padding: "32px 16px" }}>No orders yet</p>
+              ) : (
+                <div>
+                  {(data?.recentOrders || []).slice(0, 6).map((o: any, i: number) => (
+                    <Link key={i} href={`/admin/orders/${o.id}`}>
+                      <div
+                        className="flex items-center gap-3 px-4 py-3 active:bg-amber-50 transition-colors"
+                        style={{ borderBottom: `1px solid ${A.border}` }}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span style={{ fontFamily:"'DM Sans',monospace", fontWeight:700, fontSize:12, color:A.brown }}>
+                              {o.order_number}
+                            </span>
+                            <StatusBadge status={o.status}/>
+                          </div>
+                          <p style={{ fontSize:12, color:A.grey }} className="truncate">
+                            {o.customer_name || "Guest"} · {o.payment_method?.replace(/_/g," ")}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p style={{ fontWeight:700, fontSize:14, color:A.brown }}>{fmtRupee(o.total)}</p>
+                          <p style={{ fontSize:10, color:A.grey }}>{fmtDate(o.created_at)}</p>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* ── Desktop: full table ── */}
+            <div className="hidden sm:block">
+              <Table
+                loading={loading}
+                columns={[
+                  { key:"order",    label:"Order #"                  },
+                  { key:"customer", label:"Customer"                 },
+                  { key:"amount",   label:"Amount",  align:"right"  },
+                  { key:"method",   label:"Method"                   },
+                  { key:"status",   label:"Status"                   },
+                  { key:"date",     label:"Date"                     },
+                  { key:"action",   label:"",        width:"60px"   },
+                ]}
+                rows={(data?.recentOrders || []).slice(0,8).map((o: any) => ({
+                  order:    (
+                    <span style={{ fontFamily:"'DM Sans',monospace", fontWeight:700, fontSize:12, color:A.brown }}>
+                      {o.order_number}
+                    </span>
+                  ),
+                  customer: (
+                    <div>
+                      <p style={{ fontSize:12, fontWeight:500, color:A.brown }}>{o.customer_name || "Guest"}</p>
+                      <p style={{ fontSize:10, color:A.grey }}>{o.customer_mobile}</p>
+                    </div>
+                  ),
+                  amount:   <span style={{ fontWeight:700, fontSize:13 }}>{fmtRupee(o.total)}</span>,
+                  method:   <span style={{ fontSize:11, color:A.grey, textTransform:"capitalize" }}>{o.payment_method?.replace(/_/g," ")}</span>,
+                  status:   <StatusBadge status={o.status}/>,
+                  date:     <span style={{ fontSize:11, color:A.grey }}>{fmtDate(o.created_at)}</span>,
+                  action:   <Link href={`/admin/orders/${o.id}`}><Btn variant="ghost" size="sm">→</Btn></Link>,
+                }))}
+                emptyMessage="No orders yet"
+              />
+            </div>
           </Card>
         </div>
 
@@ -427,20 +477,20 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Quick Actions row ── */}
-      <Card title="Quick Actions" subtitle="Common admin tasks">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <Card title="Quick Actions">
+        <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
           {QUICK_ACTIONS.map(qa => (
             <Link key={qa.href} href={qa.href}>
               <div
-                className="flex flex-col items-center gap-2 p-3 rounded-xl text-center cursor-pointer transition-all"
+                className="flex flex-col items-center gap-1.5 p-2 sm:p-3 rounded-xl text-center cursor-pointer transition-all active:scale-95"
                 style={{ border:`1px solid ${A.border}`, background:"#fff" }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = A.gold; (e.currentTarget as HTMLElement).style.background = "#FFFDF5"; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = A.border; (e.currentTarget as HTMLElement).style.background = "#fff"; }}
               >
-                <span style={{ fontSize:20 }}>{qa.icon}</span>
-                <span style={{ color:A.brown, fontSize:11, fontWeight:600 }}>{qa.label}</span>
-                {qa.badge && (
-                  <span className="px-1.5 py-0.5 rounded-full text-xs font-bold" style={{ background:"rgba(192,39,45,0.12)", color:"#C0272D" }}>
+                <span style={{ fontSize:18 }}>{qa.icon}</span>
+                <span style={{ color:A.brown, fontSize:10, fontWeight:600, lineHeight:1.2, textAlign:"center" }}>{qa.label}</span>
+                {qa.badge && (kpis) && (qa.badge(kpis) as number) > 0 && (
+                  <span className="px-1.5 py-0.5 rounded-full font-bold" style={{ background:"rgba(192,39,45,0.12)", color:"#C0272D", fontSize:10 }}>
                     {qa.badge(kpis)}
                   </span>
                 )}
@@ -551,7 +601,7 @@ const QUICK_ACTIONS = [
 ];
 
 // ─── Tiny icon components ─────────────────────────────────────────────────────
-function RupeeIcon()  { return <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>; }
+function RupeeIcon()  { return <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path d="M6 3h12"/><path d="M6 8h12"/><path d="M6 13l8.5 8"/><path d="M6 13h3"/><path d="M9 13c6.667 0 6.667-10 0-10"/></svg>; }
 function TrendIcon()  { return <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>; }
 function OrderIcon()  { return <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>; }
 function PeopleIcon() { return <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>; }
