@@ -1,17 +1,17 @@
 // src/lib/notify-customer.ts
-// Maa Flavours — Customer SMS Notifications via Fast2SMS
+// Maa Flavours — Customer WhatsApp Notifications via Fast2SMS
 //
-// Sends transactional SMS to the customer's mobile on every order event.
-// Uses Fast2SMS "quick" (transactional) route — no DLT registration needed.
+// Sends WhatsApp messages to the customer's mobile on every order event.
+// Uses Fast2SMS WhatsApp API route.
 //
 // Setup:
-//   1. Sign up at https://www.fast2sms.com (free 100 credits on signup)
+//   1. Sign up at https://www.fast2sms.com
 //   2. Go to Dashboard → Dev API → copy your API key
 //   3. Add to Vercel env vars: FAST2SMS_API_KEY=your_key_here
 //
 // If FAST2SMS_API_KEY is not set, all calls are silently skipped (non-fatal).
 
-// ─── Core SMS sender ────────────────────────────────────────────────────────
+// ─── Core WhatsApp sender ─────────────────────────────────────────────────────
 
 export async function notifyCustomerSMS(
   mobile: string,
@@ -25,16 +25,15 @@ export async function notifyCustomerSMS(
   if (normalized.length !== 10) return;
 
   try {
-    await fetch("https://www.fast2sms.com/dev/bulkV2", {
+    await fetch("https://www.fast2sms.com/dev/whatsapp", {
       method: "POST",
       headers: {
         "authorization": apiKey,
-        "Content-Type": "application/json",
+        "Content-Type":  "application/json",
       },
       body: JSON.stringify({
-        route:   "q",          // quick transactional route
-        message,
         numbers: normalized,
+        message,
       }),
     });
   } catch { /* non-fatal — never block order processing */ }
