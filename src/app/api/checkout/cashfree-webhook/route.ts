@@ -15,6 +15,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { notifyCustomerSMS, msgOrderConfirmed, shortOrderId } from "@/lib/notify-customer";
 import { sendOrderConfirmedEmail } from "@/lib/email";
+import { pushOrderToShiprocket } from "@/lib/shiprocket";
 
 function verifyCashfreeSignature(
   rawBody: string,
@@ -165,11 +166,12 @@ export async function POST(request: NextRequest) {
 
         console.log(`[cashfree-webhook] Order ${matchedOrder.id} → ${orderStatus} / ${paymentStatusDb}`);
 
-        // On successful payment: deduct stock + notify admin + notify customer
+        // On successful payment: deduct stock + notify admin + notify customer + push to Shiprocket
         if (orderStatus === "confirmed") {
           await decrementOrderStock(adminSupa, matchedOrder.id).catch(() => {});
           await notifyAdmin(adminSupa, matchedOrder.id, cfPaymentId, "cashfree").catch(() => {});
           await notifyCustomerOnPayment(adminSupa, matchedOrder.id).catch(() => {});
+          pushOrderToShiprocket(matchedOrder.id).catch(() => {});
         }
       } else {
         console.warn("[cashfree-webhook] No matching order found for cf_order_id:", cfOrderId);

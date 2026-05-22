@@ -28,6 +28,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { notifyCustomerSMS, msgOrderConfirmed, shortOrderId } from "@/lib/notify-customer";
 import { sendOrderConfirmedEmail } from "@/lib/email";
 import { verifyCustomerSession } from "@/lib/customer-auth";
+import { pushOrderToShiprocket } from "@/lib/shiprocket";
 import { isAllowedOrigin } from "@/lib/origin-check";
 
 // ─── Validation schemas ──────────────────────────────────────────────────────
@@ -477,6 +478,9 @@ export async function POST(request: NextRequest) {
         // Notify admin of new COD order
         await notifyAdmin(adminSupa, supabaseOrderId, deliveryAddress.name, total, "cod").catch(() => {});
 
+        // Push to Shiprocket (non-fatal — fire and forget)
+        pushOrderToShiprocket(supabaseOrderId).catch(() => {});
+
         // ── Notify customer via SMS ────────────────────────────────────────
         await notifyCustomerSMS(
           deliveryAddress.mobile,
@@ -547,6 +551,9 @@ export async function POST(request: NextRequest) {
         await notifyAdmin(
           adminSupa, supabaseOrderId, deliveryAddress.name, total, "phonepe_qr"
         ).catch(() => {});
+
+        // Push to Shiprocket (non-fatal — fire and forget)
+        pushOrderToShiprocket(supabaseOrderId).catch(() => {});
 
         // Notify customer via SMS
         await notifyCustomerSMS(

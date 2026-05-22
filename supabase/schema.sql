@@ -334,11 +334,15 @@ CREATE TABLE IF NOT EXISTS orders (
   cashfree_payment_id  TEXT   UNIQUE,   -- cf_pay_xxx
 
   -- Shipping
-  tracking_id          TEXT,
-  courier_name         TEXT,            -- "DTDC", "BlueDart", "India Post"
-  tracking_url         TEXT,
-  dispatched_at        TIMESTAMPTZ,
-  delivered_at         TIMESTAMPTZ,
+  tracking_id              TEXT,
+  courier_name             TEXT,            -- "DTDC", "BlueDart", "India Post"
+  tracking_url             TEXT,
+  dispatched_at            TIMESTAMPTZ,
+  delivered_at             TIMESTAMPTZ,
+
+  -- Shiprocket integration (auto-pushed on order confirmation)
+  shiprocket_order_id      BIGINT,
+  shiprocket_shipment_id   BIGINT,
 
   -- GST (pickles = HSN 2001, 12% GST: CGST 6% + SGST 6% intrastate, IGST 12% interstate)
   cgst_rate            NUMERIC(5,2) NOT NULL DEFAULT 6.00,
