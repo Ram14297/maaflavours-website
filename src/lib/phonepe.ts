@@ -15,7 +15,7 @@
 // because Next.js evaluates this module during `next build` to "collect
 // page data" — env vars from the deployment may not be present then.
 
-import { createHash } from "crypto";
+import { createHash, timingSafeEqual } from "crypto";
 
 function envOrThrow(name: string, devFallback: string): string {
   const v = process.env[name];
@@ -70,11 +70,23 @@ export function generateStatusChecksum(merchantTransactionId: string): string {
 
 // ─── Verify server-to-server callback ────────────────────────────────────────
 // PhonePe sends header X-VERIFY: SHA256(base64response + saltKey) + "###" + saltIndex
+// SECURITY: Use timingSafeEqual to prevent timing-oracle attacks that could let
+// an attacker guess the salt key one character at a time.
 export function verifyCallbackChecksum(base64Response: string, xVerify: string): boolean {
   const saltKey = getPhonePeSaltKey();
   const idx     = getPhonePeSaltIndex();
   const hash    = createHash("sha256")
     .update(base64Response + saltKey)
     .digest("hex");
-  return `${hash}###${idx}` === xVerify;
+  const expected = `${hash}###${idx}`;
+
+  // Buffers must be the same length for timingSafeEqual
+  const a = Buffer.from(expected);
+  const b = Buffer.from(xVerify);
+  if (a.length !== b.length) return false;
+  try {
+    return timingSafeEqual(a, b);
+  } catch {
+    return false;
+  }
 }

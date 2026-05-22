@@ -37,3 +37,8 @@ next-env.d.ts
 
 .vercel
 .env*.local
+# Env backup/copy files — never commit these
+.env.local.*
+.env.*.backup
+.env.*.fresh
+.env.*.bak

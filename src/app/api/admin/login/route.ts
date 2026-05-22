@@ -10,10 +10,15 @@ import bcrypt from "bcryptjs";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { signAdminToken, ADMIN_COOKIE_NAME, ADMIN_COOKIE_OPTIONS } from "@/lib/admin-auth";
 
-// Rate limiting: in-memory map (use Redis/Upstash in production for multi-instance)
-const FAILED_ATTEMPTS = new Map<string, { count: number; lockedUntil: number }>();
-const MAX_ATTEMPTS    = 5;
-const LOCKOUT_MINUTES = 15;
+// ─── Rate limiting ────────────────────────────────────────────────────────────
+// Two-tier defence:
+//   1. DB-backed (primary): lockout survives serverless cold starts because
+//      failed_login_count + locked_until are stored in admin_users table.
+//   2. In-memory (secondary): fast same-instance protection for env-var-only
+//      fallback path where there is no admin_users row to update.
+const FAILED_ATTEMPTS_MEM = new Map<string, { count: number; lockedUntil: number }>();
+const MAX_ATTEMPTS        = 5;
+const LOCKOUT_MINUTES     = 15;
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,13 +28,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
     }
 
-    const clientIp = req.headers.get("x-forwarded-for") || "unknown";
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || "unknown";
 
-    // ─── Rate limiting ───────────────────────────────────────────────
-    const rateKey  = `${clientIp}:${email}`;
-    const attempts = FAILED_ATTEMPTS.get(rateKey);
-    if (attempts && attempts.lockedUntil > Date.now()) {
-      const minutes = Math.ceil((attempts.lockedUntil - Date.now()) / 60000);
+    // ─── In-memory rate limit (same-instance fast path) ──────────────
+    const rateKey      = `${clientIp}:${email}`;
+    const memAttempts  = FAILED_ATTEMPTS_MEM.get(rateKey);
+    if (memAttempts && memAttempts.lockedUntil > Date.now()) {
+      const minutes = Math.ceil((memAttempts.lockedUntil - Date.now()) / 60000);
       return NextResponse.json(
         { error: `Too many failed attempts. Try again in ${minutes} minute(s).` },
         { status: 429 }
@@ -37,47 +42,93 @@ export async function POST(req: NextRequest) {
     }
 
     // ─── Look up admin in DB ─────────────────────────────────────────
-    let adminUser: { id: string; email: string; password_hash: string; role: string } | null = null;
+    let adminUser: {
+      id: string; email: string; password_hash: string; role: string;
+      failed_login_count: number; locked_until: string | null;
+    } | null = null;
+    let dbAvailable = false;
 
     try {
       const supabase = createAdminSupabaseClient();
       const { data } = await supabase
         .from("admin_users")
-        .select("id, email, password_hash, role, is_active")
+        .select("id, email, password_hash, role, is_active, failed_login_count, locked_until")
         .eq("email", email.toLowerCase().trim())
         .eq("is_active", true)
         .single();
-      adminUser = data;
+      adminUser    = data as typeof adminUser;
+      dbAvailable  = true;
     } catch {
       // Fallback: check env vars (for local dev without DB)
       const adminEmail = process.env.ADMIN_EMAIL;
       const adminHash  = process.env.ADMIN_PASSWORD_HASH;
       if (adminEmail && adminHash && email === adminEmail) {
-        adminUser = { id: "admin-dev", email: adminEmail, password_hash: adminHash, role: "super_admin" };
+        adminUser = {
+          id: "admin-dev", email: adminEmail, password_hash: adminHash,
+          role: "super_admin", failed_login_count: 0, locked_until: null,
+        };
       }
     }
 
+    // ─── DB-backed lockout check ──────────────────────────────────────
+    // This check survives cold starts because locked_until is in Supabase.
+    if (adminUser?.locked_until && new Date(adminUser.locked_until) > new Date()) {
+      const minutes = Math.ceil(
+        (new Date(adminUser.locked_until).getTime() - Date.now()) / 60000
+      );
+      return NextResponse.json(
+        { error: `Too many failed attempts. Try again in ${minutes} minute(s).` },
+        { status: 429 }
+      );
+    }
+
     if (!adminUser) {
-      // Track failed attempt
-      const cur = FAILED_ATTEMPTS.get(rateKey) || { count: 0, lockedUntil: 0 };
+      // Track failed attempt in memory (DB had no row for this email)
+      const cur = FAILED_ATTEMPTS_MEM.get(rateKey) || { count: 0, lockedUntil: 0 };
       cur.count++;
       if (cur.count >= MAX_ATTEMPTS) cur.lockedUntil = Date.now() + LOCKOUT_MINUTES * 60 * 1000;
-      FAILED_ATTEMPTS.set(rateKey, cur);
+      FAILED_ATTEMPTS_MEM.set(rateKey, cur);
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
     // ─── Verify password ─────────────────────────────────────────────
     const passwordValid = await bcrypt.compare(password, adminUser.password_hash);
     if (!passwordValid) {
-      const cur = FAILED_ATTEMPTS.get(rateKey) || { count: 0, lockedUntil: 0 };
+      // Increment in-memory counter
+      const cur = FAILED_ATTEMPTS_MEM.get(rateKey) || { count: 0, lockedUntil: 0 };
       cur.count++;
       if (cur.count >= MAX_ATTEMPTS) cur.lockedUntil = Date.now() + LOCKOUT_MINUTES * 60 * 1000;
-      FAILED_ATTEMPTS.set(rateKey, cur);
+      FAILED_ATTEMPTS_MEM.set(rateKey, cur);
+
+      // Increment DB counter (primary lockout store — survives cold starts)
+      if (dbAvailable && adminUser.id !== "admin-dev") {
+        try {
+          const newCount      = (adminUser.failed_login_count ?? 0) + 1;
+          const lockedUntilTs = newCount >= MAX_ATTEMPTS
+            ? new Date(Date.now() + LOCKOUT_MINUTES * 60 * 1000).toISOString()
+            : null;
+          const supabase = createAdminSupabaseClient();
+          await supabase.from("admin_users").update({
+            failed_login_count: newCount,
+            ...(lockedUntilTs ? { locked_until: lockedUntilTs } : {}),
+          }).eq("id", adminUser.id);
+        } catch { /* non-fatal — in-memory still active */ }
+      }
+
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 
     // ─── Clear failed attempts on success ────────────────────────────
-    FAILED_ATTEMPTS.delete(rateKey);
+    FAILED_ATTEMPTS_MEM.delete(rateKey);
+    if (dbAvailable && adminUser.id !== "admin-dev") {
+      try {
+        const supabase = createAdminSupabaseClient();
+        await supabase.from("admin_users").update({
+          failed_login_count: 0,
+          locked_until:       null,
+        }).eq("id", adminUser.id);
+      } catch { /* non-fatal */ }
+    }
 
     // ─── Update last_login_at ────────────────────────────────────────
     try {

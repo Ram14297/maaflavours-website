@@ -23,12 +23,24 @@ const PROD_ALLOWED_HOSTS = new Set([
 
 function isAllowedHost(host: string): boolean {
   if (PROD_ALLOWED_HOSTS.has(host)) return true;
-  if (process.env.NODE_ENV !== "production") {
+
+  // Local development only
+  if (process.env.NODE_ENV === "development") {
     if (host === "localhost" || host.startsWith("localhost:")) return true;
     if (host === "127.0.0.1" || host.startsWith("127.0.0.1:")) return true;
-    if (host.endsWith(".vercel.app")) return true;  // preview deployments
   }
-  // Additional hosts via env var (comma-separated), e.g. for custom previews
+
+  // Vercel preview deployments: only allow our project's own preview URLs.
+  // VERCEL_URL is set automatically by Vercel for each deployment
+  // (e.g. maa-flavours-abc123-ram.vercel.app). We also accept the project
+  // alias pattern. Do NOT allow *.vercel.app broadly — that would let any
+  // other Vercel project bypass the origin check.
+  const vercelUrl = process.env.VERCEL_URL; // set by Vercel infra, not user
+  if (vercelUrl && host === vercelUrl) return true;
+
+  // Additional explicit hosts via env var (comma-separated)
+  // Use this for custom preview domains, staging, etc.
+  // Example: ALLOWED_ORIGINS=staging.maaflavours.com,preview.maaflavours.com
   const extra = process.env.ALLOWED_ORIGINS;
   if (extra) {
     for (const h of extra.split(",").map(s => s.trim()).filter(Boolean)) {

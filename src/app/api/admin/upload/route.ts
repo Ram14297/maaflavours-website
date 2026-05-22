@@ -64,6 +64,8 @@ export async function DELETE(req: NextRequest) {
   const bucket = req.nextUrl.searchParams.get("bucket") || "product-images";
 
   if (!path) return NextResponse.json({ error: "path required" }, { status: 400 });
+  if (!ALLOWED_BUCKETS.includes(bucket))
+    return NextResponse.json({ error: "Invalid bucket" }, { status: 400 });
 
   try {
     const supabase = createAdminSupabaseClient();

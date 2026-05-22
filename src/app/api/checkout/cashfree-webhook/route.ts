@@ -63,7 +63,8 @@ export async function POST(request: NextRequest) {
 
     const data = JSON.parse(body);
 
-    console.log("[cashfree-webhook] Received:", JSON.stringify(data));
+    // Log only non-PII fields (never log full payload — it contains name, email, phone)
+    console.log("[cashfree-webhook] Received event:", data?.type, "| cf_order_id:", data?.data?.order?.order_id);
 
     // ─── Extract key fields from Cashfree webhook payload ────────────────
     // Cashfree webhook structure (v2023-08-01):
@@ -127,6 +128,21 @@ export async function POST(request: NextRequest) {
       }
 
       if (matchedOrder) {
+        // ── Idempotency guard ─────────────────────────────────────────
+        // Cashfree may deliver the same webhook more than once (retries on
+        // non-2xx or on transient network errors). If we have already
+        // confirmed + paid this order, do nothing and return 200 so
+        // Cashfree stops retrying. Without this guard, a duplicate webhook
+        // would re-run stock decrement and re-send SMS/email to the customer.
+        if (
+          orderStatus === "confirmed" &&
+          matchedOrder.status === "confirmed" &&
+          matchedOrder.payment_status === "paid"
+        ) {
+          console.log(`[cashfree-webhook] Order ${matchedOrder.id} already confirmed — skipping duplicate event`);
+          return NextResponse.json({ ok: true, duplicate: true });
+        }
+
         // ── Amount-tampering guard ────────────────────────────────────
         // Only trust SUCCESS if Cashfree's order_amount equals our stored
         // total (within 1 paise tolerance). Otherwise we'd let an attacker
