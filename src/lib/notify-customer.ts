@@ -76,7 +76,7 @@ export function msgOrderShipped(
   trackingId: string
 ): string {
   const firstName = name.split(" ")[0];
-  return `Hi ${firstName}! Your Maa Flavours order #${shortId} is on its way. Courier: ${courier}. Tracking ID: ${trackingId}. Track at maaflavours.com/account/orders`;
+  return `Hi ${firstName}! Your Maa Flavours order #${shortId} is on its way. Courier: ${courier}. Track here: https://shiprocket.co/tracking/${trackingId}`;
 }
 
 export function msgOrderOutForDelivery(name: string, shortId: string): string {
