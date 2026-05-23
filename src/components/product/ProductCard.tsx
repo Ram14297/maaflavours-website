@@ -22,6 +22,71 @@ interface ProductCardProps {
   onAddToCart?: (product: ProductSeed, variantIndex: number) => void;
 }
 
+// ─── Restock notify button for card overlay ───────────────────────────────────
+function RestockCardButton({ productSlug, productName }: { productSlug: string; productName: string }) {
+  const [open,   setOpen]   = useState(false);
+  const [email,  setEmail]  = useState("");
+  const [status, setStatus] = useState<"idle"|"loading"|"done"|"error">("idle");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setStatus("loading");
+    try {
+      const res = await fetch("/api/restock-notify", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ productSlug, productName, email }),
+      });
+      setStatus(res.ok ? "done" : "error");
+    } catch {
+      setStatus("error");
+    }
+  }
+
+  if (status === "done") {
+    return (
+      <span className="font-dm-sans text-[0.65rem] font-semibold px-3 py-1 rounded-full"
+        style={{ background: "rgba(255,255,255,0.95)", color: "#4A7C2F" }}>
+        ✅ We'll email you!
+      </span>
+    );
+  }
+
+  if (!open) {
+    return (
+      <button onClick={e => { e.preventDefault(); e.stopPropagation(); setOpen(true); }}
+        className="font-dm-sans text-[0.65rem] font-medium px-3 py-1 rounded-full hover:opacity-80 transition-opacity"
+        style={{ background: "rgba(255,255,255,0.9)", color: "var(--color-brown)" }}>
+        Notify me when available
+      </button>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} onClick={e => { e.preventDefault(); e.stopPropagation(); }}
+      className="flex flex-col items-center gap-1.5">
+      <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
+        placeholder="your@email.com" autoFocus
+        className="font-dm-sans text-[0.65rem] px-3 py-1.5 rounded-full border-0 outline-none w-44 text-center"
+        style={{ background: "rgba(255,255,255,0.97)", color: "var(--color-brown)" }}
+      />
+      <div className="flex gap-1.5">
+        <button type="submit" disabled={status === "loading"}
+          className="font-dm-sans text-[0.65rem] font-semibold px-3 py-1 rounded-full"
+          style={{ background: "var(--color-crimson)", color: "#fff" }}>
+          {status === "loading" ? "…" : "Notify Me"}
+        </button>
+        <button type="button" onClick={e => { e.stopPropagation(); setOpen(false); }}
+          className="font-dm-sans text-[0.65rem] px-2 py-1 rounded-full"
+          style={{ background: "rgba(255,255,255,0.7)", color: "var(--color-brown)" }}>
+          ✕
+        </button>
+      </div>
+    </form>
+  );
+}
+
 export default function ProductCard({
   product,
   imageUrl,
@@ -434,7 +499,7 @@ export default function ProductCard({
         {isSoldOut && (
           <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-2">
             <span
-              className="font-dm-sans font-extrabold text-sm sm:text-base uppercase px-5 py-2 rounded-full shadow-lg"
+              className="font-dm-sans font-extrabold text-sm sm:text-base uppercase px-5 py-2 rounded-full shadow-lg pointer-events-none"
               style={{
                 background: "var(--color-crimson)",
                 color: "white",
@@ -444,15 +509,7 @@ export default function ProductCard({
             >
               Sold Out
             </span>
-            <span
-              className="font-dm-sans text-[0.65rem] font-medium px-3 py-1 rounded-full"
-              style={{
-                background: "rgba(255,255,255,0.9)",
-                color: "var(--color-brown)",
-              }}
-            >
-              Notify me when available
-            </span>
+            <RestockCardButton productSlug={product.slug} productName={product.name} />
           </div>
         )}
       </div>

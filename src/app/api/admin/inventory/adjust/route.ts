@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient }  from "@/lib/supabase/server";
 import { requireAdmin }               from "@/lib/admin-auth";
+import { sendRestockEmail }           from "@/lib/email";
 
 export async function POST(req: NextRequest) {
   const admin = await requireAdmin(req);
@@ -62,6 +63,40 @@ export async function POST(req: NextRequest) {
       note:            note || null,
       created_by:      admin.email || "admin",
     });
+
+    // ── Restock notifications ──────────────────────────────────────────────
+    // If stock just went from 0 → positive, email everyone who asked to be notified.
+    if (qtyBefore === 0 && qtyAfter > 0) {
+      const productName = (variant.products as any)?.name || "";
+
+      // Look up the product slug
+      const { data: productRow } = await supabase
+        .from("products")
+        .select("slug")
+        .eq("name", productName)
+        .maybeSingle();
+
+      if (productRow?.slug) {
+        const { data: pending } = await supabase
+          .from("restock_notifications")
+          .select("id, email")
+          .eq("product_slug", productRow.slug)
+          .is("notified_at", null);
+
+        for (const row of pending || []) {
+          try {
+            await sendRestockEmail({ to: row.email, productName, productSlug: productRow.slug });
+            await supabase.from("restock_notifications")
+              .update({ notified_at: new Date().toISOString() })
+              .eq("id", row.id);
+          } catch { /* non-fatal per recipient */ }
+        }
+
+        if ((pending || []).length > 0) {
+          console.log(`[inventory/adjust] Sent restock emails to ${pending!.length} customer(s) for ${productName}`);
+        }
+      }
+    }
 
     return NextResponse.json({ success: true, qtyBefore, qtyAfter, qtyChange });
   } catch (err: any) {

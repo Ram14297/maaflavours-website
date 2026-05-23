@@ -350,3 +350,42 @@ export async function sendOrderCancelledEmail(args: SendOrderStatusArgs): Promis
 
   await send(to, `Order Cancelled — ${orderNumber} | Maa Flavours`, html);
 }
+
+// ─── Restock notification email ───────────────────────────────────────────────
+export async function sendRestockEmail({
+  to,
+  productName,
+  productSlug,
+}: {
+  to:          string;
+  productName: string;
+  productSlug: string;
+}): Promise<void> {
+  const productUrl = `${SITE}/products/${productSlug}`;
+
+  const html = shell(`
+    <h2 style="margin:0 0 8px;font-size:22px;color:${C.brown};font-family:Georgia,serif;">
+      🎉 Great news — ${productName} is back!
+    </h2>
+    <p style="margin:0 0 24px;font-size:14px;color:${C.grey};line-height:1.6;">
+      You asked us to let you know when <strong style="color:${C.brown};">${productName}</strong>
+      was back in stock. It's available now — grab yours before it sells out again!
+    </p>
+
+    <div style="background:${C.lightBg};border-radius:12px;padding:20px 24px;border:1px solid rgba(200,150,12,0.2);margin-bottom:24px;text-align:center;">
+      <div style="font-size:48px;margin-bottom:8px;">🫙</div>
+      <div style="font-size:18px;font-weight:700;color:${C.brown};">${productName}</div>
+      <div style="font-size:13px;color:${C.grey};margin-top:4px;">Freshly made · No preservatives · Ships across India</div>
+    </div>
+
+    ${btn(`Order ${productName} Now →`, productUrl)}
+
+    <p style="margin:24px 0 0;font-size:13px;color:${C.grey};text-align:center;line-height:1.6;">
+      Stock is limited — we make these in small batches at home.<br/>
+      Questions? WhatsApp us at
+      <a href="https://wa.me/919701452929" style="color:${C.crimson};font-weight:700;text-decoration:none;">+91 97014 52929</a>
+    </p>
+  `);
+
+  await send(to, `${productName} is back in stock! 🎉 | Maa Flavours`, html);
+}

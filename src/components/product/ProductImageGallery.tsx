@@ -8,6 +8,75 @@ import { useState, useCallback } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, ZoomIn } from "lucide-react";
 
+// ─── Restock notify mini-form ─────────────────────────────────────────────────
+function RestockNotifyForm({ productSlug, productName }: { productSlug: string; productName: string }) {
+  const [open,    setOpen]    = useState(false);
+  const [email,   setEmail]   = useState("");
+  const [status,  setStatus]  = useState<"idle"|"loading"|"done"|"error">("idle");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus("loading");
+    try {
+      const res = await fetch("/api/restock-notify", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ productSlug, productName, email }),
+      });
+      setStatus(res.ok ? "done" : "error");
+    } catch {
+      setStatus("error");
+    }
+  }
+
+  if (status === "done") {
+    return (
+      <span className="font-dm-sans text-xs font-semibold px-4 py-2 rounded-full pointer-events-auto"
+        style={{ background: "rgba(255,255,255,0.95)", color: "#4A7C2F" }}>
+        ✅ We'll email you when it's back!
+      </span>
+    );
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="font-dm-sans text-xs font-semibold px-4 py-2 rounded-full pointer-events-auto transition-opacity hover:opacity-80"
+        style={{ background: "rgba(255,255,255,0.95)", color: "var(--color-brown)" }}>
+        Notify me when available
+      </button>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit}
+      className="flex flex-col items-center gap-2 pointer-events-auto"
+      onClick={e => e.stopPropagation()}>
+      <input
+        type="email" required value={email} onChange={e => setEmail(e.target.value)}
+        placeholder="your@email.com"
+        className="font-dm-sans text-xs px-3 py-2 rounded-full border-0 outline-none w-52 text-center"
+        style={{ background: "rgba(255,255,255,0.97)", color: "var(--color-brown)" }}
+        autoFocus
+      />
+      <div className="flex gap-2">
+        <button type="submit" disabled={status === "loading"}
+          className="font-dm-sans text-xs font-semibold px-4 py-1.5 rounded-full"
+          style={{ background: "var(--color-crimson)", color: "#fff" }}>
+          {status === "loading" ? "Saving…" : "Notify Me"}
+        </button>
+        <button type="button" onClick={() => setOpen(false)}
+          className="font-dm-sans text-xs px-3 py-1.5 rounded-full"
+          style={{ background: "rgba(255,255,255,0.7)", color: "var(--color-brown)" }}>
+          Cancel
+        </button>
+      </div>
+      {status === "error" && <span className="text-xs text-red-300">Something went wrong. Try again.</span>}
+    </form>
+  );
+}
+
 interface GalleryImage {
   id: string;
   url: string;    // REPLACE with actual Supabase Storage URL
@@ -149,9 +218,9 @@ export default function ProductImageGallery({
 
         {/* Sold Out overlay — product detail page */}
         {isSoldOut && (
-          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 pointer-events-none">
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3">
             <span
-              className="font-dm-sans font-extrabold text-lg sm:text-xl uppercase px-8 py-3 rounded-full shadow-2xl"
+              className="font-dm-sans font-extrabold text-lg sm:text-xl uppercase px-8 py-3 rounded-full shadow-2xl pointer-events-none"
               style={{
                 background: "var(--color-crimson)",
                 color: "white",
@@ -161,16 +230,7 @@ export default function ProductImageGallery({
             >
               Sold Out
             </span>
-            <span
-              className="font-dm-sans text-xs font-semibold px-4 py-1.5 rounded-full"
-              style={{
-                background: "rgba(255,255,255,0.92)",
-                color: "var(--color-brown)",
-                letterSpacing: "0.04em",
-              }}
-            >
-              We'll notify you when it's back
-            </span>
+            <RestockNotifyForm productSlug={productSlug} productName={productName} />
           </div>
         )}
 
