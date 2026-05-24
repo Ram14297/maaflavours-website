@@ -3,9 +3,121 @@
 // Shows: subtotal, coupon discount, delivery charge, grand total
 // Matches Razorpay order creation data structure
 
-import React from "react";
+"use client";
+import React, { useMemo } from "react";
 import { formatPrice } from "@/lib/utils";
 import { AppliedCoupon } from "@/store/cartStore";
+
+// ─── Free shipping nudge phrases ─────────────────────────────────────────────
+const PHRASES_FAR = [   // > ₹200 away
+  (x: string) => `🫙 Add one more pack and we'll deliver free!`,
+  (x: string) => `🚚 Free delivery unlocks at ₹899 — just ${x} more to go!`,
+  (x: string) => `💛 Stock up and save — free shipping in just ${x} more!`,
+  (x: string) => `🌶️ Your cart is ${x} away from free shipping across India`,
+];
+const PHRASES_CLOSE = [  // ₹100–₹200 away
+  (x: string) => `🎯 Almost there! ${x} more = free delivery`,
+  (x: string) => `🫙 One more pack gets you free shipping! (${x} to go)`,
+  (x: string) => `✨ So close! Add ${x} worth of pickles for free delivery`,
+  (x: string) => `💪 ${x} more and shipping is on us!`,
+];
+const PHRASES_VERY_CLOSE = [  // < ₹100 away
+  (x: string) => `🔥 Just ${x} more — free shipping is right there!`,
+  (x: string) => `👀 ${x} away from free delivery — don't miss it!`,
+  (x: string) => `🚀 Almost free shipping! Only ${x} left`,
+  (x: string) => `⚡ ${x} more and delivery becomes FREE!`,
+];
+const PHRASES_UNLOCKED = [  // crossed ₹899
+  (_x: string) => `🎉 Free shipping unlocked! Your pickles are coming home free`,
+  (_x: string) => `✅ You've earned free delivery on this order!`,
+  (_x: string) => `🚚 Free shipping added — Maa's proud of you! 😄`,
+  (_x: string) => `🎊 Free delivery unlocked! Enjoy your Andhra pickles!`,
+];
+
+function pick<T>(arr: T[], seed: number): T {
+  return arr[seed % arr.length];
+}
+
+// ─── Free Shipping Banner ─────────────────────────────────────────────────────
+function FreeShippingBanner({ subtotal }: { subtotal: number }) {
+  const FREE_THRESHOLD = 89900; // ₹899 in paise
+  const remaining      = Math.max(0, FREE_THRESHOLD - subtotal);
+  const progress       = Math.min((subtotal / FREE_THRESHOLD) * 100, 100);
+  const unlocked       = subtotal >= FREE_THRESHOLD;
+  const remainRs       = Math.ceil(remaining / 100);
+
+  // Pick a phrase based on current subtotal (changes as cart changes)
+  const phrase = useMemo(() => {
+    const seed = Math.floor(subtotal / 1000); // changes as items added
+    const fmt  = `₹${remainRs}`;
+    if (unlocked)          return pick(PHRASES_UNLOCKED,    seed)("free");
+    if (remainRs < 100)    return pick(PHRASES_VERY_CLOSE,  seed)(fmt);
+    if (remainRs < 200)    return pick(PHRASES_CLOSE,       seed)(fmt);
+    return                        pick(PHRASES_FAR,         seed)(fmt);
+  }, [subtotal, remainRs, unlocked]);
+
+  // Colours per stage
+  const colors = unlocked
+    ? { bg: "rgba(46,125,50,0.08)", border: "#2E7D32", text: "#2E7D32", bar: "#2E7D32", glow: "rgba(46,125,50,0.25)" }
+    : remainRs < 100
+    ? { bg: "rgba(192,39,45,0.07)", border: "var(--color-crimson)", text: "var(--color-crimson)", bar: "var(--color-crimson)", glow: "rgba(192,39,45,0.20)" }
+    : remainRs < 200
+    ? { bg: "rgba(200,120,12,0.08)", border: "#E07B00", text: "#C87000", bar: "#E07B00", glow: "rgba(200,120,12,0.20)" }
+    : { bg: "rgba(200,150,12,0.06)", border: "rgba(200,150,12,0.35)", text: "var(--color-brown)", bar: "var(--color-gold)", glow: "transparent" };
+
+  return (
+    <div
+      className="rounded-2xl px-4 py-3.5 mb-4"
+      style={{
+        background:  colors.bg,
+        border:      `2px solid ${colors.border}`,
+        boxShadow:   `0 0 18px ${colors.glow}`,
+        transition:  "all 0.4s ease",
+      }}
+    >
+      {/* Message */}
+      <p
+        className="font-dm-sans text-sm font-bold mb-2.5 leading-snug"
+        style={{ color: colors.text }}
+      >
+        {phrase}
+      </p>
+
+      {/* Progress bar */}
+      <div className="relative">
+        <div
+          className="h-3 rounded-full overflow-hidden"
+          style={{ background: "rgba(0,0,0,0.07)" }}
+        >
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{
+              width:      `${progress}%`,
+              background: unlocked
+                ? "linear-gradient(90deg,#2E7D32,#4CAF50)"
+                : remainRs < 100
+                ? "linear-gradient(90deg,var(--color-crimson),#E74C3C)"
+                : "linear-gradient(90deg,var(--color-gold),#F5C842)",
+            }}
+          />
+        </div>
+
+        {/* % label */}
+        <div className="flex justify-between items-center mt-1">
+          <span className="font-dm-sans text-[10px]" style={{ color: colors.text, opacity: 0.7 }}>
+            {unlocked ? "Free shipping" : `₹${Math.round(subtotal / 100)} of ₹899`}
+          </span>
+          <span
+            className="font-dm-sans text-xs font-extrabold"
+            style={{ color: colors.text }}
+          >
+            {unlocked ? "🚚 FREE" : `${Math.round(progress)}%`}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface CartOrderSummaryProps {
   subtotal: number;       // paise
@@ -24,54 +136,10 @@ export default function CartOrderSummary({
   appliedCoupon,
   itemCount,
 }: CartOrderSummaryProps) {
-  const freeShippingThreshold = 89900; // ₹899 in paise — applies to all zones
-  const amountToFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
-  const freeShippingProgress = Math.min((subtotal / freeShippingThreshold) * 100, 100);
-
   return (
     <div className="flex flex-col gap-0">
-      {/* ─── Free shipping bar ──────────────────────────────────────────── */}
-      {subtotal < freeShippingThreshold && !appliedCoupon && (
-        <div
-          className="px-4 py-3 mb-3 rounded-xl"
-          style={{
-            background: "rgba(200,150,12,0.06)",
-            border: "1px solid rgba(200,150,12,0.15)",
-          }}
-        >
-          <div className="flex items-center justify-between mb-1.5">
-            <p
-              className="font-dm-sans text-xs"
-              style={{ color: "var(--color-brown)" }}
-            >
-              🚚 Add{" "}
-              <span className="font-bold">{formatPrice(amountToFreeShipping)}</span>{" "}
-              more for{" "}
-              <span className="font-bold" style={{ color: "var(--color-gold)" }}>
-                Free Shipping
-              </span>
-            </p>
-            <span
-              className="font-dm-sans text-xs font-semibold"
-              style={{ color: "var(--color-gold)" }}
-            >
-              {Math.round(freeShippingProgress)}%
-            </span>
-          </div>
-          <div
-            className="h-1.5 rounded-full overflow-hidden"
-            style={{ background: "rgba(200,150,12,0.12)" }}
-          >
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${freeShippingProgress}%`,
-                background: "linear-gradient(90deg, var(--color-gold), var(--color-gold-light))",
-              }}
-            />
-          </div>
-        </div>
-      )}
+      {/* ─── Free shipping nudge banner ──────────────────────────────── */}
+      {!appliedCoupon && <FreeShippingBanner subtotal={subtotal} />}
 
       {/* ─── Price lines ────────────────────────────────────────────────── */}
       <div
