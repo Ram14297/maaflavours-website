@@ -280,7 +280,10 @@ export default function CartDrawer({ onClose }: CartDrawerProps) {
                 <p className="font-playfair font-bold text-xl leading-tight" style={{ color: "var(--color-crimson)" }}>
                   {formatPrice(sub - disc)}
                 </p>
-                <p className="font-dm-sans text-[0.65rem]" style={{ color: "var(--color-grey)" }}>+ delivery at checkout</p>
+                {sub >= 89900
+                  ? <p className="font-dm-sans text-[0.65rem] font-semibold" style={{ color: "#2E7D32" }}>🚚 Free delivery</p>
+                  : <p className="font-dm-sans text-[0.65rem]" style={{ color: "var(--color-grey)" }}>+ delivery at checkout</p>
+                }
               </div>
               {disc > 0 && (
                 <div
