@@ -46,14 +46,6 @@ const PAIRINGS = [
     description: "Soft idli with tangy amla pickle is a healthy, flavour-packed breakfast.",
     bg: "linear-gradient(135deg, #F5EFE0, #EDE3CE)",
   },
-  {
-    food: "Pulao / Biryani",
-    foodEmoji: "🍛",
-    pickle: "Red Chilli Pickle",
-    pickleSlug: "red-chilli-pickle",
-    description: "A tiny piece of our fiery red chilli pickle elevates every biryani bite.",
-    bg: "linear-gradient(135deg, #EDE3CE, #F5EFE0)",
-  },
 ];
 
 export default function RecipeInspiration() {
