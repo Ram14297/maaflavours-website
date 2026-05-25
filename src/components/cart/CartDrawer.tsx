@@ -5,7 +5,7 @@
 // Sections: header | item list | coupon | order summary | checkout CTA
 // Connected to Zustand cartStore for all state
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import Link from "next/link";
 import { X, ShoppingBag, Trash2, ArrowRight, Lock } from "lucide-react";
@@ -90,6 +90,31 @@ export default function CartDrawer({ onClose }: CartDrawerProps) {
   const disc = couponDiscount();
   const del = deliveryCharge();
   const tot = total();
+
+  // ─── Dynamic upsell: pick a random in-stock product not already in cart ──
+  const [suggestion, setSuggestion] = useState<{ name: string; slug: string; tagline: string } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/products?limit=50")
+      .then(r => r.json())
+      .then(data => {
+        const all: any[] = data.products ?? data ?? [];
+        const cartSlugs = new Set(items.map(i => i.productSlug));
+        const eligible = all.filter(
+          p => p.is_active !== false && !p.is_out_of_stock && !cartSlugs.has(p.slug)
+        );
+        if (!eligible.length) { setSuggestion(null); return; }
+        const pick = eligible[Math.floor(Math.random() * eligible.length)];
+        setSuggestion({
+          name:    pick.name,
+          slug:    pick.slug,
+          tagline: pick.short_description || "a Maa Flavours favourite — try it today!",
+        });
+      })
+      .catch(() => setSuggestion(null));
+  // Re-run when cart items change so suggestion never shows a cart item
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items.map(i => i.productSlug).join(",")]);
 
   return (
     <>
@@ -183,28 +208,30 @@ export default function CartDrawer({ onClose }: CartDrawerProps) {
                 ))}
               </div>
 
-              {/* Upsell strip */}
-              <div
-                className="mx-5 mb-4 px-4 py-3 rounded-xl flex items-center gap-3"
-                style={{
-                  background: "rgba(200,150,12,0.06)",
-                  border: "1px solid rgba(200,150,12,0.15)",
-                }}
-              >
-                <span className="text-xl flex-shrink-0">🌟</span>
-                <p className="font-dm-sans text-xs leading-snug" style={{ color: "var(--color-brown)" }}>
-                  <strong>Pair it up!</strong> Try{" "}
-                  <Link
-                    href="/products/lemon-pickle"
-                    onClick={onClose}
-                    className="font-semibold underline hover:no-underline"
-                    style={{ color: "var(--color-crimson)" }}
-                  >
-                    Lemon Pickle
-                  </Link>{" "}
-                  — perfect with every Andhra meal.
-                </p>
-              </div>
+              {/* Upsell strip — only when an in-stock, not-in-cart product exists */}
+              {suggestion && (
+                <div
+                  className="mx-5 mb-4 px-4 py-3 rounded-xl flex items-center gap-3"
+                  style={{
+                    background: "rgba(200,150,12,0.06)",
+                    border: "1px solid rgba(200,150,12,0.15)",
+                  }}
+                >
+                  <span className="text-xl flex-shrink-0">🌟</span>
+                  <p className="font-dm-sans text-xs leading-snug" style={{ color: "var(--color-brown)" }}>
+                    <strong>Pair it up!</strong> Try{" "}
+                    <Link
+                      href={`/products/${suggestion.slug}`}
+                      onClick={onClose}
+                      className="font-semibold underline hover:no-underline"
+                      style={{ color: "var(--color-crimson)" }}
+                    >
+                      {suggestion.name}
+                    </Link>{" "}
+                    — {suggestion.tagline}
+                  </p>
+                </div>
+              )}
 
               {/* Coupon */}
               <div className="px-5 pb-4">
