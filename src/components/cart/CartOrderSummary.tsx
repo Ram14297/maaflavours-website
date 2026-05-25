@@ -139,7 +139,7 @@ export default function CartOrderSummary({
   return (
     <div className="flex flex-col gap-0">
       {/* ─── Free shipping nudge banner ──────────────────────────────── */}
-      {!appliedCoupon && <FreeShippingBanner subtotal={subtotal} />}
+      <FreeShippingBanner subtotal={subtotal} />
 
       {/* ─── Price lines ────────────────────────────────────────────────── */}
       <div
