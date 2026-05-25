@@ -4,7 +4,7 @@
 // Matches Razorpay order creation data structure
 
 "use client";
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useRef } from "react";
 import { formatPrice } from "@/lib/utils";
 import { AppliedCoupon } from "@/store/cartStore";
 
@@ -38,6 +38,48 @@ function pick<T>(arr: T[], seed: number): T {
   return arr[seed % arr.length];
 }
 
+// ─── Confetti burst (reuses same pattern as order-confirmation page) ──────────
+function ConfettiBurst() {
+  const COLORS = [
+    "var(--color-crimson)",
+    "var(--color-gold)",
+    "#4CAF50",
+    "var(--color-gold-light)",
+    "#4A2C0A",
+    "#E74C3C",
+  ];
+  return (
+    <>
+      <style>{`
+        @keyframes cartConfettiFall {
+          0%   { opacity: 1; transform: translateY(-6px) rotate(0deg) scale(1); }
+          70%  { opacity: 0.9; }
+          100% { opacity: 0; transform: translateY(90px) rotate(600deg) scale(0.4); }
+        }
+        .cart-confetti { animation: cartConfettiFall var(--cdur) ease-in var(--cdelay) both; }
+      `}</style>
+      <div className="absolute inset-x-0 top-0 h-24 overflow-hidden pointer-events-none z-10">
+        {Array.from({ length: 28 }).map((_, i) => (
+          <div
+            key={i}
+            className="cart-confetti absolute"
+            style={{
+              left:         `${2 + i * 3.5}%`,
+              top:          "-6px",
+              width:        i % 3 === 0 ? "7px" : "5px",
+              height:       i % 2 === 0 ? "7px" : "11px",
+              borderRadius: i % 4 === 0 ? "50%" : "2px",
+              background:   COLORS[i % COLORS.length],
+              ["--cdur"   as any]: `${1.0 + (i % 6) * 0.18}s`,
+              ["--cdelay" as any]: `${i * 0.04}s`,
+            }}
+          />
+        ))}
+      </div>
+    </>
+  );
+}
+
 // ─── Free Shipping Banner ─────────────────────────────────────────────────────
 function FreeShippingBanner({ subtotal }: { subtotal: number }) {
   const FREE_THRESHOLD = 89900; // ₹899 in paise
@@ -45,6 +87,20 @@ function FreeShippingBanner({ subtotal }: { subtotal: number }) {
   const progress       = Math.min((subtotal / FREE_THRESHOLD) * 100, 100);
   const unlocked       = subtotal >= FREE_THRESHOLD;
   const remainRs       = Math.ceil(remaining / 100);
+
+  // Fire confetti only on the moment it first unlocks (not on every render)
+  const wasUnlocked = useRef(unlocked);
+  const [showConfetti, setShowConfetti] = React.useState(false);
+
+  useEffect(() => {
+    if (unlocked && !wasUnlocked.current) {
+      setShowConfetti(true);
+      // Remove confetti DOM after animation finishes (28 pieces × ~2s max)
+      const t = setTimeout(() => setShowConfetti(false), 2400);
+      return () => clearTimeout(t);
+    }
+    wasUnlocked.current = unlocked;
+  }, [unlocked]);
 
   // Pick a phrase based on current subtotal (changes as cart changes)
   const phrase = useMemo(() => {
@@ -67,7 +123,7 @@ function FreeShippingBanner({ subtotal }: { subtotal: number }) {
 
   return (
     <div
-      className="rounded-2xl px-4 py-3.5 mb-4"
+      className="relative rounded-2xl px-4 py-3.5 mb-4 overflow-hidden"
       style={{
         background:  colors.bg,
         border:      `2px solid ${colors.border}`,
@@ -75,16 +131,19 @@ function FreeShippingBanner({ subtotal }: { subtotal: number }) {
         transition:  "all 0.4s ease",
       }}
     >
+      {/* Confetti — only when just unlocked */}
+      {showConfetti && <ConfettiBurst />}
+
       {/* Message */}
       <p
-        className="font-dm-sans text-sm font-bold mb-2.5 leading-snug"
+        className="font-dm-sans text-sm font-bold mb-2.5 leading-snug relative z-[1]"
         style={{ color: colors.text }}
       >
         {phrase}
       </p>
 
       {/* Progress bar */}
-      <div className="relative">
+      <div className="relative z-[1]">
         <div
           className="h-3 rounded-full overflow-hidden"
           style={{ background: "rgba(0,0,0,0.07)" }}
