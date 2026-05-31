@@ -28,8 +28,15 @@ function shell(content: string): string {
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Maa Flavours</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700;800&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Lato', 'Segoe UI', Arial, sans-serif; }
+    h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, serif; }
+  </style>
 </head>
-<body style="margin:0;padding:0;background:${C.lightBg};font-family:'Segoe UI',Arial,sans-serif;">
+<body style="margin:0;padding:0;background:${C.lightBg};font-family:'Lato','Segoe UI',Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:${C.lightBg};padding:32px 16px;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:${C.white};border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(74,44,10,0.10);">
@@ -40,8 +47,8 @@ function shell(content: string): string {
         <!-- Header -->
         <tr><td style="background:${C.brown};padding:24px 32px;text-align:center;">
           <img src="https://maaflavours.com/maa-flavours-logo.png" alt="Maa Flavours" width="80" height="80" style="display:block;margin:0 auto 10px;border-radius:50%;object-fit:cover;border:2px solid rgba(200,150,12,0.4);" />
-          <div style="font-size:20px;font-weight:800;color:${C.white};letter-spacing:0.5px;">Maa Flavours</div>
-          <div style="font-size:11px;color:rgba(232,184,75,0.85);margin-top:4px;letter-spacing:1.5px;">AUTHENTIC ANDHRA HOMEMADE PICKLES</div>
+          <div style="font-size:22px;font-weight:800;color:${C.white};letter-spacing:0.5px;font-family:'Cormorant Garamond',Georgia,serif;">Maa Flavours</div>
+          <div style="font-size:11px;color:rgba(232,184,75,0.85);margin-top:4px;letter-spacing:2px;font-family:'Lato','Segoe UI',Arial,sans-serif;">AUTHENTIC ANDHRA HOMEMADE PICKLES</div>
         </td></tr>
 
         <!-- Content -->
@@ -174,8 +181,8 @@ export async function sendOrderConfirmedEmail(args: SendOrderConfirmedArgs): Pro
       </div>
     </div>
 
-    <h2 style="margin:0 0 4px;color:${C.brown};font-size:22px;">Hi ${firstName}! 👋</h2>
-    <p style="margin:0 0 20px;color:${C.grey};font-size:15px;line-height:1.6;">
+    <h2 style="margin:0 0 4px;color:${C.brown};font-size:24px;font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;">Hi ${firstName}! 👋</h2>
+    <p style="margin:0 0 20px;color:${C.grey};font-size:15px;line-height:1.7;font-family:'Lato','Segoe UI',Arial,sans-serif;">
       Your order has been ${isCod ? "placed" : "confirmed and we're preparing it with love"}.
       Here's your order summary:
     </p>
@@ -236,8 +243,8 @@ export async function sendOrderShippedEmail(args: SendOrderShippedArgs): Promise
       </div>
     </div>
 
-    <h2 style="margin:0 0 4px;color:${C.brown};font-size:22px;">Great news, ${firstName}! 🎉</h2>
-    <p style="margin:0 0 24px;color:${C.grey};font-size:15px;line-height:1.6;">
+    <h2 style="margin:0 0 4px;color:${C.brown};font-size:24px;font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;">Great news, ${firstName}! 🎉</h2>
+    <p style="margin:0 0 24px;color:${C.grey};font-size:15px;line-height:1.7;font-family:'Lato','Segoe UI',Arial,sans-serif;">
       Your pickles have been dispatched and are heading your way. Here are the shipping details:
     </p>
 
@@ -281,8 +288,8 @@ export async function sendOrderDeliveredEmail(args: SendOrderStatusArgs): Promis
       </div>
     </div>
 
-    <h2 style="margin:0 0 4px;color:${C.brown};font-size:22px;">Your pickles have arrived, ${firstName}! 🫙</h2>
-    <p style="margin:0 0 24px;color:${C.grey};font-size:15px;line-height:1.6;">
+    <h2 style="margin:0 0 4px;color:${C.brown};font-size:24px;font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;">Your pickles have arrived, ${firstName}! 🫙</h2>
+    <p style="margin:0 0 24px;color:${C.grey};font-size:15px;line-height:1.7;font-family:'Lato','Segoe UI',Arial,sans-serif;">
       Order <strong>${orderNumber}</strong> has been delivered. We hope you love every jar!
     </p>
 
@@ -322,8 +329,8 @@ export async function sendOrderCancelledEmail(args: SendOrderStatusArgs): Promis
       </div>
     </div>
 
-    <h2 style="margin:0 0 4px;color:${C.brown};font-size:22px;">Hi ${firstName},</h2>
-    <p style="margin:0 0 20px;color:${C.grey};font-size:15px;line-height:1.6;">
+    <h2 style="margin:0 0 4px;color:${C.brown};font-size:24px;font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;">Hi ${firstName},</h2>
+    <p style="margin:0 0 20px;color:${C.grey};font-size:15px;line-height:1.7;font-family:'Lato','Segoe UI',Arial,sans-serif;">
       Your order <strong>${orderNumber}</strong> has been cancelled. We're sorry to see it go!
     </p>
 
@@ -364,7 +371,7 @@ export async function sendRestockEmail({
   const productUrl = `${SITE}/products/${productSlug}`;
 
   const html = shell(`
-    <h2 style="margin:0 0 8px;font-size:22px;color:${C.brown};font-family:Georgia,serif;">
+    <h2 style="margin:0 0 8px;font-size:24px;color:${C.brown};font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;">
       🎉 Great news — ${productName} is back!
     </h2>
     <p style="margin:0 0 24px;font-size:14px;color:${C.grey};line-height:1.6;">
