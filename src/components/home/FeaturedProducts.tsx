@@ -55,12 +55,6 @@ function ProductCard({ product, imageUrl }: ProductCardProps) {
       style={{ borderRadius: "14px" }}
       aria-label={`View ${product.name}`}
     >
-      {/* ─── Gold corner ornaments ─────────────────────────────────────── */}
-      <span className="corner-tl" />
-      <span className="corner-tr" />
-      <span className="corner-bl" />
-      <span className="corner-br" />
-
       {/* ─── Image Area ────────────────────────────────────────────────── */}
       {/* REPLACE with actual product image */}
       <div

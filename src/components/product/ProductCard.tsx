@@ -367,12 +367,6 @@ export default function ProductCard({
         }}
       />
 
-      {/* ─── Gold corner ornaments ─────────────────────────────────────── */}
-      <span className="corner-tl z-20" />
-      <span className="corner-tr z-20" />
-      <span className="corner-bl z-20" />
-      <span className="corner-br z-20" />
-
       {/* ─── Image Area ─────────────────────────────────────────────────── */}
       <div
         className="relative aspect-square overflow-hidden rounded-t-2xl"

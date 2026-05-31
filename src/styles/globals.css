@@ -456,53 +456,6 @@ ul, ol {
   width: 100%;
 }
 
-/* ─── Gold Corner Ornament ───────────────────────────────────────────────── */
-.corner-tl,
-.corner-tr,
-.corner-bl,
-.corner-br {
-  position: absolute;
-  display: none; /* hidden on mobile */
-  width: 20px;
-  height: 20px;
-}
-
-.corner-tl {
-  top: 10px;
-  left: 10px;
-  border-top: 2px solid var(--color-gold-light);
-  border-left: 2px solid var(--color-gold-light);
-  border-radius: 2px 0 0 0;
-}
-
-.corner-tr {
-  top: 10px;
-  right: 10px;
-  border-top: 2px solid var(--color-gold-light);
-  border-right: 2px solid var(--color-gold-light);
-  border-radius: 0 2px 0 0;
-}
-
-.corner-bl {
-  bottom: 10px;
-  left: 10px;
-  border-bottom: 2px solid var(--color-gold-light);
-  border-left: 2px solid var(--color-gold-light);
-  border-radius: 0 0 0 2px;
-}
-
-.corner-br {
-  bottom: 10px;
-  right: 10px;
-  border-bottom: 2px solid var(--color-gold-light);
-  border-right: 2px solid var(--color-gold-light);
-  border-radius: 0 0 2px 0;
-}
-
-
-@media (min-width: 640px) {
-  .corner-tl, .corner-tr, .corner-bl, .corner-br { display: block; }
-}
 /* ─── OTP Input Focus States ─────────────────────────────────────────────── */
 .otp-box {
   width: 3rem;

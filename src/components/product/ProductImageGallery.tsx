@@ -234,12 +234,6 @@ export default function ProductImageGallery({
           </div>
         )}
 
-        {/* Gold corner ornaments */}
-        <span className="corner-tl" />
-        <span className="corner-tr" />
-        <span className="corner-bl" />
-        <span className="corner-br" />
-
         {/* Zoom hint */}
         {!zoomed && !isSoldOut && (
           <div
