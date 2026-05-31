@@ -16,7 +16,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { unstable_noStore as noStore } from "next/cache";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { PRODUCTS } from "@/lib/constants/products";
-import { getOriginalPrice } from "@/lib/constants/launch-offer";
 
 export async function GET(req: NextRequest) {
   noStore();
@@ -78,14 +77,6 @@ export async function GET(req: NextRequest) {
         for (const v of variantsData || []) {
           if (!variantsMap[v.product_id]) variantsMap[v.product_id] = [];
           variantsMap[v.product_id].push(v);
-        }
-        // Inject launch offer original prices
-        for (const pid of Object.keys(variantsMap)) {
-          const slug = (products || []).find((p: any) => p.id === pid)?.slug ?? "";
-          variantsMap[pid] = variantsMap[pid].map((v: any) => ({
-            ...v,
-            compare_at_price: getOriginalPrice(slug, v.label) ?? null,
-          }));
         }
       }
 

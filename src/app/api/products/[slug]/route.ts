@@ -7,7 +7,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { unstable_noStore as noStore } from "next/cache";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { PRODUCTS } from "@/lib/constants/products";
-import { getOriginalPrice } from "@/lib/constants/launch-offer";
 
 // Always fetch fresh data — never serve a stale cached response
 export const dynamic = "force-dynamic";
@@ -94,15 +93,9 @@ export async function GET(
       // related products are non-critical — fail silently
     }
 
-    // Inject launch offer compare_at_price into variants
-    const enrichedVariants = (variants || []).map((v: any) => ({
-      ...v,
-      compare_at_price: getOriginalPrice(slug, v.label) ?? null,
-    }));
-
     return NextResponse.json({
       product,
-      variants:   enrichedVariants,
+      variants:   variants || [],
       images:     images     || [],
       reviews:    reviews    || [],
       related,
