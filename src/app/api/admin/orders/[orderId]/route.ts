@@ -17,6 +17,7 @@ import {
   sendOrderDeliveredEmail,
   sendOrderCancelledEmail,
 } from "@/lib/email";
+import { pushOrderToShiprocket } from "@/lib/shiprocket";
 
 export async function GET(
   req: NextRequest,
@@ -45,7 +46,7 @@ export async function GET(
       .from("order_status_history")
       .select("*")
       .eq("order_id", params.orderId)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: false }); // newest first → i=0 is the latest event (gold dot)
 
     return NextResponse.json({ order, items: items || [], statusHistory: statusHistory || [] });
   } catch (err: any) {
@@ -90,14 +91,35 @@ export async function PATCH(
 
     if (error) throw error;
 
-    // If status changed, add to history with admin attribution
+    // If status changed, attribute the DB-trigger row to this admin.
+    // The trigger (trg_log_order_status) fires on orders.update and inserts
+    // a row with changed_by='system'. We find it and stamp it with the
+    // actual admin email + note — no second row, no duplicates.
     if (body.status) {
-      await supabase.from("order_status_history").insert({
-        order_id:   params.orderId,
-        new_status: body.status,
-        changed_by: `admin:${admin.email}`,
-        note:       body.note || null,
-      });
+      const { data: triggerRow } = await supabase
+        .from("order_status_history")
+        .select("id")
+        .eq("order_id", params.orderId)
+        .eq("new_status", body.status)
+        .eq("changed_by", "system")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (triggerRow?.id) {
+        await supabase
+          .from("order_status_history")
+          .update({ changed_by: `admin:${admin.email}`, note: body.note || null })
+          .eq("id", triggerRow.id);
+      } else {
+        // Fallback: trigger row not found (shouldn't happen), insert manually
+        await supabase.from("order_status_history").insert({
+          order_id:   params.orderId,
+          new_status: body.status,
+          changed_by: `admin:${admin.email}`,
+          note:       body.note || null,
+        });
+      }
 
       // ── Notify customer via SMS on every status change ─────────────────
       await notifyCustomerOnStatusChange(
@@ -107,6 +129,15 @@ export async function PATCH(
         body.trackingId   || updated?.tracking_id   || "",
         body.courierName  || updated?.courier_name  || "",
       ).catch(() => {});
+
+      // ── Auto-push to Shiprocket when marked as packed ──────────────────
+      // If the order isn't in Shiprocket yet, push it now so pickup can be
+      // scheduled immediately without manual data entry in Shiprocket.
+      if (body.status === "packed" && !updated?.shiprocket_order_id) {
+        pushOrderToShiprocket(params.orderId).catch(err =>
+          console.error("[admin-patch] Shiprocket auto-push failed:", err.message)
+        );
+      }
     }
 
     return NextResponse.json({ success: true, order: updated });

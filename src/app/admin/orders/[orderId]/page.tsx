@@ -64,6 +64,8 @@ export default function OrderDetailPage() {
   const [waMessage,    setWaMessage]    = useState("");
   const [showWa,       setShowWa]       = useState(false);
   const [copied,       setCopied]       = useState(false);
+  const [srPushing,    setSrPushing]    = useState(false);
+  const [srSuccess,    setSrSuccess]    = useState("");
 
   const loadOrder = useCallback(async () => {
     setLoading(true);
@@ -163,6 +165,18 @@ export default function OrderDetailPage() {
     setShowWa(true);
   }
 
+  async function pushToShiprocket() {
+    setSrPushing(true); setSrSuccess(""); setError("");
+    try {
+      const r = await fetch(`/api/admin/orders/${orderId}/push-shiprocket`, { method: "POST" });
+      const d = await r.json();
+      if (!r.ok) { setError(d.error || "Shiprocket push failed"); }
+      else if (d.already) { setSrSuccess(`Already in Shiprocket (ID: ${d.shiprocket_order_id || "—"})`); }
+      else { setSrSuccess(`✅ Pushed to Shiprocket! Order ID: ${d.shiprocket_order_id || "—"}`); loadOrder(); }
+    } catch { setError("Shiprocket push failed"); }
+    setSrPushing(false);
+  }
+
   async function copyWa() {
     await navigator.clipboard.writeText(waMessage);
     setCopied(true);
@@ -236,11 +250,31 @@ export default function OrderDetailPage() {
               <span style={{ color:"#25D366" }}>📱</span> WhatsApp
             </Btn>
           )}
+          {/* Show Push to Shiprocket button if not yet pushed */}
+          {!order.shiprocket_order_id && !["cancelled","refunded","delivered"].includes(order.status) && (
+            <Btn
+              variant="secondary"
+              onClick={pushToShiprocket}
+              loading={srPushing}
+            >
+              🚀 Push to Shiprocket
+            </Btn>
+          )}
+          {/* Show Shiprocket badge if already pushed */}
+          {order.shiprocket_order_id && (
+            <span
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
+              style={{ background:"rgba(46,125,50,0.1)", color:"#2E7D32", border:"1px solid rgba(46,125,50,0.2)" }}
+            >
+              ✅ In Shiprocket #{order.shiprocket_order_id}
+            </span>
+          )}
         </div>
       </div>
 
-      {success && <Alert type="success">{success}</Alert>}
-      {error   && <Alert type="error">{error}</Alert>}
+      {success   && <Alert type="success">{success}</Alert>}
+      {srSuccess && <Alert type="success">{srSuccess}</Alert>}
+      {error     && <Alert type="error">{error}</Alert>}
 
       {/* ── Status Progress Bar ── */}
       {!isTerminal && (
