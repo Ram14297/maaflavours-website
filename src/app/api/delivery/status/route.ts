@@ -88,6 +88,27 @@ export async function POST(req: NextRequest) {
       order = data;
     }
 
+    // Also save AWB back to DB if we find the order by other means
+    // (AWB gets assigned in Shiprocket after courier selection — not at order creation)
+
+    // Fallback: try Shiprocket shipment ID
+    if (!order && shipmentId) {
+      const { data } = await supabase
+        .from("orders")
+        .select("id, status, order_number, customer_id, shipping_address, courier_name, tracking_id")
+        .eq("shiprocket_shipment_id", shipmentId)
+        .maybeSingle();
+      order = data;
+      // Save AWB to DB now that we found the order
+      if (data && awb) {
+        await supabase.from("orders").update({
+          tracking_id:  awb,
+          courier_name: courierName || data.courier_name || "",
+        }).eq("id", data.id);
+        order.tracking_id = awb;
+      }
+    }
+
     // Fallback: try Shiprocket order ID
     if (!order && srOrderId) {
       const { data } = await supabase
@@ -96,6 +117,14 @@ export async function POST(req: NextRequest) {
         .eq("shiprocket_order_id", srOrderId)
         .maybeSingle();
       order = data;
+      // Save AWB to DB
+      if (data && awb) {
+        await supabase.from("orders").update({
+          tracking_id:  awb,
+          courier_name: courierName || data.courier_name || "",
+        }).eq("id", data.id);
+        order.tracking_id = awb;
+      }
     }
 
     if (!order) {
