@@ -66,6 +66,7 @@ export default function OrderDetailPage() {
   const [copied,       setCopied]       = useState(false);
   const [srPushing,    setSrPushing]    = useState(false);
   const [srSuccess,    setSrSuccess]    = useState("");
+  const [markingPaid,  setMarkingPaid]  = useState(false);
 
   const loadOrder = useCallback(async () => {
     setLoading(true);
@@ -175,6 +176,23 @@ export default function OrderDetailPage() {
       else { setSrSuccess(`✅ Pushed to Shiprocket! Order ID: ${d.shiprocket_order_id || "—"}`); loadOrder(); }
     } catch { setError("Shiprocket push failed"); }
     setSrPushing(false);
+  }
+
+  async function markCodPaid() {
+    setMarkingPaid(true); setError(""); setSuccess("");
+    const r = await fetch(`/api/admin/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paymentStatus: "paid", note: "COD payment collected on delivery" }),
+    });
+    const d = await r.json();
+    if (!r.ok) {
+      setError(d.error || "Failed to update payment status");
+    } else {
+      setSuccess("💵 COD payment marked as collected");
+      setData((prev: any) => ({ ...prev, order: { ...prev.order, payment_status: "paid" } }));
+    }
+    setMarkingPaid(false);
   }
 
   async function copyWa() {
@@ -674,6 +692,22 @@ export default function OrderDetailPage() {
                   <span style={{ color:A.brown, fontSize:12 }}>{v}</span>
                 </div>
               ))}
+              {/* COD payment collection button */}
+              {order.payment_method === "cod" && order.payment_status !== "paid" && (
+                <div className="pt-2 border-t" style={{ borderColor:A.border }}>
+                  <Btn
+                    onClick={markCodPaid}
+                    loading={markingPaid}
+                    className="w-full justify-center"
+                    style={{ background:"rgba(46,125,50,0.1)", color:"#2E7D32", border:"1px solid rgba(46,125,50,0.3)" } as any}
+                  >
+                    💵 Mark Payment Collected
+                  </Btn>
+                  <p style={{ fontSize:10, color:A.grey, textAlign:"center", marginTop:4 }}>
+                    Tap when cash is received from the customer
+                  </p>
+                </div>
+              )}
               {order.customer_notes && (
                 <div className="mt-2 pt-2 border-t" style={{ borderColor:A.border }}>
                   <p style={{ fontSize:11, color:A.grey, marginBottom:4 }}>Customer Note:</p>
