@@ -14,7 +14,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from("settings")
       .select("key, value")
-      .in("key", ["business", "social"]);
+      .in("key", ["business", "social", "announcement"]);
 
     if (error) throw error;
 

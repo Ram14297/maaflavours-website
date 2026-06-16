@@ -31,7 +31,7 @@ export function AdminPage({
   className?: string;
 }) {
   return (
-    <div className={`p-6 space-y-6 ${className}`} style={{ minHeight: "calc(100vh - 64px)", background: A.bg }}>
+    <div className={`p-3 sm:p-6 space-y-4 sm:space-y-6 ${className}`} style={{ minHeight: "calc(100vh - 52px)", background: A.bg }}>
       {children}
     </div>
   );
@@ -61,40 +61,40 @@ export function StatCard({
 }) {
   if (loading) {
     return (
-      <div className="rounded-xl p-5 animate-pulse" style={{ background: A.card, border: `1px solid ${A.border}` }}>
-        <div className="h-3 w-24 rounded mb-3" style={{ background: A.cream }} />
-        <div className="h-7 w-32 rounded mb-2" style={{ background: A.cream }} />
-        <div className="h-3 w-20 rounded" style={{ background: A.cream }} />
+      <div className="rounded-xl p-3 sm:p-5 animate-pulse" style={{ background: A.card, border: `1px solid ${A.border}` }}>
+        <div className="h-3 w-20 rounded mb-2" style={{ background: A.cream }} />
+        <div className="h-6 w-28 rounded mb-2" style={{ background: A.cream }} />
+        <div className="h-3 w-16 rounded" style={{ background: A.cream }} />
       </div>
     );
   }
 
   return (
     <div
-      className="rounded-xl p-5 transition-shadow hover:shadow-md"
+      className="rounded-xl p-3 sm:p-5 transition-shadow hover:shadow-md"
       style={{
         background:  A.card,
         border:      `1px solid ${A.border}`,
         borderLeft:  `3px solid ${accent}`,
       }}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <p style={{ color: A.grey, fontSize: 11, textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 600, marginBottom: 6 }}>
+          <p style={{ color: A.grey, fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: 4 }}>
             {title}
           </p>
-          <p style={{ color: A.brown, fontSize: 26, fontWeight: 700, fontFamily: "'Playfair Display', serif", lineHeight: 1 }}>
+          <p style={{ color: A.brown, fontSize: 22, fontWeight: 700, fontFamily: "'Playfair Display', serif", lineHeight: 1 }}>
             {value}
           </p>
           {(sub || trend) && (
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex flex-wrap items-center gap-1 mt-1.5">
               {sub && (
-                <span style={{ color: A.grey, fontSize: 11 }}>{sub}</span>
+                <span style={{ color: A.grey, fontSize: 10 }}>{sub}</span>
               )}
               {trend && (
                 <span
-                  className="flex items-center gap-0.5 text-xs font-medium"
-                  style={{ color: trendPositive ? "#2E7D32" : A.crimson }}
+                  className="flex items-center gap-0.5 font-medium"
+                  style={{ color: trendPositive ? "#2E7D32" : A.crimson, fontSize: 10 }}
                 >
                   {trendPositive ? "▲" : "▼"} {trend}
                 </span>
@@ -105,7 +105,7 @@ export function StatCard({
         {icon && (
           <div
             className="shrink-0 flex items-center justify-center rounded-lg"
-            style={{ width: 40, height: 40, background: `${accent}18`, color: accent }}
+            style={{ width: 34, height: 34, background: `${accent}18`, color: accent }}
           >
             {icon}
           </div>
@@ -140,23 +140,23 @@ export function Card({
     >
       {(title || action) && (
         <div
-          className="flex items-center justify-between px-5 py-4"
+          className="flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4"
           style={{ borderBottom: `1px solid ${A.border}` }}
         >
-          <div>
+          <div className="min-w-0 flex-1">
             {title && (
-              <h2 style={{ color: A.brown, fontSize: 15, fontWeight: 600, fontFamily: "'Playfair Display', serif" }}>
+              <h2 style={{ color: A.brown, fontSize: 14, fontWeight: 600, fontFamily: "'Playfair Display', serif" }}>
                 {title}
               </h2>
             )}
             {subtitle && (
-              <p style={{ color: A.grey, fontSize: 12, marginTop: 2 }}>{subtitle}</p>
+              <p style={{ color: A.grey, fontSize: 11, marginTop: 1 }} className="truncate">{subtitle}</p>
             )}
           </div>
-          {action && <div>{action}</div>}
+          {action && <div className="shrink-0 ml-2">{action}</div>}
         </div>
       )}
-      <div className={noPad ? "" : "p-5"}>
+      <div className={noPad ? "" : "p-3 sm:p-5"}>
         {children}
       </div>
     </div>

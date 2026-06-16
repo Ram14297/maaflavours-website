@@ -1,47 +1,66 @@
 "use client";
 // src/components/layout/AnnouncementBar.tsx
 // Maa Flavours — Sticky announcement bar at the very top
-// Crimson background, gold text, dismissible, auto-rotating messages
+// Messages controlled from Admin → Settings → Announcement
+// Pipe-separated messages auto-rotate every 4 seconds
+// Dismissible per session
 
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
-const MESSAGES = [
-  "🎉 Launch Offer — Prices Slashed! Shop Now Before It Ends",
+const FALLBACK_MESSAGES = [
   "🚚 Free Shipping on orders above ₹899 — Pan-India Delivery",
   "🌿 No Preservatives. No Shortcuts. Just Pure Andhra Flavour.",
 ];
 
 export default function AnnouncementBar() {
-  const [visible, setVisible] = useState(true);
+  const [messages, setMessages]   = useState<string[]>([]);
+  const [enabled, setEnabled]     = useState(false);
+  const [visible, setVisible]     = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [animating, setAnimating] = useState(false);
 
-  // Check if user dismissed it this session
+  // Fetch settings from public API
   useEffect(() => {
     const dismissed = sessionStorage.getItem("mf_announcement_dismissed");
-    if (dismissed) setVisible(false);
+    if (dismissed) return; // Don't even fetch if dismissed this session
+
+    fetch("/api/settings/public")
+      .then(r => r.json())
+      .then(data => {
+        const ann = data?.announcement;
+        if (ann?.enabled && ann?.text) {
+          const msgs = (ann.text as string)
+            .split("|")
+            .map((m: string) => m.trim())
+            .filter(Boolean);
+          setMessages(msgs.length ? msgs : FALLBACK_MESSAGES);
+          setEnabled(true);
+          setVisible(true);
+        }
+      })
+      .catch(() => {}); // Silent fail — bar just won't show
   }, []);
 
   // Rotate messages every 4 seconds
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || messages.length <= 1) return;
     const interval = setInterval(() => {
       setAnimating(true);
       setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % MESSAGES.length);
+        setCurrentIndex(prev => (prev + 1) % messages.length);
         setAnimating(false);
       }, 300);
     }, 4000);
     return () => clearInterval(interval);
-  }, [visible]);
+  }, [visible, messages.length]);
 
   const handleDismiss = () => {
     setVisible(false);
     sessionStorage.setItem("mf_announcement_dismissed", "true");
   };
 
-  if (!visible) return null;
+  if (!visible || !enabled || messages.length === 0) return null;
 
   return (
     <div
@@ -60,26 +79,28 @@ export default function AnnouncementBar() {
             opacity: animating ? 0 : 1,
           }}
         >
-          {MESSAGES[currentIndex]}
+          {messages[currentIndex]}
         </p>
 
-        {/* Dot indicators */}
-        <div className="hidden sm:flex items-center gap-1 absolute right-12">
-          {MESSAGES.map((_, i) => (
-            <span
-              key={i}
-              className="block rounded-full transition-all duration-300"
-              style={{
-                width: i === currentIndex ? "16px" : "5px",
-                height: "5px",
-                backgroundColor:
-                  i === currentIndex
-                    ? "var(--color-gold-light)"
-                    : "rgba(232, 184, 75, 0.35)",
-              }}
-            />
-          ))}
-        </div>
+        {/* Dot indicators — only if multiple messages */}
+        {messages.length > 1 && (
+          <div className="hidden sm:flex items-center gap-1 absolute right-12">
+            {messages.map((_, i) => (
+              <span
+                key={i}
+                className="block rounded-full transition-all duration-300"
+                style={{
+                  width: i === currentIndex ? "16px" : "5px",
+                  height: "5px",
+                  backgroundColor:
+                    i === currentIndex
+                      ? "var(--color-gold-light)"
+                      : "rgba(232, 184, 75, 0.35)",
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Dismiss button */}

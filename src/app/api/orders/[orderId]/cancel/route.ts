@@ -76,13 +76,33 @@ export async function POST(
 
     if (updateError) throw updateError;
 
-    // ── Log status change ─────────────────────────────────────────────────
-    await supabase.from("order_status_history").insert({
-      order_id:   orderId,
-      new_status: "cancelled",
-      changed_by: `customer:${session.userId}`,
-      note:       "Cancelled by customer via website",
-    });
+    // ── Attribute the trigger row to this customer ────────────────────────
+    // The DB trigger (trg_log_order_status) fires on the status UPDATE above
+    // and inserts a row with changed_by='system'. We update it with proper
+    // attribution — avoids duplicate rows in the timeline.
+    const { data: cancelTriggerRow } = await supabase
+      .from("order_status_history")
+      .select("id")
+      .eq("order_id", orderId)
+      .eq("new_status", "cancelled")
+      .eq("changed_by", "system")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (cancelTriggerRow?.id) {
+      await supabase
+        .from("order_status_history")
+        .update({ changed_by: `customer:${session.userId}`, note: "Cancelled by customer via website" })
+        .eq("id", cancelTriggerRow.id);
+    } else {
+      await supabase.from("order_status_history").insert({
+        order_id:   orderId,
+        new_status: "cancelled",
+        changed_by: `customer:${session.userId}`,
+        note:       "Cancelled by customer via website",
+      });
+    }
 
     // ── Determine refund message ──────────────────────────────────────────
     const isPrepaid =

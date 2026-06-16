@@ -351,16 +351,16 @@ function TopBar({
 
   return (
     <header
-      className="shrink-0 flex items-center gap-4 px-6 py-4"
+      className="shrink-0 flex items-center gap-2 sm:gap-4 px-3 sm:px-6 py-2 sm:py-4"
       style={{
         background:   "#fff",
         borderBottom: "1px solid rgba(74, 44, 10, 0.08)",
-        minHeight:    64,
+        minHeight:    52,
       }}
     >
       {/* Mobile hamburger */}
       <button
-        className="lg:hidden p-2 rounded-lg transition-colors"
+        className="lg:hidden p-2 rounded-lg transition-colors shrink-0"
         onClick={onMobileMenuToggle}
         style={{ color: "#4A2C0A" }}
         onMouseEnter={e => (e.currentTarget.style.background = "#F5EFE0")}
@@ -374,9 +374,9 @@ function TopBar({
 
       {/* Breadcrumb / Page Title */}
       <div className="flex-1 min-w-0">
-        <Breadcrumb pathname={pathname} />
+        <div className="hidden sm:block"><Breadcrumb pathname={pathname} /></div>
         <h1
-          className="text-lg font-semibold leading-tight truncate"
+          className="text-base sm:text-lg font-semibold leading-tight truncate"
           style={{ fontFamily: "'Playfair Display', serif", color: "#4A2C0A" }}
         >
           {pageTitle}
@@ -384,19 +384,19 @@ function TopBar({
       </div>
 
       {/* Right controls */}
-      <div className="flex items-center gap-3 shrink-0">
-        {/* Live time */}
-        <LiveClock />
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        {/* Live time — desktop only */}
+        <span className="hidden sm:block"><LiveClock /></span>
 
-        {/* Divider */}
-        <div className="w-px h-6 bg-gray-200" />
+        {/* Divider — desktop only */}
+        <div className="hidden sm:block w-px h-6 bg-gray-200" />
 
-        {/* Quick link: View store */}
+        {/* Quick link: View store — desktop only */}
         <a
           href="/"
           target="_blank"
           rel="noopener noreferrer"
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors"
+          className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors"
           style={{ color: "#C8960C", fontWeight: 500, fontSize: 12 }}
           onMouseEnter={e => (e.currentTarget.style.background = "#F5EFE0")}
           onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
@@ -410,12 +410,12 @@ function TopBar({
         {/* Logout button */}
         <button
           onClick={onLogout}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-all"
+          className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg transition-all"
           style={{ color: "#6B6B6B", fontSize: 12, fontWeight: 500 }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgba(192,39,45,0.08)"; (e.currentTarget as HTMLElement).style.color = "#C0272D"; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#6B6B6B"; }}
         >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
           </svg>
           <span className="hidden sm:inline">Logout</span>
