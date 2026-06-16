@@ -328,14 +328,14 @@ export default function OtpLoginModal({
           )}
 
           {/* Header */}
-          <div className="px-7 pt-7 pb-5 text-center">
-            <div className="flex justify-center mb-3">
+          <div className="px-7 pt-8 pb-5 text-center">
+            <div className="flex justify-center mb-4">
               {step === "success" ? (
                 <div
-                  className="relative w-16 h-16 rounded-full flex items-center justify-center"
+                  className="relative w-20 h-20 rounded-full flex items-center justify-center"
                   style={{ background: "rgba(46,125,50,0.1)", border: "3px solid rgba(46,125,50,0.25)" }}
                 >
-                  <CheckCircle2 size={32} strokeWidth={1.75} style={{ color: "#2E7D32" }} />
+                  <CheckCircle2 size={36} strokeWidth={1.75} style={{ color: "#2E7D32" }} />
                   <div
                     className="absolute inset-0 rounded-full animate-ping"
                     style={{ background: "rgba(46,125,50,0.1)", animationDuration: "1.4s" }}
@@ -343,45 +343,78 @@ export default function OtpLoginModal({
                 </div>
               ) : step === "otp" ? (
                 <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center"
-                  style={{ background: "rgba(200,150,12,0.1)", border: "2px solid rgba(200,150,12,0.25)" }}
+                  className="w-20 h-20 rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(200,150,12,0.08)", border: "2px solid rgba(200,150,12,0.3)" }}
                 >
-                  <ShieldCheck size={26} strokeWidth={1.75} style={{ color: "var(--color-gold)" }} />
+                  <ShieldCheck size={32} strokeWidth={1.5} style={{ color: "var(--color-gold)" }} />
                 </div>
               ) : step === "profile" ? (
                 <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center"
-                  style={{ background: "rgba(192,39,45,0.08)", border: "2px solid rgba(192,39,45,0.2)" }}
+                  className="w-20 h-20 rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(192,39,45,0.06)", border: "2px solid rgba(192,39,45,0.2)" }}
                 >
-                  <User size={26} strokeWidth={1.75} style={{ color: "var(--color-crimson)" }} />
+                  <User size={32} strokeWidth={1.5} style={{ color: "var(--color-crimson)" }} />
                 </div>
               ) : (
-                <Image
-                  src="/maa-flavours-logo.png"
-                  alt="Maa Flavours"
-                  width={80}
-                  height={80}
-                  className="object-contain"
-                  priority
-                />
+                <div
+                  className="rounded-full p-1.5"
+                  style={{
+                    background: "rgba(200,150,12,0.08)",
+                    border: "1.5px solid rgba(200,150,12,0.35)",
+                    boxShadow: "0 0 0 6px rgba(200,150,12,0.06)",
+                  }}
+                >
+                  <Image
+                    src="/maa-flavours-logo.png"
+                    alt="Maa Flavours"
+                    width={120}
+                    height={120}
+                    className="object-contain rounded-full"
+                    priority
+                  />
+                </div>
               )}
             </div>
 
-            <div className="ornament-line w-16 mx-auto mb-3" />
+            {step === "mobile" && (
+              <>
+                <p
+                  className="font-dm-sans font-medium tracking-widest uppercase mb-2"
+                  style={{ fontSize: "10px", color: "var(--color-gold)", letterSpacing: "3px" }}
+                >
+                  Authentic Andhra Pickles
+                </p>
+                <h2
+                  id="auth-modal-title"
+                  className="font-cormorant font-semibold"
+                  style={{ fontSize: "28px", color: "var(--color-brown)", lineHeight: 1.2, letterSpacing: "0.3px" }}
+                >
+                  {title || "Maa Flavours"}
+                </h2>
+                <div className="ornament-line w-16 mx-auto my-3" />
+                <p className="font-dm-sans text-sm" style={{ color: "var(--color-grey)" }}>
+                  {STEP_SUB[step]}
+                </p>
+              </>
+            )}
 
-            <h2
-              id="auth-modal-title"
-              className="font-playfair font-bold text-xl"
-              style={{ color: "var(--color-brown)" }}
-            >
-              {step === "mobile" && (title || "Sign In to Maa Flavours")}
-              {step === "otp" && "Check Your Messages"}
-              {step === "profile" && "Complete Your Profile"}
-              {step === "success" && (loggedInUser?.name ? `Welcome, ${loggedInUser.name.split(" ")[0]}! 🎉` : "Logged in successfully!")}
-            </h2>
-            <p className="font-dm-sans text-sm mt-1.5" style={{ color: "var(--color-grey)" }}>
-              {STEP_SUB[step]}
-            </p>
+            {step !== "mobile" && (
+              <>
+                <div className="ornament-line w-16 mx-auto mb-3" />
+                <h2
+                  id="auth-modal-title"
+                  className="font-playfair font-bold text-xl"
+                  style={{ color: "var(--color-brown)" }}
+                >
+                  {step === "otp" && "Check Your Messages"}
+                  {step === "profile" && "Complete Your Profile"}
+                  {step === "success" && (loggedInUser?.name ? `Welcome, ${loggedInUser.name.split(" ")[0]}! 🎉` : "Logged in successfully!")}
+                </h2>
+                <p className="font-dm-sans text-sm mt-1.5" style={{ color: "var(--color-grey)" }}>
+                  {STEP_SUB[step]}
+                </p>
+              </>
+            )}
           </div>
 
           {/* Step Body */}

@@ -249,13 +249,13 @@ function LoginPageContent() {
       {/* ── Right: auth form ────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 min-h-screen lg:min-h-0">
 
-        <div className="lg:hidden text-center mb-8">
+        <div className="lg:hidden text-center mb-6">
           <Link href="/">
             <Image
               src="/maa-flavours-logo.png"
               alt="Maa Flavours"
-              width={140}
-              height={70}
+              width={100}
+              height={100}
               className="object-contain mx-auto"
               priority
             />
@@ -271,49 +271,79 @@ function LoginPageContent() {
           />
 
           {/* Card header */}
-          <div className="px-7 pt-7 pb-4 text-center border-b" style={{ borderColor: "rgba(200,150,12,0.1)" }}>
-            <div className="flex justify-center mb-3">
+          <div className="px-7 pt-8 pb-4 text-center border-b" style={{ borderColor: "rgba(200,150,12,0.1)" }}>
+            <div className="flex justify-center mb-4">
               {step === "success" ? (
-                <div className="relative w-14 h-14 rounded-full flex items-center justify-center"
+                <div className="relative w-20 h-20 rounded-full flex items-center justify-center"
                   style={{ background: "rgba(46,125,50,0.1)", border: "3px solid rgba(46,125,50,0.25)" }}>
-                  <CheckCircle2 size={28} strokeWidth={1.75} style={{ color: "#2E7D32" }} />
+                  <CheckCircle2 size={36} strokeWidth={1.75} style={{ color: "#2E7D32" }} />
                   <div className="absolute inset-0 rounded-full animate-ping"
                     style={{ background: "rgba(46,125,50,0.1)", animationDuration: "1.4s" }} />
                 </div>
               ) : step === "otp" ? (
-                <div className="w-14 h-14 rounded-full flex items-center justify-center"
-                  style={{ background: "rgba(200,150,12,0.1)", border: "2px solid rgba(200,150,12,0.25)" }}>
-                  <ShieldCheck size={26} strokeWidth={1.75} style={{ color: "var(--color-gold)" }} />
+                <div className="w-20 h-20 rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(200,150,12,0.08)", border: "2px solid rgba(200,150,12,0.3)" }}>
+                  <ShieldCheck size={32} strokeWidth={1.5} style={{ color: "var(--color-gold)" }} />
                 </div>
               ) : step === "profile" ? (
-                <div className="w-14 h-14 rounded-full flex items-center justify-center"
-                  style={{ background: "rgba(192,39,45,0.08)", border: "2px solid rgba(192,39,45,0.18)" }}>
-                  <User size={26} strokeWidth={1.75} style={{ color: "var(--color-crimson)" }} />
+                <div className="w-20 h-20 rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(192,39,45,0.06)", border: "2px solid rgba(192,39,45,0.2)" }}>
+                  <User size={32} strokeWidth={1.5} style={{ color: "var(--color-crimson)" }} />
                 </div>
               ) : (
-                <Image
-                  src="/maa-flavours-logo.png"
-                  alt="Maa Flavours"
-                  width={64}
-                  height={64}
-                  className="object-contain"
-                  priority
-                />
+                <div
+                  className="rounded-full p-1.5"
+                  style={{
+                    background: "rgba(200,150,12,0.08)",
+                    border: "1.5px solid rgba(200,150,12,0.35)",
+                    boxShadow: "0 0 0 6px rgba(200,150,12,0.06)",
+                  }}
+                >
+                  <Image
+                    src="/maa-flavours-logo.png"
+                    alt="Maa Flavours"
+                    width={120}
+                    height={120}
+                    className="object-contain rounded-full"
+                    priority
+                  />
+                </div>
               )}
             </div>
 
-            <h1 className="font-playfair font-bold text-xl" style={{ color: "var(--color-brown)" }}>
-              {step === "mobile" && "Sign In"}
-              {step === "otp" && "Enter OTP"}
-              {step === "profile" && "Complete Your Profile"}
-              {step === "success" && "You're all set! 🎉"}
-            </h1>
-            <p className="font-dm-sans text-sm mt-1" style={{ color: "var(--color-grey)" }}>
-              {step === "mobile" && "Enter your mobile number to continue"}
-              {step === "otp" && `OTP sent to ${maskedMobile}`}
-              {step === "profile" && "One quick step before you start shopping"}
-              {step === "success" && "Redirecting you now…"}
-            </p>
+            {step === "mobile" ? (
+              <>
+                <p
+                  className="font-dm-sans font-medium uppercase mb-2"
+                  style={{ fontSize: "10px", color: "var(--color-gold)", letterSpacing: "3px" }}
+                >
+                  Authentic Andhra Pickles
+                </p>
+                <h1
+                  className="font-cormorant font-semibold"
+                  style={{ fontSize: "28px", color: "var(--color-brown)", lineHeight: 1.2, letterSpacing: "0.3px" }}
+                >
+                  Maa Flavours
+                </h1>
+                <div className="ornament-line w-16 mx-auto my-3" />
+                <p className="font-dm-sans text-sm" style={{ color: "var(--color-grey)" }}>
+                  Enter your mobile number to continue
+                </p>
+              </>
+            ) : (
+              <>
+                <h1 className="font-playfair font-bold text-xl" style={{ color: "var(--color-brown)" }}>
+                  {step === "otp" && "Enter OTP"}
+                  {step === "profile" && "Complete Your Profile"}
+                  {step === "success" && "You're all set! 🎉"}
+                </h1>
+                <p className="font-dm-sans text-sm mt-1" style={{ color: "var(--color-grey)" }}>
+                  {step === "otp" && `OTP sent to ${maskedMobile}`}
+                  {step === "profile" && "One quick step before you start shopping"}
+                  {step === "success" && "Redirecting you now…"}
+                </p>
+              </>
+            )}
 
             {/* Step progress */}
             <div className="flex gap-1 mt-4 justify-center">
