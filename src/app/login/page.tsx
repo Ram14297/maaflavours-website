@@ -312,7 +312,7 @@ function LoginPageContent() {
                 </p>
                 <h1
                   className="font-cormorant font-semibold"
-                  style={{ fontSize: "28px", color: "var(--color-brown)", lineHeight: 1.2, letterSpacing: "0.3px" }}
+                  style={{ fontSize: "28px", color: "var(--color-crimson)", lineHeight: 1.2, letterSpacing: "0.3px" }}
                 >
                   Maa Flavours
                 </h1>

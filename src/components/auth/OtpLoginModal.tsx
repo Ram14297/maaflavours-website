@@ -378,7 +378,7 @@ export default function OtpLoginModal({
                 <h2
                   id="auth-modal-title"
                   className="font-cormorant font-semibold"
-                  style={{ fontSize: "28px", color: "var(--color-brown)", lineHeight: 1.2, letterSpacing: "0.3px" }}
+                  style={{ fontSize: "28px", color: "var(--color-crimson)", lineHeight: 1.2, letterSpacing: "0.3px" }}
                 >
                   {title || "Maa Flavours"}
                 </h2>
