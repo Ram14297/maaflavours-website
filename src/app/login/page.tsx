@@ -291,23 +291,14 @@ function LoginPageContent() {
                   <User size={32} strokeWidth={1.5} style={{ color: "var(--color-crimson)" }} />
                 </div>
               ) : (
-                <div
-                  className="rounded-full p-1.5"
-                  style={{
-                    background: "rgba(200,150,12,0.08)",
-                    border: "1.5px solid rgba(200,150,12,0.35)",
-                    boxShadow: "0 0 0 6px rgba(200,150,12,0.06)",
-                  }}
-                >
-                  <Image
-                    src="/maa-flavours-logo.png"
-                    alt="Maa Flavours"
-                    width={120}
-                    height={120}
-                    className="object-contain rounded-full"
-                    priority
-                  />
-                </div>
+                <Image
+                  src="/maa-flavours-logo.png"
+                  alt="Maa Flavours"
+                  width={148}
+                  height={148}
+                  className="object-contain"
+                  priority
+                />
               )}
             </div>
 
