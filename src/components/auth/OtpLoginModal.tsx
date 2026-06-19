@@ -455,7 +455,7 @@ export default function OtpLoginModal({
                       aria-describedby={mobileError ? "mobile-err" : undefined}
                     />
                     {isValidMobile(mobile) && (
-                      <div className="flex items-center pr-3">
+                      <div className="flex items-center px-3">
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                           <circle cx="10" cy="10" r="10" fill="#22C55E" />
                           <path d="M6 10.5l2.8 2.8 5.2-5.6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
