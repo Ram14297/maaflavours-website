@@ -28,7 +28,7 @@ export async function notifyCustomerSMS(
   if (normalized.length !== 10) return;
 
   try {
-    await fetch("https://www.fast2sms.com/dev/bulkV2", {
+    const res = await fetch("https://www.fast2sms.com/dev/bulkV2", {
       method: "POST",
       headers: {
         "authorization": apiKey,
@@ -40,7 +40,13 @@ export async function notifyCustomerSMS(
         numbers: normalized,
       }),
     });
-  } catch { /* non-fatal — never block order processing */ }
+    const data = await res.json().catch(() => ({}));
+    if (!data?.return) {
+      console.error("[Fast2SMS] SMS failed:", JSON.stringify(data), "| mobile:", normalized);
+    }
+  } catch (err: any) {
+    console.error("[Fast2SMS] Fetch error:", err?.message);
+  }
 }
 
 // ─── Short order ID for SMS (readable, not full UUID) ────────────────────────
