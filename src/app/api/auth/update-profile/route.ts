@@ -1,9 +1,11 @@
 // src/app/api/auth/update-profile/route.ts
-// Maa Flavours — Update New User Profile (name + optional email)
+// Maa Flavours — Update New User Profile
 // POST /api/auth/update-profile
-// Called after OTP verification for new users, and from account settings page.
-// Body: { name: string, email?: string }
-// Mobile comes from the signed session cookie — never trusted from body.
+// Called after OTP verification for new users to save name + email
+// Body: { name: string, email?: string, mobile: string }
+//
+// Strategy: try UPDATE existing row → if no row found, INSERT using userId from session cookie
+// IMPORTANT: Even if DB fails, return 200 and store name in cookie — never block login
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -16,11 +18,14 @@ import {
 import { isAllowedOrigin } from "@/lib/origin-check";
 
 const RequestSchema = z.object({
-  name: z.string().min(2, "Please enter your full name (at least 2 characters).").max(80).trim(),
-  email: z.string({ required_error: "Email address is required for order confirmations." }).email("Please enter a valid email address."),
+  email: z.string().email().optional().or(z.literal("")),
+  name: z.string().min(2).max(80).trim(),
+  mobile: z.string().regex(/^\+91[6-9]\d{9}$/).optional().nullable().or(z.literal("")),
 });
 
 export async function POST(request: NextRequest) {
+  console.log("[update-profile] Request received");
+
   if (!isAllowedOrigin(request)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -29,15 +34,16 @@ export async function POST(request: NextRequest) {
   const parsed = RequestSchema.safeParse(body);
 
   if (!parsed.success) {
-    const firstError = parsed.error.errors[0];
+    console.log("[update-profile] Validation failed:", parsed.error.issues);
     return NextResponse.json(
-      { error: firstError?.message || "Please provide a valid name and email address." },
+      { error: "Please provide a valid name (at least 2 characters)." },
       { status: 400 }
     );
   }
 
-  const { name, email } = parsed.data;
+  const { email, name, mobile } = parsed.data;
 
+  // ── Get userId from signed session cookie (set by verify-otp) ─────────
   const existingSession = await verifyCustomerSession(request);
   if (!existingSession) {
     return NextResponse.json(
@@ -45,46 +51,89 @@ export async function POST(request: NextRequest) {
       { status: 401 }
     );
   }
+  const userId = existingSession.userId;
+  console.log("[update-profile] userId from cookie:", userId);
 
-  const { userId, mobile } = existingSession;
-
+  // ── Try to update/insert customer in DB ───────────────────────────────
   try {
     const supabase = createAdminSupabaseClient();
 
+    // Step 1: Try UPDATE the existing row by userId
     const updatePayload: Record<string, any> = {
       name,
       updated_at: new Date().toISOString(),
-      ...(email ? { email } : {}),
     };
+    if (mobile) {
+      updatePayload.mobile = mobile;
+    }
 
-    const { data: updated } = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from("customers")
       .update(updatePayload)
       .eq("id", userId!)
       .select("id");
 
-    // No existing row — insert using userId + mobile from session
-    if (!updated?.length && userId && mobile) {
-      await supabase.from("customers").insert({
-        id: userId,
-        mobile,
-        name,
-        ...(email ? { email } : {}),
-      });
+    if (updateError) {
+      console.error("[update-profile] UPDATE error:", JSON.stringify(updateError));
     }
+
+    const rowsUpdated = updated?.length ?? 0;
+    console.log("[update-profile] Rows updated:", rowsUpdated);
+
+    // Step 2: If no existing row, INSERT using userId from session cookie
+    if (rowsUpdated === 0 && userId) {
+      console.log("[update-profile] No existing row — inserting:", { email, userId });
+
+      const mobileForInsert = mobile || `_ph_${userId.replace(/-/g, "").substring(0, 16)}`;
+
+      const { error: insertError } = await supabase
+        .from("customers")
+        .insert({
+          id: userId,
+          ...(email ? { email } : {}),
+          name,
+          mobile: mobileForInsert,
+        });
+
+      if (insertError) {
+        console.error("[update-profile] INSERT error:", JSON.stringify(insertError));
+
+        if (insertError.code === "23505") {
+          // Duplicate key — row exists now, retry update
+          await supabase
+            .from("customers")
+            .update({ name, mobile: mobile || null, updated_at: new Date().toISOString() })
+            .eq("id", userId);
+          console.log("[update-profile] Resolved duplicate key via retry update");
+        }
+      } else {
+        console.log("[update-profile] Insert succeeded");
+      }
+    }
+
+    if (rowsUpdated === 0 && !userId) {
+      console.warn("[update-profile] No userId in session and no existing row — profile saved to cookie only");
+    }
+
   } catch (err: any) {
-    console.error("[update-profile] DB error (non-fatal):", err?.message);
+    console.error("[update-profile] DB error (non-fatal, proceeding):", err?.message || err);
   }
+
+  // ── Re-issue signed mf_session cookie with updated name ──────────────
+  console.log("[update-profile] Updating mf_session cookie with name:", name);
 
   const newToken = await signCustomerSession({
     userId,
-    mobile,
-    email: email || existingSession.email || null,
+    email:     existingSession.email || email || null,
+    mobile:    mobile || existingSession.mobile || null,
     name,
     isNewUser: false,
   });
 
   const response = NextResponse.json({ success: true, name });
   setCustomerSessionCookie(response, newToken);
+
+  console.log("[update-profile] Cookie set on response. Returning success.");
+
   return response;
 }

@@ -1,7 +1,7 @@
 "use client";
 // src/components/auth/OtpLoginModal.tsx
-// Maa Flavours — Mobile OTP Login Modal
-// Flow: mobile → OTP → profile (new users) → success
+// Maa Flavours — Email OTP Login Modal
+// Flow: email → OTP (Supabase, free) → profile (new users) → success
 
 import {
   useState, useEffect, useRef, useCallback,
@@ -9,18 +9,18 @@ import {
 import Image from "next/image";
 import { useBodyScrollLock } from "@/hooks/useBodyScrollLock";
 import {
-  X, ArrowRight, CheckCircle2, User, Mail, ShieldCheck,
+  X, Mail, ArrowRight, CheckCircle2, User, Phone, ShieldCheck,
 } from "lucide-react";
 import OtpBoxes from "./OtpBoxes";
 import ResendTimer from "./ResendTimer";
 import toast from "react-hot-toast";
 
-type AuthStep = "mobile" | "otp" | "profile" | "success";
+type AuthStep = "email" | "otp" | "profile" | "success";
 
 export interface OtpLoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (user: { name: string; mobile: string; isNewUser: boolean }) => void;
+  onSuccess?: (user: { name: string; email: string; isNewUser: boolean }) => void;
   redirectTo?: string;
   title?: string;
   subtitle?: string;
@@ -41,13 +41,13 @@ const KEYFRAMES = `
   }
 `;
 
-function isValidMobile(mobile: string) {
-  return /^[6-9]\d{9}$/.test(mobile.replace(/\D/g, ""));
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
-function maskMobile(mobile: string) {
-  const digits = mobile.replace(/\D/g, "").slice(-10);
-  return digits.slice(0, 2) + "***" + digits.slice(-4);
+function maskEmail(email: string) {
+  const [local, domain] = email.split("@");
+  return (local.slice(0, 2) + "***@" + domain);
 }
 
 export default function OtpLoginModal({
@@ -58,27 +58,27 @@ export default function OtpLoginModal({
   title,
   subtitle,
 }: OtpLoginModalProps) {
-  const [step, setStep] = useState<AuthStep>("mobile");
-  const [mobile, setMobile] = useState("");
-  const [mobileError, setMobileError] = useState("");
-  const [maskedMobile, setMaskedMobile] = useState("");
+  const [step, setStep] = useState<AuthStep>("email");
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [otp, setOtp] = useState(Array(6).fill(""));
   const [otpError, setOtpError] = useState("");
+  const [maskedEmail, setMaskedEmail] = useState("");
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
   const [profileError, setProfileError] = useState("");
-  const [loggedInUser, setLoggedInUser] = useState<{ name: string; mobile: string } | null>(null);
+  const [loggedInUser, setLoggedInUser] = useState<{ name: string; email: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [resendKey, setResendKey] = useState(0);
 
-  const mobileRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
 
   useBodyScrollLock(isOpen);
 
   useEffect(() => {
     if (!isOpen) return;
-    if (step === "mobile") setTimeout(() => mobileRef.current?.focus(), 150);
+    if (step === "email") setTimeout(() => emailRef.current?.focus(), 150);
     if (step === "profile") setTimeout(() => nameRef.current?.focus(), 150);
   }, [isOpen, step]);
 
@@ -91,14 +91,14 @@ export default function OtpLoginModal({
   });
 
   const reset = useCallback(() => {
-    setStep("mobile");
-    setMobile("");
-    setMobileError("");
-    setMaskedMobile("");
+    setStep("email");
+    setEmail("");
+    setEmailError("");
     setOtp(Array(6).fill(""));
     setOtpError("");
+    setMaskedEmail("");
     setName("");
-    setEmail("");
+    setMobile("");
     setProfileError("");
     setLoggedInUser(null);
     setLoading(false);
@@ -111,32 +111,31 @@ export default function OtpLoginModal({
 
   // ─── STEP 1: Send OTP ───────────────────────────────────────────────────
   const handleSendOtp = async () => {
-    const digits = mobile.replace(/\D/g, "");
-    if (!isValidMobile(digits)) {
-      setMobileError("Enter a valid 10-digit Indian mobile number.");
+    if (!isValidEmail(email)) {
+      setEmailError("Enter a valid email address.");
       return;
     }
 
     setLoading(true);
-    setMobileError("");
+    setEmailError("");
 
     try {
       const res = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile: digits }),
+        body: JSON.stringify({ email: email.trim() }),
       });
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        setMobileError(data.error || "Could not send OTP. Please try again.");
+        setEmailError(data.error || "Could not send OTP. Please try again.");
         return;
       }
 
-      setMaskedMobile(data.maskedMobile || maskMobile(digits));
+      setMaskedEmail(data.maskedEmail || maskEmail(email));
       setStep("otp");
     } catch {
-      setMobileError("Network error. Check your connection and try again.");
+      setEmailError("Network error. Check your connection and try again.");
     } finally {
       setLoading(false);
     }
@@ -154,11 +153,10 @@ export default function OtpLoginModal({
     setOtpError("");
 
     try {
-      const digits = mobile.replace(/\D/g, "");
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile: digits, otp: otpCode }),
+        body: JSON.stringify({ email: email.trim(), otp: otpCode }),
       });
       const data = await res.json();
 
@@ -171,11 +169,7 @@ export default function OtpLoginModal({
       if (data.isNewUser) {
         setStep("profile");
       } else {
-        const user = {
-          name: data.user?.name || "Customer",
-          mobile: mobile.replace(/\D/g, ""),
-          isNewUser: false,
-        };
+        const user = { name: data.user?.name || "Customer", email: email.trim(), isNewUser: false };
         setLoggedInUser(user);
         setStep("success");
         triggerSuccess(user);
@@ -185,15 +179,14 @@ export default function OtpLoginModal({
     } finally {
       setLoading(false);
     }
-  }, [mobile, otp]);
+  }, [email, otp]);
 
   // ─── Resend OTP ──────────────────────────────────────────────────────────
   const handleResend = async () => {
-    const digits = mobile.replace(/\D/g, "");
     const res = await fetch("/api/auth/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mobile: digits }),
+      body: JSON.stringify({ email: email.trim() }),
     });
     const data = await res.json();
     if (data.success) {
@@ -212,8 +205,8 @@ export default function OtpLoginModal({
       setProfileError("Please enter your full name (minimum 2 characters).");
       return;
     }
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setProfileError("Please enter a valid email address for order confirmations.");
+    if (!mobile || !/^[6-9]\d{9}$/.test(mobile.replace(/\D/g, ""))) {
+      setProfileError("Please enter a valid 10-digit mobile number for delivery updates.");
       return;
     }
 
@@ -221,12 +214,14 @@ export default function OtpLoginModal({
     setProfileError("");
 
     try {
+      const mobileFormatted = `+91${mobile.replace(/\D/g, "")}`;
       const res = await fetch("/api/auth/update-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          email: email.trim(),
           name: name.trim(),
-          ...(email.trim() ? { email: email.trim() } : {}),
+          mobile: mobileFormatted,
         }),
       });
       const data = await res.json();
@@ -236,11 +231,7 @@ export default function OtpLoginModal({
         return;
       }
 
-      const user = {
-        name: name.trim(),
-        mobile: mobile.replace(/\D/g, ""),
-        isNewUser: true,
-      };
+      const user = { name: name.trim(), email: email.trim(), isNewUser: true };
       setLoggedInUser(user);
       setStep("success");
       triggerSuccess(user);
@@ -251,7 +242,7 @@ export default function OtpLoginModal({
     }
   };
 
-  const triggerSuccess = (user: { name: string; mobile: string; isNewUser: boolean }) => {
+  const triggerSuccess = (user: { name: string; email: string; isNewUser: boolean }) => {
     window.dispatchEvent(new CustomEvent("mf:auth:login", { detail: user }));
     onSuccess?.(user);
 
@@ -268,9 +259,9 @@ export default function OtpLoginModal({
   if (!isOpen) return null;
 
   const STEP_SUB: Record<AuthStep, string> = {
-    mobile: subtitle || "Enter your mobile number to continue",
-    otp: `OTP sent to ${maskedMobile}`,
-    profile: "One quick step before you start shopping",
+    email: subtitle || "Enter your email to receive a free OTP",
+    otp: `OTP sent to ${maskedEmail}`,
+    profile: "Tell us your name & mobile for delivery updates",
     success: "Authentic Andhra flavours await you",
   };
 
@@ -367,7 +358,7 @@ export default function OtpLoginModal({
               )}
             </div>
 
-            {step === "mobile" && (
+            {step === "email" && (
               <>
                 <p
                   className="font-dm-sans font-medium tracking-widest uppercase mb-2"
@@ -389,7 +380,7 @@ export default function OtpLoginModal({
               </>
             )}
 
-            {step !== "mobile" && (
+            {step !== "email" && (
               <>
                 <div className="ornament-line w-16 mx-auto mb-3" />
                 <h2
@@ -397,8 +388,8 @@ export default function OtpLoginModal({
                   className="font-playfair font-bold text-xl"
                   style={{ color: "var(--color-brown)" }}
                 >
-                  {step === "otp" && "Check Your Messages"}
-                  {step === "profile" && "Complete Your Profile"}
+                  {step === "otp" && "Check Your Email"}
+                  {step === "profile" && "Welcome to Maa Flavours! 🎉"}
                   {step === "success" && (loggedInUser?.name ? `Welcome, ${loggedInUser.name.split(" ")[0]}! 🎉` : "Logged in successfully!")}
                 </h2>
                 <p className="font-dm-sans text-sm mt-1.5" style={{ color: "var(--color-grey)" }}>
@@ -415,46 +406,44 @@ export default function OtpLoginModal({
             style={{ animation: "mf-slideStep 0.28s ease" }}
           >
 
-            {/* ════ STEP 1: Mobile number ════ */}
-            {step === "mobile" && (
+            {/* ════ STEP 1: Email ════ */}
+            {step === "email" && (
               <>
                 <div>
-                  <label htmlFor="auth-mobile" className="block font-dm-sans text-sm font-semibold mb-1.5"
+                  <label htmlFor="auth-email" className="block font-dm-sans text-sm font-semibold mb-1.5"
                     style={{ color: "var(--color-brown)" }}>
-                    Mobile Number
+                    Email Address
                   </label>
                   <div
                     className="flex items-stretch rounded-xl overflow-hidden transition-all duration-200"
                     style={{
-                      border: `2px solid ${mobileError ? "var(--color-crimson)" : "rgba(200,150,12,0.25)"}`,
-                      boxShadow: mobileError ? "0 0 0 3px rgba(192,39,45,0.1)" : "none",
+                      border: `2px solid ${emailError ? "var(--color-crimson)" : "rgba(200,150,12,0.25)"}`,
+                      boxShadow: emailError ? "0 0 0 3px rgba(192,39,45,0.1)" : "none",
                     }}
                   >
                     <div
-                      className="flex items-center gap-1.5 px-3 flex-shrink-0"
+                      className="flex items-center justify-center w-11 flex-shrink-0"
                       style={{ background: "var(--color-cream)", borderRight: "1.5px solid rgba(200,150,12,0.2)" }}
                     >
-                      <span className="text-base">🇮🇳</span>
-                      <span className="font-dm-sans font-bold text-sm" style={{ color: "var(--color-brown)" }}>+91</span>
+                      <Mail size={16} style={{ color: "var(--color-gold)" }} />
                     </div>
                     <input
-                      id="auth-mobile"
-                      ref={mobileRef}
-                      type="tel"
-                      inputMode="numeric"
-                      value={mobile}
+                      id="auth-email"
+                      ref={emailRef}
+                      type="email"
+                      value={email}
                       onChange={(e) => {
-                        setMobile(e.target.value.replace(/\D/g, "").slice(0, 10));
-                        setMobileError("");
+                        setEmail(e.target.value);
+                        setEmailError("");
                       }}
                       onKeyDown={(e) => e.key === "Enter" && handleSendOtp()}
-                      placeholder="98765 43210"
-                      autoComplete="tel-national"
+                      placeholder="you@example.com"
+                      autoComplete="email"
                       className="flex-1 px-4 py-3.5 font-dm-sans text-base bg-white outline-none"
                       style={{ color: "var(--color-brown)" }}
-                      aria-describedby={mobileError ? "mobile-err" : undefined}
+                      aria-describedby={emailError ? "email-err" : undefined}
                     />
-                    {isValidMobile(mobile) && (
+                    {isValidEmail(email) && (
                       <div className="flex items-center px-3">
                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                           <circle cx="10" cy="10" r="10" fill="#22C55E" />
@@ -463,10 +452,10 @@ export default function OtpLoginModal({
                       </div>
                     )}
                   </div>
-                  {mobileError && (
-                    <p id="mobile-err" role="alert" className="font-dm-sans text-xs mt-1.5 flex gap-1.5 items-start"
+                  {emailError && (
+                    <p id="email-err" role="alert" className="font-dm-sans text-xs mt-1.5 flex gap-1.5 items-start"
                       style={{ color: "var(--color-crimson)" }}>
-                      <span className="mt-px">⚠️</span>{mobileError}
+                      <span className="mt-px">⚠️</span>{emailError}
                     </p>
                   )}
                 </div>
@@ -475,12 +464,12 @@ export default function OtpLoginModal({
                   className="btn-primary w-full py-4 text-base gap-3 disabled:opacity-60">
                   {loading
                     ? <><span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Sending OTP…</>
-                    : <>Send OTP<ArrowRight size={18} /></>
+                    : <><Mail size={18} />Send OTP<ArrowRight size={18} /></>
                   }
                 </button>
 
                 <p className="font-dm-sans text-xs text-center" style={{ color: "var(--color-grey)" }}>
-                  🔒 A 6-digit OTP will be sent to your mobile. Free, no spam.
+                  🔒 We'll send a 6-digit OTP to your email. Free, no spam.
                 </p>
               </>
             )}
@@ -506,7 +495,7 @@ export default function OtpLoginModal({
 
                 <button
                   onClick={() => handleVerifyOtp()}
-                  disabled={loading || otp.some((d) => !d)}
+                  disabled={loading || otp.length < 6 || otp.some((d) => !d)}
                   className="btn-primary w-full py-4 text-base gap-3 disabled:opacity-60"
                 >
                   {loading
@@ -518,12 +507,12 @@ export default function OtpLoginModal({
                 <ResendTimer key={resendKey} onResend={handleResend} />
 
                 <p className="font-dm-sans text-xs text-center" style={{ color: "var(--color-grey)" }}>
-                  Wrong number?{" "}
+                  Wrong email?{" "}
                   <button type="button"
-                    onClick={() => { setStep("mobile"); setOtp(Array(6).fill("")); setOtpError(""); }}
+                    onClick={() => { setStep("email"); setOtp(Array(6).fill("")); setOtpError(""); }}
                     className="font-semibold underline hover:no-underline"
                     style={{ color: "var(--color-crimson)" }}>
-                    Change number
+                    Change email
                   </button>
                 </p>
               </>
@@ -538,11 +527,11 @@ export default function OtpLoginModal({
                 >
                   <CheckCircle2 size={16} style={{ color: "#2E7D32", flexShrink: 0 }} />
                   <p className="font-dm-sans text-sm" style={{ color: "#2E7D32" }}>
-                    Mobile verified! Just one more thing.
+                    Email verified! Just one more thing.
                   </p>
                 </div>
 
-                {/* Name (required) */}
+                {/* Name */}
                 <div>
                   <label htmlFor="auth-name" className="block font-dm-sans text-sm font-semibold mb-1.5"
                     style={{ color: "var(--color-brown)" }}>
@@ -565,29 +554,38 @@ export default function OtpLoginModal({
                   </div>
                 </div>
 
-                {/* Email (required) */}
+                {/* Mobile (required for delivery) */}
                 <div>
-                  <label htmlFor="auth-email" className="block font-dm-sans text-sm font-semibold mb-1.5"
+                  <label htmlFor="auth-mobile" className="block font-dm-sans text-sm font-semibold mb-1.5"
                     style={{ color: "var(--color-brown)" }}>
-                    Email Address *
+                    Mobile Number *
                   </label>
                   <div className="flex rounded-xl overflow-hidden"
-                    style={{ border: `2px solid ${profileError && email.trim() === "" ? "var(--color-crimson)" : "rgba(200,150,12,0.25)"}` }}>
-                    <div className="flex items-center justify-center w-11 flex-shrink-0"
-                      style={{ background: "var(--color-cream)" }}>
-                      <Mail size={16} style={{ color: "var(--color-gold)" }} />
+                    style={{ border: `2px solid rgba(200,150,12,0.2)` }}>
+                    <div className="flex items-center gap-1.5 px-3 flex-shrink-0"
+                      style={{ background: "var(--color-cream)", borderRight: "1.5px solid rgba(200,150,12,0.2)" }}>
+                      <span className="text-sm">🇮🇳</span>
+                      <span className="font-dm-sans font-bold text-sm" style={{ color: "var(--color-brown)" }}>+91</span>
                     </div>
-                    <input id="auth-email" type="email"
-                      value={email} onChange={(e) => { setEmail(e.target.value); setProfileError(""); }}
+                    <input id="auth-mobile" type="tel" inputMode="numeric"
+                      value={mobile} onChange={(e) => { setMobile(e.target.value.replace(/\D/g, "").slice(0, 10)); setProfileError(""); }}
                       onKeyDown={(e) => e.key === "Enter" && handleSaveProfile()}
-                      placeholder="you@example.com"
+                      placeholder="98765 43210"
                       className="flex-1 px-3.5 py-3.5 font-dm-sans text-base bg-white outline-none"
                       style={{ color: "var(--color-brown)" }}
-                      autoComplete="email" maxLength={120}
+                      autoComplete="tel-national" maxLength={10}
                     />
+                    {mobile.length === 10 && /^[6-9]\d{9}$/.test(mobile) && (
+                      <div className="flex items-center px-3">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                          <circle cx="10" cy="10" r="10" fill="#22C55E" />
+                          <path d="M6 10.5l2.8 2.8 5.2-5.6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                    )}
                   </div>
                   <p className="font-dm-sans text-xs mt-1" style={{ color: "var(--color-grey)" }}>
-                    📦 For order confirmations & tracking updates
+                    📦 Required for order delivery & offer updates
                   </p>
                 </div>
 
@@ -598,7 +596,7 @@ export default function OtpLoginModal({
                   </p>
                 )}
 
-                <button onClick={handleSaveProfile} disabled={loading || !name.trim() || !email.trim()}
+                <button onClick={handleSaveProfile} disabled={loading || !name.trim() || mobile.length < 10}
                   className="btn-primary w-full py-4 text-base gap-2 disabled:opacity-60">
                   {loading
                     ? <><span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Setting up…</>
@@ -637,8 +635,8 @@ export default function OtpLoginModal({
           {/* Step dots */}
           {step !== "success" && (
             <div className="flex items-center justify-center gap-2 pb-5">
-              {(["mobile", "otp", "profile"] as AuthStep[]).map((s, i) => {
-                const stepIdx = ["mobile", "otp", "profile"].indexOf(step);
+              {(["email", "otp", "profile"] as AuthStep[]).map((s, i) => {
+                const stepIdx = ["email", "otp", "profile"].indexOf(step);
                 const active = s === step;
                 const done = i < stepIdx;
                 return (

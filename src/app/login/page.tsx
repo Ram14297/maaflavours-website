@@ -1,7 +1,9 @@
 "use client";
 // src/app/login/page.tsx
 // Maa Flavours — Standalone Login Page at /login
-// Mobile OTP flow: mobile → OTP → profile (new users) → success
+// Used when user navigates directly to /login (not via modal)
+// Same 4-step OTP flow but in a full-page layout with brand elements
+// Redirects to ?redirect= param or /account after login
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
@@ -16,74 +18,80 @@ import OtpBoxes from "@/components/auth/OtpBoxes";
 import ResendTimer from "@/components/auth/ResendTimer";
 import toast from "react-hot-toast";
 
-function isValidMobile(mobile: string): boolean {
-  return /^[6-9]\d{9}$/.test(mobile.replace(/\D/g, ""));
+// ─── Helpers ─────────────────────────────────────────────────────────────
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
-function maskMobile(mobile: string): string {
-  const digits = mobile.replace(/\D/g, "").slice(-10);
-  return digits.slice(0, 2) + "***" + digits.slice(-4);
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  return local.slice(0, 2) + "***@" + domain;
 }
 
+// ─── Testimonial strip ───────────────────────────────────────────────────
 const TESTIMONIALS = [
   { name: "Lakshmi D.", city: "Hyderabad", text: "Best gongura I've tasted since my grandmother's. Ships so fast!" },
   { name: "Ravi K.", city: "Chennai", text: "Drumstick pickle is outstanding. Exactly the Andhra taste I missed." },
   { name: "Ananya M.", city: "Bangalore", text: "No preservatives and still so fresh. Ordering every month now!" },
 ];
 
-type LoginStep = "mobile" | "otp" | "profile" | "success";
+type LoginStep = "email" | "otp" | "profile" | "success";
 
+// ─── Inner content (needs useSearchParams — wrapped in Suspense) ─────────
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect") || "/account";
 
-  const [step, setStep] = useState<LoginStep>("mobile");
-  const [mobile, setMobile] = useState("");
-  const [mobileError, setMobileError] = useState("");
-  const [maskedMobile, setMaskedMobile] = useState("");
+  const [step, setStep] = useState<LoginStep>("email");
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [otp, setOtp] = useState(Array(6).fill(""));
   const [otpError, setOtpError] = useState("");
+  const [maskedEmail, setMaskedEmail] = useState("");
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
   const [profileError, setProfileError] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendKey, setResendKey] = useState(0);
   const [testimonialIdx, setTestimonialIdx] = useState(0);
 
-  const mobileRef = useRef<HTMLInputElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
   const nameRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => { setTimeout(() => mobileRef.current?.focus(), 200); }, []);
+  // Auto-focus email on mount
+  useEffect(() => { setTimeout(() => emailRef.current?.focus(), 200); }, []);
 
+  // Rotate testimonials
   useEffect(() => {
-    const t = setInterval(() => setTestimonialIdx((i) => (i + 1) % TESTIMONIALS.length), 4000);
+    const t = setInterval(() => {
+      setTestimonialIdx((i) => (i + 1) % TESTIMONIALS.length);
+    }, 4000);
     return () => clearInterval(t);
   }, []);
 
   // ─── Step 1: Send OTP ────────────────────────────────────────────────
   const handleSendOtp = async () => {
-    const digits = mobile.replace(/\D/g, "");
-    if (!isValidMobile(digits)) {
-      setMobileError("Enter a valid 10-digit Indian mobile number.");
+    if (!isValidEmail(email)) {
+      setEmailError("Enter a valid email address.");
       return;
     }
     setLoading(true);
-    setMobileError("");
+    setEmailError("");
     try {
       const res = await fetch("/api/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile: digits }),
+        body: JSON.stringify({ email: email.trim() }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        setMobileError(data.error || "Failed to send OTP.");
+        setEmailError(data.error || "Failed to send OTP.");
         return;
       }
-      setMaskedMobile(data.maskedMobile || maskMobile(digits));
+      setMaskedEmail(data.maskedEmail || maskEmail(email.trim()));
       setStep("otp");
     } catch {
-      setMobileError("Network error. Please try again.");
+      setEmailError("Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -96,11 +104,10 @@ function LoginPageContent() {
     setLoading(true);
     setOtpError("");
     try {
-      const digits = mobile.replace(/\D/g, "");
       const res = await fetch("/api/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mobile: digits, otp: otpCode }),
+        body: JSON.stringify({ email: email.trim(), otp: otpCode }),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -113,7 +120,7 @@ function LoginPageContent() {
         setTimeout(() => nameRef.current?.focus(), 100);
       } else {
         window.dispatchEvent(new CustomEvent("mf:auth:login", {
-          detail: { name: data.user?.name, mobile: digits, isNewUser: false }
+          detail: { name: data.user?.name, email: email.trim(), isNewUser: false }
         }));
         router.push(redirectTo);
       }
@@ -122,15 +129,14 @@ function LoginPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [mobile, otp, redirectTo, router]);
+  }, [email, otp, redirectTo, router]);
 
   // ─── Resend ──────────────────────────────────────────────────────────
   const handleResend = async () => {
-    const digits = mobile.replace(/\D/g, "");
     const res = await fetch("/api/auth/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mobile: digits }),
+      body: JSON.stringify({ email: email.trim() }),
     });
     const data = await res.json();
     if (data.success) {
@@ -147,23 +153,22 @@ function LoginPageContent() {
     if (!name.trim() || name.trim().length < 2) {
       setProfileError("Please enter your full name."); return;
     }
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setProfileError("Please enter a valid email address for order confirmations."); return;
+    const mobileDigits = mobile.replace(/\D/g, "");
+    if (!mobileDigits || !/^[6-9]\d{9}$/.test(mobileDigits)) {
+      setProfileError("Please enter a valid 10-digit mobile number for delivery updates."); return;
     }
     setLoading(true); setProfileError("");
     try {
+      const mobileFormatted = `+91${mobileDigits}`;
       const res = await fetch("/api/auth/update-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          ...(email.trim() ? { email: email.trim() } : {}),
-        }),
+        body: JSON.stringify({ email: email.trim(), name: name.trim(), mobile: mobileFormatted }),
       });
       const data = await res.json();
       if (!data.success) { setProfileError(data.error || "Could not save profile."); return; }
       window.dispatchEvent(new CustomEvent("mf:auth:login", {
-        detail: { name: name.trim(), mobile: mobile.replace(/\D/g, ""), isNewUser: true }
+        detail: { name: name.trim(), email: email.trim(), isNewUser: true }
       }));
       router.push(redirectTo);
     } catch {
@@ -176,31 +181,47 @@ function LoginPageContent() {
   const t = TESTIMONIALS[testimonialIdx];
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row" style={{ background: "var(--color-warm-white)" }}>
-
+    <div
+      className="min-h-screen flex flex-col lg:flex-row"
+      style={{ background: "var(--color-warm-white)" }}
+    >
       {/* ── Left brand panel (desktop only) ────────────────────────── */}
       <div
         className="hidden lg:flex lg:w-[45%] flex-col justify-between p-12 relative overflow-hidden"
-        style={{ background: "linear-gradient(160deg, #4A2C0A 0%, #6B3E12 40%, #8B4C14 100%)" }}
+        style={{
+          background: "linear-gradient(160deg, #4A2C0A 0%, #6B3E12 40%, #8B4C14 100%)",
+        }}
       >
-        <div className="absolute inset-0 opacity-[0.04]"
-          style={{ backgroundImage: "repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 50%)", backgroundSize: "12px 12px" }}
+        {/* Texture overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 50%)",
+            backgroundSize: "12px 12px",
+          }}
         />
 
+        {/* Logo */}
         <div className="relative z-10">
           <Link href="/">
-            <p className="font-dancing text-4xl" style={{ color: "var(--color-gold-light)" }}>Maa Flavours</p>
+            <p className="font-dancing text-4xl" style={{ color: "var(--color-gold-light)" }}>
+              Maa Flavours
+            </p>
             <p className="font-cormorant italic text-lg mt-1" style={{ color: "rgba(232,184,75,0.7)" }}>
               Authentic Andhra Taste
             </p>
           </Link>
         </div>
 
+        {/* Center content */}
         <div className="relative z-10 flex flex-col gap-6">
           <div>
             <h2 className="font-playfair font-bold text-4xl leading-tight text-white">
-              Taste the love<br />
-              <span style={{ color: "var(--color-gold-light)" }}>Maa bottled</span><br />
+              Taste the love
+              <br />
+              <span style={{ color: "var(--color-gold-light)" }}>Maa bottled</span>
+              <br />
               just for you.
             </h2>
             <p className="font-dm-sans text-base mt-4 leading-relaxed" style={{ color: "rgba(255,255,255,0.7)" }}>
@@ -209,6 +230,7 @@ function LoginPageContent() {
             </p>
           </div>
 
+          {/* Trust badges */}
           <div className="grid grid-cols-2 gap-3">
             {[
               { icon: "🏺", label: "Homemade" },
@@ -216,28 +238,37 @@ function LoginPageContent() {
               { icon: "🚚", label: "Pan-India Delivery" },
               { icon: "✅", label: "100% Vegetarian" },
             ].map((b) => (
-              <div key={b.label} className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl"
-                style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(232,184,75,0.2)" }}>
+              <div
+                key={b.label}
+                className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl"
+                style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(232,184,75,0.2)" }}
+              >
                 <span className="text-xl">{b.icon}</span>
                 <span className="font-dm-sans text-sm font-medium text-white">{b.label}</span>
               </div>
             ))}
           </div>
 
-          <div className="px-5 py-4 rounded-2xl"
-            style={{ background: "rgba(200,150,12,0.15)", border: "1px solid rgba(200,150,12,0.3)" }}>
+          {/* Rotating testimonial */}
+          <div
+            className="px-5 py-4 rounded-2xl"
+            style={{ background: "rgba(200,150,12,0.15)", border: "1px solid rgba(200,150,12,0.3)" }}
+          >
             <div className="flex mb-2">
               {Array(5).fill(0).map((_, i) => (
                 <Star key={i} size={14} fill="var(--color-gold-light)" strokeWidth={0} />
               ))}
             </div>
-            <p className="font-cormorant italic text-lg text-white leading-snug">"{t.text}"</p>
+            <p className="font-cormorant italic text-lg text-white leading-snug">
+              "{t.text}"
+            </p>
             <p className="font-dm-sans text-sm mt-2" style={{ color: "rgba(232,184,75,0.8)" }}>
               — {t.name}, {t.city}
             </p>
           </div>
         </div>
 
+        {/* Bottom */}
         <div className="relative z-10">
           <div className="ornament-line w-24 mb-3" style={{ background: "rgba(200,150,12,0.4)", height: "1px" }} />
           <p className="font-dm-sans text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
@@ -249,97 +280,89 @@ function LoginPageContent() {
       {/* ── Right: auth form ────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-10 min-h-screen lg:min-h-0">
 
-        <div className="lg:hidden text-center mb-6">
+        {/* Mobile logo — premium header */}
+        <div className="lg:hidden text-center mb-8">
           <Link href="/">
-            <Image
-              src="/maa-flavours-logo.png"
-              alt="Maa Flavours"
-              width={100}
-              height={100}
-              className="object-contain mx-auto"
-              priority
-            />
+            <div className="flex justify-center mb-2">
+              <Image src="/maa-flavours-logo.png" alt="Maa Flavours" width={100} height={100} className="object-contain" priority />
+            </div>
+            <p className="font-dm-sans font-medium tracking-widest uppercase"
+               style={{ fontSize: "9px", color: "var(--color-gold)", letterSpacing: "3px" }}>
+              Authentic Andhra Pickles
+            </p>
+            <p className="font-cormorant font-semibold mt-1"
+               style={{ fontSize: "26px", color: "var(--color-crimson)", lineHeight: 1.2 }}>
+              Maa Flavours
+            </p>
           </Link>
         </div>
 
         {/* Card */}
-        <div className="w-full flex flex-col rounded-3xl overflow-hidden"
-          style={{ maxWidth: 460, background: "white", border: "1px solid rgba(200,150,12,0.15)", boxShadow: "0 8px 40px rgba(74,44,10,0.1)" }}>
-
-          <div className="h-1 flex-shrink-0"
-            style={{ background: "linear-gradient(90deg,transparent,var(--color-gold) 20%,var(--color-gold-light) 50%,var(--color-gold) 80%,transparent)" }}
+        <div
+          className="w-full flex flex-col rounded-3xl overflow-hidden"
+          style={{
+            maxWidth: 460,
+            background: "white",
+            border: "1px solid rgba(200,150,12,0.15)",
+            boxShadow: "0 8px 40px rgba(74,44,10,0.1)",
+          }}
+        >
+          {/* Gold ornament */}
+          <div
+            className="h-1 flex-shrink-0"
+            style={{
+              background:
+                "linear-gradient(90deg,transparent,var(--color-gold) 20%,var(--color-gold-light) 50%,var(--color-gold) 80%,transparent)",
+            }}
           />
 
           {/* Card header */}
-          <div className="px-7 pt-8 pb-4 text-center border-b" style={{ borderColor: "rgba(200,150,12,0.1)" }}>
-            <div className="flex justify-center mb-4">
+          <div className="px-7 pt-7 pb-4 text-center border-b" style={{ borderColor: "rgba(200,150,12,0.1)" }}>
+            <div className="flex justify-center mb-3">
               {step === "success" ? (
-                <div className="relative w-20 h-20 rounded-full flex items-center justify-center"
-                  style={{ background: "rgba(46,125,50,0.1)", border: "3px solid rgba(46,125,50,0.25)" }}>
-                  <CheckCircle2 size={36} strokeWidth={1.75} style={{ color: "#2E7D32" }} />
+                <div
+                  className="relative w-14 h-14 rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(46,125,50,0.1)", border: "3px solid rgba(46,125,50,0.25)" }}
+                >
+                  <CheckCircle2 size={28} strokeWidth={1.75} style={{ color: "#2E7D32" }} />
                   <div className="absolute inset-0 rounded-full animate-ping"
                     style={{ background: "rgba(46,125,50,0.1)", animationDuration: "1.4s" }} />
                 </div>
               ) : step === "otp" ? (
-                <div className="w-20 h-20 rounded-full flex items-center justify-center"
-                  style={{ background: "rgba(200,150,12,0.08)", border: "2px solid rgba(200,150,12,0.3)" }}>
-                  <ShieldCheck size={32} strokeWidth={1.5} style={{ color: "var(--color-gold)" }} />
+                <div className="w-14 h-14 rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(200,150,12,0.1)", border: "2px solid rgba(200,150,12,0.25)" }}>
+                  <ShieldCheck size={26} strokeWidth={1.75} style={{ color: "var(--color-gold)" }} />
                 </div>
               ) : step === "profile" ? (
-                <div className="w-20 h-20 rounded-full flex items-center justify-center"
-                  style={{ background: "rgba(192,39,45,0.06)", border: "2px solid rgba(192,39,45,0.2)" }}>
-                  <User size={32} strokeWidth={1.5} style={{ color: "var(--color-crimson)" }} />
+                <div className="w-14 h-14 rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(192,39,45,0.08)", border: "2px solid rgba(192,39,45,0.18)" }}>
+                  <User size={26} strokeWidth={1.75} style={{ color: "var(--color-crimson)" }} />
                 </div>
               ) : (
-                <Image
-                  src="/maa-flavours-logo.png"
-                  alt="Maa Flavours"
-                  width={148}
-                  height={148}
-                  className="object-contain"
-                  priority
-                />
+                <div className="w-14 h-14 rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(192,39,45,0.08)", border: "2px solid rgba(192,39,45,0.18)" }}>
+                  <Mail size={24} strokeWidth={1.75} style={{ color: "var(--color-crimson)" }} />
+                </div>
               )}
             </div>
 
-            {step === "mobile" ? (
-              <>
-                <p
-                  className="font-dm-sans font-medium uppercase mb-2"
-                  style={{ fontSize: "10px", color: "var(--color-gold)", letterSpacing: "3px" }}
-                >
-                  Authentic Andhra Pickles
-                </p>
-                <h1
-                  className="font-cormorant font-semibold"
-                  style={{ fontSize: "28px", color: "var(--color-crimson)", lineHeight: 1.2, letterSpacing: "0.3px" }}
-                >
-                  Maa Flavours
-                </h1>
-                <div className="ornament-line w-16 mx-auto my-3" />
-                <p className="font-dm-sans text-sm" style={{ color: "var(--color-grey)" }}>
-                  Enter your mobile number to continue
-                </p>
-              </>
-            ) : (
-              <>
-                <h1 className="font-playfair font-bold text-xl" style={{ color: "var(--color-brown)" }}>
-                  {step === "otp" && "Enter OTP"}
-                  {step === "profile" && "Complete Your Profile"}
-                  {step === "success" && "You're all set! 🎉"}
-                </h1>
-                <p className="font-dm-sans text-sm mt-1" style={{ color: "var(--color-grey)" }}>
-                  {step === "otp" && `OTP sent to ${maskedMobile}`}
-                  {step === "profile" && "One quick step before you start shopping"}
-                  {step === "success" && "Redirecting you now…"}
-                </p>
-              </>
-            )}
+            <h1 className="font-playfair font-bold text-xl" style={{ color: "var(--color-brown)" }}>
+              {step === "email" && "Sign In"}
+              {step === "otp" && "Enter OTP"}
+              {step === "profile" && "Complete Your Profile"}
+              {step === "success" && "You're in! 🎉"}
+            </h1>
+            <p className="font-dm-sans text-sm mt-1" style={{ color: "var(--color-grey)" }}>
+              {step === "email" && "We'll send a 6-digit OTP to your email"}
+              {step === "otp" && `OTP sent to ${maskedEmail}`}
+              {step === "profile" && "Tell us your name & mobile for delivery updates"}
+              {step === "success" && "Redirecting you now…"}
+            </p>
 
-            {/* Step progress */}
+            {/* Step progress bar */}
             <div className="flex gap-1 mt-4 justify-center">
-              {(["mobile", "otp", "profile"] as LoginStep[]).map((s, i) => {
-                const idx = ["mobile", "otp", "profile"].indexOf(step);
+              {(["email", "otp", "profile"] as LoginStep[]).map((s, i) => {
+                const idx = ["email", "otp", "profile"].indexOf(step);
                 const active = s === step;
                 const done = i < idx;
                 return (
@@ -357,38 +380,40 @@ function LoginPageContent() {
           {/* Form body */}
           <div className="px-7 py-6 flex flex-col gap-4">
 
-            {/* ══ STEP 1: Mobile ══ */}
-            {step === "mobile" && (
+            {/* ══ STEP 1: Email ══ */}
+            {step === "email" && (
               <>
                 <div>
-                  <label htmlFor="login-mobile" className="block font-dm-sans text-sm font-semibold mb-1.5"
-                    style={{ color: "var(--color-brown)" }}>Mobile Number</label>
+                  <label htmlFor="login-email" className="block font-dm-sans text-sm font-semibold mb-1.5"
+                    style={{ color: "var(--color-brown)" }}>Email Address</label>
                   <div className="flex rounded-xl overflow-hidden"
-                    style={{ border: `2px solid ${mobileError ? "var(--color-crimson)" : "rgba(200,150,12,0.25)"}` }}>
-                    <div className="flex items-center gap-1.5 px-3 flex-shrink-0"
+                    style={{ border: `2px solid ${emailError ? "var(--color-crimson)" : "rgba(200,150,12,0.25)"}` }}>
+                    <div className="flex items-center justify-center w-11"
                       style={{ background: "var(--color-cream)", borderRight: "1.5px solid rgba(200,150,12,0.2)" }}>
-                      <span className="text-base">🇮🇳</span>
-                      <span className="font-dm-sans font-bold text-sm" style={{ color: "var(--color-brown)" }}>+91</span>
+                      <Mail size={16} style={{ color: "var(--color-gold)" }} />
                     </div>
-                    <input id="login-mobile" ref={mobileRef} type="tel" inputMode="numeric"
-                      value={mobile}
-                      onChange={(e) => { setMobile(e.target.value.replace(/\D/g, "").slice(0, 10)); setMobileError(""); }}
+                    <input id="login-email" ref={emailRef} type="email"
+                      value={email}
+                      onChange={(e) => { setEmail(e.target.value); setEmailError(""); }}
                       onKeyDown={(e) => e.key === "Enter" && handleSendOtp()}
-                      placeholder="98765 43210"
-                      autoComplete="tel-national"
+                      placeholder="you@example.com"
+                      autoComplete="email"
                       className="flex-1 px-4 py-3.5 font-dm-sans text-base bg-white outline-none"
                       style={{ color: "var(--color-brown)" }}
                     />
-                    {isValidMobile(mobile) && (
-                      <div className="flex items-center pr-3">
-                        <CheckCircle2 size={18} style={{ color: "#2E7D32" }} />
+                    {isValidEmail(email) && (
+                      <div className="flex items-center px-3">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                          <circle cx="10" cy="10" r="10" fill="#22C55E" />
+                          <path d="M6 10.5l2.8 2.8 5.2-5.6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
                       </div>
                     )}
                   </div>
-                  {mobileError && (
+                  {emailError && (
                     <p role="alert" className="font-dm-sans text-xs mt-1.5 flex gap-1.5"
                       style={{ color: "var(--color-crimson)" }}>
-                      ⚠️ {mobileError}
+                      ⚠️ {emailError}
                     </p>
                   )}
                 </div>
@@ -397,13 +422,14 @@ function LoginPageContent() {
                   className="btn-primary w-full py-4 text-base gap-3 disabled:opacity-60">
                   {loading
                     ? <><span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Sending…</>
-                    : <>Send OTP<ArrowRight size={18} /></>
+                    : <><Mail size={18} />Send OTP<ArrowRight size={18} /></>
                   }
                 </button>
 
                 <p className="font-dm-sans text-xs text-center" style={{ color: "var(--color-grey)" }}>
                   No account? You'll be registered automatically.
-                  <br />🔒 Your number is never shared.
+                  <br />
+                  🔒 We never share your email.
                 </p>
               </>
             )}
@@ -421,7 +447,7 @@ function LoginPageContent() {
                     ⚠️ {otpError}
                   </p>
                 )}
-                <button onClick={() => handleVerifyOtp()} disabled={loading || otp.some((d) => !d)}
+                <button onClick={() => handleVerifyOtp()} disabled={loading || otp.length < 6 || otp.some((d) => !d)}
                   className="btn-primary w-full py-4 text-base gap-3 disabled:opacity-60">
                   {loading
                     ? <><span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Verifying…</>
@@ -432,10 +458,10 @@ function LoginPageContent() {
                 <ResendTimer key={resendKey} onResend={handleResend} />
 
                 <button type="button"
-                  onClick={() => { setStep("mobile"); setOtp(Array(6).fill("")); setOtpError(""); }}
+                  onClick={() => { setStep("email"); setOtp(Array(6).fill("")); setOtpError(""); }}
                   className="font-dm-sans text-sm text-center underline hover:no-underline"
                   style={{ color: "var(--color-grey)" }}>
-                  ← Change mobile number
+                  ← Change email address
                 </button>
               </>
             )}
@@ -447,11 +473,10 @@ function LoginPageContent() {
                   style={{ background: "rgba(46,125,50,0.07)", border: "1px solid rgba(46,125,50,0.2)" }}>
                   <CheckCircle2 size={16} style={{ color: "#2E7D32" }} />
                   <p className="font-dm-sans text-sm" style={{ color: "#2E7D32" }}>
-                    Mobile verified! Setting up your account.
+                    Email verified! Setting up your account.
                   </p>
                 </div>
 
-                {/* Name (required) */}
                 <div>
                   <label htmlFor="reg-name" className="block font-dm-sans text-sm font-semibold mb-1.5"
                     style={{ color: "var(--color-brown)" }}>Full Name *</label>
@@ -471,28 +496,28 @@ function LoginPageContent() {
                   </div>
                 </div>
 
-                {/* Email (required) */}
                 <div>
-                  <label htmlFor="reg-email" className="block font-dm-sans text-sm font-semibold mb-1.5"
+                  <label htmlFor="reg-mobile" className="block font-dm-sans text-sm font-semibold mb-1.5"
                     style={{ color: "var(--color-brown)" }}>
-                    Email Address *
+                    Mobile Number *
                   </label>
                   <div className="flex rounded-xl overflow-hidden"
-                    style={{ border: "2px solid rgba(200,150,12,0.25)" }}>
-                    <div className="flex items-center justify-center w-11"
-                      style={{ background: "var(--color-cream)" }}>
-                      <Mail size={16} style={{ color: "var(--color-gold)" }} />
+                    style={{ border: "2px solid rgba(200,150,12,0.2)" }}>
+                    <div className="flex items-center gap-2 px-3.5 flex-shrink-0"
+                      style={{ background: "var(--color-cream)", borderRight: "1.5px solid rgba(200,150,12,0.2)" }}>
+                      <span className="text-base leading-none">🇮🇳</span>
+                      <span className="font-dm-sans font-bold text-sm" style={{ color: "var(--color-brown)" }}>+91</span>
                     </div>
-                    <input id="reg-email" type="email"
-                      value={email} onChange={(e) => { setEmail(e.target.value); setProfileError(""); }}
+                    <input id="reg-mobile" type="tel" inputMode="numeric"
+                      value={mobile} onChange={(e) => { setMobile(e.target.value.replace(/\D/g, "").slice(0, 10)); setProfileError(""); }}
                       onKeyDown={(e) => e.key === "Enter" && handleSaveProfile()}
-                      placeholder="you@example.com"
+                      placeholder="98765 43210"
                       className="flex-1 px-3.5 py-3.5 font-dm-sans text-base bg-white outline-none"
-                      style={{ color: "var(--color-brown)" }} autoComplete="email" maxLength={120}
+                      style={{ color: "var(--color-brown)" }} autoComplete="tel-national" maxLength={10}
                     />
                   </div>
                   <p className="font-dm-sans text-xs mt-1" style={{ color: "var(--color-grey)" }}>
-                    📦 For order confirmations & tracking updates
+                    📦 Required for order delivery & offer updates
                   </p>
                 </div>
 
@@ -502,7 +527,7 @@ function LoginPageContent() {
                   </p>
                 )}
 
-                <button onClick={handleSaveProfile} disabled={loading || !name.trim() || !email.trim()}
+                <button onClick={handleSaveProfile} disabled={loading || !name.trim() || mobile.length < 10}
                   className="btn-primary w-full py-4 text-base gap-2 disabled:opacity-60">
                   {loading
                     ? <><span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Saving…</>
@@ -522,8 +547,12 @@ function LoginPageContent() {
                     style={{ background: "rgba(46,125,50,0.1)", animationDuration: "1.4s" }} />
                 </div>
                 <div>
-                  <p className="font-playfair font-bold text-xl" style={{ color: "var(--color-brown)" }}>You're all set!</p>
-                  <p className="font-dm-sans text-sm mt-1" style={{ color: "var(--color-grey)" }}>Heading to your account…</p>
+                  <p className="font-playfair font-bold text-xl" style={{ color: "var(--color-brown)" }}>
+                    You're all set!
+                  </p>
+                  <p className="font-dm-sans text-sm mt-1" style={{ color: "var(--color-grey)" }}>
+                    Heading to your account…
+                  </p>
                 </div>
                 <div className="w-full px-4 py-3 rounded-xl flex items-center gap-3"
                   style={{ background: "rgba(200,150,12,0.06)", border: "1px solid rgba(200,150,12,0.2)" }}>
@@ -542,38 +571,47 @@ function LoginPageContent() {
           </div>
 
           {/* Card footer */}
-          <div className="px-7 py-4 border-t text-center"
-            style={{ borderColor: "rgba(200,150,12,0.08)", background: "var(--color-cream)" }}>
+          <div className="px-7 py-4 border-t text-center" style={{ borderColor: "rgba(200,150,12,0.08)", background: "var(--color-cream)" }}>
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Link href="/products" className="font-dm-sans text-xs transition-opacity hover:opacity-70 flex items-center gap-1"
                 style={{ color: "var(--color-crimson)" }}>
                 🫙 Browse Pickles
               </Link>
               <span style={{ color: "rgba(200,150,12,0.3)" }}>·</span>
-              <Link href="/contact" className="font-dm-sans text-xs" style={{ color: "var(--color-grey)" }}>Need help?</Link>
+              <Link href="/contact" className="font-dm-sans text-xs" style={{ color: "var(--color-grey)" }}>
+                Need help?
+              </Link>
               <span style={{ color: "rgba(200,150,12,0.3)" }}>·</span>
-              <Link href="/privacy-policy" className="font-dm-sans text-xs" style={{ color: "var(--color-grey)" }}>Privacy Policy</Link>
+              <Link href="/privacy-policy" className="font-dm-sans text-xs" style={{ color: "var(--color-grey)" }}>
+                Privacy Policy
+              </Link>
             </div>
           </div>
         </div>
 
         {/* Why sign in strip */}
         <div className="mt-8 w-full max-w-md">
-          <p className="font-dm-sans text-xs text-center mb-3" style={{ color: "var(--color-grey)" }}>Why sign in?</p>
+          <p className="font-dm-sans text-xs text-center mb-3" style={{ color: "var(--color-grey)" }}>
+            Why sign in?
+          </p>
           <div className="grid grid-cols-3 gap-2">
             {[
               { icon: Package, label: "Track Orders" },
               { icon: Star, label: "Save Wishlist" },
               { icon: "🏷️", label: "Exclusive Offers", isEmoji: true },
             ].map((item) => (
-              <div key={item.label} className="flex flex-col items-center gap-1.5 p-3 rounded-xl"
-                style={{ background: "rgba(200,150,12,0.06)", border: "1px solid rgba(200,150,12,0.1)" }}>
+              <div key={item.label}
+                className="flex flex-col items-center gap-1.5 p-3 rounded-xl"
+                style={{ background: "rgba(200,150,12,0.06)", border: "1px solid rgba(200,150,12,0.1)" }}
+              >
                 {item.isEmoji ? (
                   <span className="text-lg">{item.icon as string}</span>
                 ) : (
                   <item.icon size={18} strokeWidth={1.75} style={{ color: "var(--color-gold)" }} />
                 )}
-                <span className="font-dm-sans text-xs font-medium" style={{ color: "var(--color-brown)" }}>{item.label}</span>
+                <span className="font-dm-sans text-xs font-medium" style={{ color: "var(--color-brown)" }}>
+                  {item.label}
+                </span>
               </div>
             ))}
           </div>

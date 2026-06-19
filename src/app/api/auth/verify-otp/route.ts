@@ -1,27 +1,24 @@
 // src/app/api/auth/verify-otp/route.ts
-// Maa Flavours — Verify Mobile OTP + Create Session Cookie
+// Maa Flavours — Verify Email OTP + Create Session Cookie
 // POST /api/auth/verify-otp
-// Body: { mobile: string, otp: string }
-// On success: sets 30-day httpOnly mf_session cookie
+// Body: { email: string, otp: string }
+// On success: upserts customer row, sets 30-day httpOnly mf_session cookie
 // Returns: { success, isNewUser, user } | { error }
 
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createHash, randomUUID } from "crypto";
-import { createAdminSupabaseClient } from "@/lib/supabase/server";
+import { createServerClient, createAdminSupabaseClient } from "@/lib/supabase/server";
 import { signCustomerSession, setCustomerSessionCookie } from "@/lib/customer-auth";
 import { isAllowedOrigin } from "@/lib/origin-check";
 
 const RequestSchema = z.object({
-  mobile: z.string().regex(/^[6-9]\d{9}$/, "Invalid mobile number"),
-  otp: z.string().regex(/^\d{6}$/, "OTP must be 6 digits"),
+  email: z.string().email("Invalid email address"),
+  otp: z.string().regex(/^\d{6,8}$/, "OTP must be 6 or 8 digits"),
 });
 
-function hashOtp(otp: string): string {
-  return createHash("sha256").update(otp).digest("hex");
-}
-
 export async function POST(request: NextRequest) {
+  console.log("[verify-otp] Request received");
+
   try {
     if (!isAllowedOrigin(request)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -31,67 +28,63 @@ export async function POST(request: NextRequest) {
     const parsed = RequestSchema.safeParse(body);
 
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid request." }, { status: 400 });
-    }
-
-    const { mobile: mobileRaw, otp } = parsed.data;
-    const mobile = `+91${mobileRaw}`;
-    const supabase = createAdminSupabaseClient();
-
-    // Find the latest valid, unverified OTP session for this mobile
-    const { data: session, error: sessionErr } = await supabase
-      .from("otp_sessions")
-      .select("id, otp_hash, attempt_count")
-      .eq("mobile", mobile)
-      .eq("is_verified", false)
-      .gt("expires_at", new Date().toISOString())
-      .lt("attempt_count", 5)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (sessionErr || !session) {
       return NextResponse.json(
-        { error: "OTP has expired or is no longer valid. Please request a new one." },
+        { error: "Invalid OTP or email." },
         { status: 400 }
       );
     }
 
-    // Verify hash
-    if (session.otp_hash !== hashOtp(otp)) {
-      await supabase
-        .from("otp_sessions")
-        .update({ attempt_count: session.attempt_count + 1 })
-        .eq("id", session.id);
+    const { email, otp } = parsed.data;
 
-      const remaining = 4 - session.attempt_count;
+    // ─── 1. Verify OTP with Supabase ──────────────────────────────────────
+    const supabase = createServerClient();
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: "email",
+    });
+
+    if (error || !data.user) {
+      console.log("[verify-otp] OTP verification failed:", error?.message);
+      const isExpired = error?.message?.toLowerCase().includes("expired");
       return NextResponse.json(
-        { error: `Incorrect OTP. ${remaining} attempt${remaining === 1 ? "" : "s"} remaining.` },
+        {
+          error: isExpired
+            ? "OTP has expired. Please request a new one."
+            : "Incorrect OTP. Please check and try again.",
+        },
         { status: 400 }
       );
     }
 
-    // Mark session as verified
-    await supabase
-      .from("otp_sessions")
-      .update({ is_verified: true })
-      .eq("id", session.id);
+    const authUserId = data.user.id;
+    console.log("[verify-otp] OTP verified for user:", authUserId);
 
-    // Look up existing customer by mobile
-    const { data: customer } = await supabase
+    // ─── 2. Get or create customer row in Supabase ────────────────────────
+    const adminSupa = createAdminSupabaseClient();
+
+    const { data: existingCustomer, error: lookupErr } = await adminSupa
       .from("customers")
       .select("id, name, email, mobile")
-      .eq("mobile", mobile)
+      .eq("id", authUserId)
       .maybeSingle();
 
-    const isNewUser = !customer || !customer.name;
-    const userId = customer?.id ?? randomUUID();
+    if (lookupErr) {
+      console.warn("[verify-otp] Customer lookup error:", lookupErr.message);
+    }
 
+    const isNewUser = !existingCustomer || !existingCustomer.name;
+
+    // Note: customer row creation is deferred to update-profile (which handles
+    // mobile correctly). Do not insert here — mobile NOT NULL would fail for
+    // email-auth users who haven't provided a mobile yet.
+
+    // ─── 3. Set signed session cookie (JWT — NOT raw JSON) ────────────────
     const token = await signCustomerSession({
-      userId,
-      mobile,
-      email: customer?.email || null,
-      name: customer?.name || "",
+      userId: authUserId,
+      email,
+      name: existingCustomer?.name || "",
+      mobile: existingCustomer?.mobile || null,
       isNewUser,
     });
 
@@ -99,20 +92,22 @@ export async function POST(request: NextRequest) {
       success: true,
       isNewUser,
       user: {
-        id: userId,
-        mobile,
-        name: customer?.name || "",
-        email: customer?.email || null,
+        id: authUserId,
+        email,
+        name: existingCustomer?.name || "",
+        mobile: existingCustomer?.mobile || null,
       },
     });
 
     setCustomerSessionCookie(response, token);
+
+    console.log("[verify-otp] Session cookie set. isNewUser:", isNewUser);
     return response;
 
   } catch (err: any) {
-    console.error("[verify-otp] Error:", err);
+    console.error("[verify-otp] Unhandled error:", err);
     return NextResponse.json(
-      { error: "Verification failed. Please try again." },
+      { error: err.message || "Verification failed. Please try again." },
       { status: 500 }
     );
   }

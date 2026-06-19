@@ -68,7 +68,7 @@ function CheckoutContent() {
     if (!mounted) return;
     fetch("/api/auth/me")
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (!d?.user?.id) setLoginOpen(true); })
+      .then(d => { if (!d?.user?.email) setLoginOpen(true); })
       .catch(() => {});
   }, [mounted]);
 
