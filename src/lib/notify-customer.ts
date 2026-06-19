@@ -28,17 +28,14 @@ export async function notifyCustomerSMS(
   if (normalized.length !== 10) return;
 
   try {
-    const res = await fetch("https://www.fast2sms.com/dev/bulkV2", {
-      method: "POST",
-      headers: {
-        "authorization": apiKey,
-        "Content-Type":  "application/json",
-      },
-      body: JSON.stringify({
-        route:   "q",   // Quick SMS — no DLT registration needed
-        message,
-        numbers: normalized,
-      }),
+    const params = new URLSearchParams({
+      authorization: apiKey,
+      route:         "q",
+      message,
+      numbers:       normalized,
+    });
+    const res = await fetch(`https://www.fast2sms.com/dev/bulkV2?${params.toString()}`, {
+      method: "GET",
     });
     const data = await res.json().catch(() => ({}));
     if (!data?.return) {
