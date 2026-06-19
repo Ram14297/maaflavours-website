@@ -16,8 +16,8 @@ import {
 import { isAllowedOrigin } from "@/lib/origin-check";
 
 const RequestSchema = z.object({
-  name: z.string().min(2).max(80).trim(),
-  email: z.string().email("Please enter a valid email address."),
+  name: z.string().min(2, "Please enter your full name (at least 2 characters).").max(80).trim(),
+  email: z.string({ required_error: "Email address is required for order confirmations." }).email("Please enter a valid email address."),
 });
 
 export async function POST(request: NextRequest) {
@@ -29,8 +29,9 @@ export async function POST(request: NextRequest) {
   const parsed = RequestSchema.safeParse(body);
 
   if (!parsed.success) {
+    const firstError = parsed.error.errors[0];
     return NextResponse.json(
-      { error: "Please provide a valid name (at least 2 characters)." },
+      { error: firstError?.message || "Please provide a valid name and email address." },
       { status: 400 }
     );
   }
