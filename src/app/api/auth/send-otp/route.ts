@@ -60,7 +60,7 @@ function otpEmailHtml(otp: string): string {
               <p style="margin:0 0 28px;font-size:15px;color:#6B7280;">Use this 6-digit code to sign in:</p>
               <!-- OTP box -->
               <div style="background:#FAFAF5;border:2px solid #E8B84B;border-radius:10px;text-align:center;padding:24px 16px;margin-bottom:28px;">
-                <span style="font-family:Georgia,serif;font-size:42px;font-weight:700;letter-spacing:10px;color:#4A2C0A;">${otp}</span>
+                <span style="font-family:'Courier New',Courier,monospace;font-size:42px;font-weight:700;letter-spacing:8px;color:#4A2C0A;">${otp}</span>
               </div>
               <p style="margin:0 0 8px;font-size:13px;color:#6B7280;">This OTP expires in <strong>10 minutes</strong>. Do not share it with anyone.</p>
               <p style="margin:0;font-size:13px;color:#9CA3AF;">If you didn't request this, you can safely ignore this email.</p>
