@@ -14,7 +14,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/server";
 import { isAllowedOrigin } from "@/lib/origin-check";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM = "Maa Flavours <noreply@maaflavours.com>";
+const FROM = "Maa Flavours <orders@maaflavours.com>";
 
 const RequestSchema = z.object({
   email: z.string().email("Invalid email address"),
