@@ -612,22 +612,24 @@ export default function OtpLoginModal({
                 <p className="font-dm-sans text-sm" style={{ color: "var(--color-grey)" }}>
                   Redirecting you now…
                 </p>
-                <div
-                  className="w-full px-4 py-3.5 rounded-xl flex items-center gap-3"
-                  style={{ background: "rgba(200,150,12,0.06)", border: "1px solid rgba(200,150,12,0.2)" }}
-                >
-                  <span className="text-xl">🏷️</span>
-                  <p className="font-dm-sans text-sm font-medium text-left" style={{ color: "var(--color-brown)" }}>
-                    Use code{" "}
-                    <strong
-                      className="px-1.5 py-0.5 rounded font-bold tracking-widest"
-                      style={{ background: "rgba(192,39,45,0.1)", color: "var(--color-crimson)" }}
-                    >
-                      WELCOME50
-                    </strong>{" "}
-                    for ₹50 off your first order!
-                  </p>
-                </div>
+                {loggedInUser?.isNewUser && (
+                  <div
+                    className="w-full px-4 py-3.5 rounded-xl flex items-center gap-3"
+                    style={{ background: "rgba(200,150,12,0.06)", border: "1px solid rgba(200,150,12,0.2)" }}
+                  >
+                    <span className="text-xl">🏷️</span>
+                    <p className="font-dm-sans text-sm font-medium text-left" style={{ color: "var(--color-brown)" }}>
+                      Use code{" "}
+                      <strong
+                        className="px-1.5 py-0.5 rounded font-bold tracking-widest"
+                        style={{ background: "rgba(192,39,45,0.1)", color: "var(--color-crimson)" }}
+                      >
+                        WELCOME50
+                      </strong>{" "}
+                      for ₹50 off your first order!
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

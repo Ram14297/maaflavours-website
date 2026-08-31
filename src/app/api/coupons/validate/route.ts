@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/server";
+import { verifyCustomerSession } from "@/lib/customer-auth";
 import { isAllowedOrigin } from "@/lib/origin-check";
 
 // Default to Zone 1 (AP/TG) rate for coupon discount preview — actual charge is zone-based at order creation
@@ -55,6 +56,23 @@ export async function POST(request: NextRequest) {
       if (!sc) return NextResponse.json({ valid: false, error: "Invalid coupon code" });
       if (!sc.is_active) return NextResponse.json({ valid: false, error: "This coupon is no longer active" });
       if (sc.min_order_amount && cartTotal < sc.min_order_amount) return NextResponse.json({ valid: false, error: `Minimum order ₹${Math.ceil(sc.min_order_amount/100)} required` });
+
+      // WELCOME50 is first-order only — reject if user already has a prior order
+      if (upperCode === "WELCOME50") {
+        const session = await verifyCustomerSession(request);
+        if (session?.userId) {
+          const supabase = createAdminSupabaseClient();
+          const { count } = await supabase
+            .from("orders")
+            .select("id", { count: "exact", head: true })
+            .eq("customer_id", session.userId)
+            .not("status", "in", '("pending","cancelled")');
+          if ((count ?? 0) > 0) {
+            return NextResponse.json({ valid: false, error: "WELCOME50 is for first orders only" });
+          }
+        }
+      }
+
       coupon = sc;
     }
 
