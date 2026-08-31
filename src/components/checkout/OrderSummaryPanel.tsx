@@ -1,9 +1,10 @@
-import React from "react";
 // src/components/checkout/OrderSummaryPanel.tsx
 // Maa Flavours — Order Summary sidebar (right column on checkout page)
 // Shows all cart items, applied coupon, price breakdown
 // Read-only — links back to /products to continue shopping
 
+import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag, Edit2 } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
@@ -85,19 +86,28 @@ export default function OrderSummaryPanel({ isCOD = false }: { isCOD?: boolean }
       >
         {items.map((item) => (
           <div key={item.id} className="flex items-center gap-3 py-3">
-            {/* Image / Emoji placeholder */}
-            {/* REPLACE with actual product image */}
+            {/* Product image with emoji fallback */}
             <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0 relative"
+              className="w-12 h-12 rounded-xl flex items-center justify-center text-xl flex-shrink-0 relative overflow-hidden"
               style={{
                 background: "var(--color-cream)",
                 border: "1px solid rgba(200,150,12,0.15)",
               }}
             >
-              {item.emoji}
+              {item.imageUrl ? (
+                <Image
+                  src={item.imageUrl}
+                  alt={item.name}
+                  fill
+                  className="object-cover"
+                  sizes="48px"
+                />
+              ) : (
+                <span>{item.emoji}</span>
+              )}
               {/* Quantity badge */}
               <span
-                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center font-dm-sans text-xs font-bold text-white"
+                className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center font-dm-sans text-xs font-bold text-white z-10"
                 style={{ background: "var(--color-crimson)" }}
               >
                 {item.quantity}
