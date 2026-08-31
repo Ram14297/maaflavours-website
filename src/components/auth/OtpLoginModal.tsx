@@ -67,7 +67,7 @@ export default function OtpLoginModal({
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [profileError, setProfileError] = useState("");
-  const [loggedInUser, setLoggedInUser] = useState<{ name: string; email: string } | null>(null);
+  const [loggedInUser, setLoggedInUser] = useState<{ name: string; email: string; isNewUser: boolean } | null>(null);
   const [loading, setLoading] = useState(false);
   const [resendKey, setResendKey] = useState(0);
 
