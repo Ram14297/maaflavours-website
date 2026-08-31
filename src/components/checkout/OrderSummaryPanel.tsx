@@ -97,7 +97,7 @@ export default function OrderSummaryPanel({ isCOD = false }: { isCOD?: boolean }
               {item.imageUrl ? (
                 <Image
                   src={item.imageUrl}
-                  alt={item.name}
+                  alt={item.productName}
                   fill
                   className="object-cover"
                   sizes="48px"
