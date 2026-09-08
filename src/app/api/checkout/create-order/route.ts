@@ -349,35 +349,67 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Create order row (schema column names)
-      const { data: newOrder, error: orderError } = await adminSupa
-        .from("orders")
-        .insert({
-          customer_id:      resolvedCustomerId,
-          shipping_address: deliveryAddress,        // JSONB snapshot
-          status:           "pending",
-          payment_status:   "pending",
-          payment_method:   paymentMethod,          // cashfree | phonepe_qr | cod
-          subtotal,
-          discount:         0,                      // Product-level discounts (future)
-          coupon_discount:  couponDiscount,
-          delivery_charge:  deliveryCharge,
-          cod_charge:       codCharge,
-          total,
-          coupon_code:      appliedCoupon?.code || null,
-          cgst_rate:        isIntraState ? CGST_RATE  : 0,
-          sgst_rate:        isIntraState ? SGST_RATE  : 0,
-          igst_rate:        isIntraState ? 0 : IGST_RATE,
-          cgst_amount:      cgstAmount,
-          sgst_amount:      sgstAmount,
-          igst_amount:      igstAmount,
-          customer_notes:   customerNotes || null,
-        })
-        .select("id")
-        .single();
+      const orderFields = {
+        customer_id:      resolvedCustomerId,
+        shipping_address: deliveryAddress,        // JSONB snapshot
+        status:           "pending",
+        payment_status:   "pending",
+        payment_method:   paymentMethod,          // cashfree | phonepe_qr | cod
+        subtotal,
+        discount:         0,                      // Product-level discounts (future)
+        coupon_discount:  couponDiscount,
+        delivery_charge:  deliveryCharge,
+        cod_charge:       codCharge,
+        total,
+        coupon_code:      appliedCoupon?.code || null,
+        cgst_rate:        isIntraState ? CGST_RATE  : 0,
+        sgst_rate:        isIntraState ? SGST_RATE  : 0,
+        igst_rate:        isIntraState ? 0 : IGST_RATE,
+        cgst_amount:      cgstAmount,
+        sgst_amount:      sgstAmount,
+        igst_amount:      igstAmount,
+        customer_notes:   customerNotes || null,
+      };
 
-      if (orderError) throw orderError;
-      supabaseOrderId = newOrder.id;
+      // ── Idempotency: reuse a still-unpaid order from the same customer's
+      // last 30 minutes instead of creating a new row every retry. Without
+      // this, a failed/retried payment (e.g. gateway declines, user retries)
+      // creates a fresh "pending" order each time, littering the order list
+      // with duplicates that all show the same cart.
+      let reusedOrderId: string | null = null;
+      if (session?.userId) {
+        const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+        const { data: recentPending } = await adminSupa
+          .from("orders")
+          .select("id")
+          .eq("customer_id", session.userId)
+          .eq("status", "pending")
+          .eq("payment_status", "pending")
+          .gt("created_at", thirtyMinAgo)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (recentPending?.id) reusedOrderId = recentPending.id;
+      }
+
+      if (reusedOrderId) {
+        const { error: updateErr } = await adminSupa
+          .from("orders")
+          .update(orderFields)
+          .eq("id", reusedOrderId);
+        if (updateErr) throw updateErr;
+        supabaseOrderId = reusedOrderId;
+        // Replace line items — cart may have changed between retries
+        await adminSupa.from("order_items").delete().eq("order_id", reusedOrderId);
+      } else {
+        const { data: newOrder, error: orderError } = await adminSupa
+          .from("orders")
+          .insert(orderFields)
+          .select("id")
+          .single();
+        if (orderError) throw orderError;
+        supabaseOrderId = newOrder.id;
+      }
 
       // Create order_items rows
       if (supabaseOrderId && validatedItems[0].productId) {
