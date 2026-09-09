@@ -24,19 +24,17 @@ const PAYMENT_METHODS: {
   tagColor?: string;
   codCharge?: boolean;
 }[] = [
-  {
-    id: "cashfree",
-    label: "UPI / Card / Net Banking",
-    subtitle: "GPay, PhonePe, Paytm, BHIM, Credit/Debit Card, Net Banking — all in one",
-    icon: <span className="text-xl">💳</span>,
-    tag: "Recommended",
-    tagColor: "#2D6A4F",
-  },
+  // "cashfree" temporarily removed from the list — Cashfree permanently
+  // blocked this merchant account (business category not supported).
+  // Do not delete the "cashfree" case in handleSubmit/handleCashfreePayment
+  // below — re-add this entry if a working gateway is set up again.
   {
     id: "phonepe_qr",
     label: "PhonePe / UPI QR Code",
     subtitle: "Scan QR with any UPI app → pay → enter transaction ID",
     icon: <span className="text-xl font-bold" style={{ color: "#5F259F" }}>₹</span>,
+    tag: "Recommended",
+    tagColor: "#2D6A4F",
   },
   {
     id: "cod",
