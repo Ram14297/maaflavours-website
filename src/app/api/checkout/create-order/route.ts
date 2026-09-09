@@ -561,65 +561,27 @@ export async function POST(request: NextRequest) {
     }
 
     // ─── 7. PhonePe QR — manual UPI scan ────────────────────────────────────
-    // Customer scans QR, pays, then enters their UPI transaction ID (stored in
-    // customerNotes). We confirm immediately — admin verifies the txn ID in
-    // PhonePe before dispatching. Same post-processing as COD.
+    // Customer scans QR, pays, then self-types a UPI ID/txn ID (stored in
+    // customerNotes) — this is UNVERIFIED input, not a real payment
+    // confirmation (no gateway webhook exists for this manual flow). So the
+    // order stays "pending" / payment_status "pending": no stock deducted, no
+    // Shiprocket push, no "Order Confirmed" SMS/email yet. Admin must check
+    // the actual PhonePe/bank app and tap "Verify Payment & Confirm Order" in
+    // the admin order detail page — that's what triggers stock deduction,
+    // Shiprocket push, and the real confirmation SMS/email (see
+    // /api/admin/orders/[orderId]/verify-payment).
     if (paymentMethod === "phonepe_qr") {
       if (supabaseOrderId && !supabaseOrderId.startsWith("DEV-")) {
-        try {
-          await adminSupa.from("orders").update({
-            status:         "confirmed",
-            payment_status: "paid",
-          }).eq("id", supabaseOrderId);
-          console.log("[create-order] PhonePe QR order confirmed:", supabaseOrderId);
-        } catch (e: any) {
-          console.error("[create-order] PhonePe QR confirm failed:", e.message);
-        }
-
-        // Deduct stock
-        await decrementStock(adminSupa, validatedItems);
-
-        // Notify admin (UPI txn ID is in customerNotes / the order record)
+        // Notify admin a new order needs manual payment verification
         await notifyAdmin(
-          adminSupa, supabaseOrderId, deliveryAddress.name, total, "phonepe_qr"
+          adminSupa, supabaseOrderId, deliveryAddress.name, total, "phonepe_qr (pending verification)"
         ).catch(() => {});
 
-        // Push to Shiprocket (non-fatal — fire and forget)
-        pushOrderToShiprocket(supabaseOrderId).catch(() => {});
-
-        // Notify customer via SMS
+        // Let the customer know their order was received and is being verified
         await notifyCustomerSMS(
           deliveryAddress.mobile,
-          msgOrderConfirmed(
-            deliveryAddress.name,
-            shortOrderId(supabaseOrderId),
-            Math.round(total / 100),
-            "phonepe_qr"
-          )
+          `Hi ${deliveryAddress.name}, we've received your Maa Flavours order (${shortOrderId(supabaseOrderId)}) for ₹${Math.round(total / 100)}. We're verifying your payment and will confirm shortly.`
         ).catch(() => {});
-
-        // ── Notify customer via Email ──────────────────────────────────────
-        const customerEmailQr = session?.email || "";
-        if (customerEmailQr) {
-          const { data: orderRowQr } = await adminSupa
-            .from("orders").select("order_number").eq("id", supabaseOrderId).maybeSingle();
-          const addrLineQr = [deliveryAddress.address_line1, deliveryAddress.address_line2, deliveryAddress.landmark, deliveryAddress.city, deliveryAddress.state, deliveryAddress.pincode].filter(Boolean).join(", ");
-          await sendOrderConfirmedEmail({
-            to:          customerEmailQr,
-            name:        deliveryAddress.name,
-            orderNumber: orderRowQr?.order_number || shortOrderId(supabaseOrderId),
-            orderId:     supabaseOrderId,
-            items:       validatedItems.map(i => ({
-              product_name:  i.productName,
-              variant_label: i.variantLabel,
-              quantity:      i.quantity,
-              total_price:   i.totalPrice,
-            })),
-            total,
-            method:  "phonepe_qr",
-            address: addrLineQr,
-          }).catch(() => {});
-        }
       }
 
       return NextResponse.json({

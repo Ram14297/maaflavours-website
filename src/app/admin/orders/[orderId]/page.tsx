@@ -67,6 +67,7 @@ export default function OrderDetailPage() {
   const [srPushing,    setSrPushing]    = useState(false);
   const [srSuccess,    setSrSuccess]    = useState("");
   const [markingPaid,  setMarkingPaid]  = useState(false);
+  const [verifyingUpi, setVerifyingUpi] = useState(false);
 
   const loadOrder = useCallback(async () => {
     setLoading(true);
@@ -193,6 +194,23 @@ export default function OrderDetailPage() {
       setData((prev: any) => ({ ...prev, order: { ...prev.order, payment_status: "paid" } }));
     }
     setMarkingPaid(false);
+  }
+
+  async function verifyUpiPayment() {
+    setVerifyingUpi(true); setError(""); setSuccess("");
+    try {
+      const r = await fetch(`/api/admin/orders/${orderId}/verify-payment`, { method: "POST" });
+      const d = await r.json();
+      if (!r.ok) {
+        setError(d.error || "Failed to verify payment");
+      } else {
+        setSuccess("✅ Payment verified — order confirmed, stock deducted, pushed to Shiprocket");
+        loadOrder();
+      }
+    } catch {
+      setError("Failed to verify payment");
+    }
+    setVerifyingUpi(false);
   }
 
   async function copyWa() {
@@ -705,6 +723,25 @@ export default function OrderDetailPage() {
                   </Btn>
                   <p style={{ fontSize:10, color:A.grey, textAlign:"center", marginTop:4 }}>
                     Tap when cash is received from the customer
+                  </p>
+                </div>
+              )}
+              {/* PhonePe QR — manual payment verification (self-reported UPI ID, unverified) */}
+              {order.payment_method === "phonepe_qr" && order.payment_status !== "paid" && (
+                <div className="pt-2 border-t" style={{ borderColor:A.border }}>
+                  <Alert type="warning">
+                    Customer's UPI ID is self-reported — not verified by any gateway. Check your PhonePe/bank app for a matching payment before confirming.
+                  </Alert>
+                  <Btn
+                    onClick={verifyUpiPayment}
+                    loading={verifyingUpi}
+                    className="w-full justify-center mt-2"
+                    style={{ background:"rgba(95,37,159,0.1)", color:"#5F259F", border:"1px solid rgba(95,37,159,0.3)" } as any}
+                  >
+                    ✅ Verify Payment &amp; Confirm Order
+                  </Btn>
+                  <p style={{ fontSize:10, color:A.grey, textAlign:"center", marginTop:4 }}>
+                    Confirms order, deducts stock, pushes to Shiprocket, notifies customer
                   </p>
                 </div>
               )}

@@ -1,8 +1,8 @@
 # CLAUDE.md — Project Bible
-_Last updated: 2026-06-06_
+_Last updated: 2026-09-08_
 
 ## Project Overview
-**Maa Flavours** is a live e-commerce website selling authentic Andhra homemade pickles and spice powders, run by Ram from Ongole, AP. The site handles the full order lifecycle: product browsing → checkout (COD / PhonePe QR / Cashfree) → Shiprocket shipping integration → customer SMS + email notifications → admin order management. The project is in active production with real orders; the launch offer ended May 31st and all prices are now at original MRP. Admin notifications (new orders) go via CallMeBot WhatsApp API.
+**Maa Flavours** is a live e-commerce website selling authentic Andhra homemade pickles and spice powders, run by Ram from Ongole, AP. The site handles the full order lifecycle: product browsing → checkout (COD / PhonePe QR — Cashfree currently disabled, see "Known Issue" below) → Shiprocket shipping integration → customer SMS + email notifications → admin order management. The project is in active production with real orders; the launch offer ended May 31st and all prices are now at original MRP. Admin notifications (new orders) go via CallMeBot WhatsApp API.
 
 Live at: **https://maaflavours.com**
 Admin panel: **https://maaflavours.com/admin**
@@ -291,11 +291,13 @@ Email fonts: **Cormorant Garamond** (headings) + **Lato** (body)
 
 | Priority | Status | Task | Notes |
 |----------|--------|------|-------|
+| **P0** | ⏳ | **GST registration** | **CRITICAL — now blocking revenue, not just "someday" compliance.** Cashfree permanently blocked the merchant account (official email: "our payment gateway is not supported for your business") — most likely reason is no GST. Steps: (1) Register free at gst.gov.in as Proprietorship, PAN + Aadhaar + address proof + bank proof; (2) Address proof workaround since renting with electricity bill in landlord's name and no rent agreement — use a **Consent Letter** (drafted, landlord just needs to sign) + existing electricity bill (fine even in owner's name) + landlord's ID copy; (3) Aadhaar e-KYC verification, ~3–7 working days; (4) Ask a local CA (₹1,500–3,000) about **Composition Scheme** for lower compliance given small revenue; (5) Once approved, reapply to Cashfree or a similar gateway for online payments again. |
 | P1 | ⏳ | Add Tomato Pickle (1KG) to website | ₹799; came through phone orders Jun 6 |
 | P1 | ⏳ | Add Chitla Podi (500g) to website | ₹379 per 500g jar; confirm 250g price |
 | P1 | ⏳ | Add Maagaya (Mango pickle variant, 500g) | ₹479; confirm other sizes |
 | P1 | ⏳ | Set up Google Reviews on website | Code ready in `src/lib/google-reviews.ts`. Add `GOOGLE_PLACES_API_KEY` + `GOOGLE_PLACE_ID` to Vercel. Find Place ID: developers.google.com/maps/documentation/javascript/examples/places-placeid-finder |
-| P1 | ⏳ | GST registration | Urgent — needed before selling on Amazon |
+| P2 | ⏳ | Google Ads promo | ₹20,000 ad credit when you spend ₹20,000 (new-advertiser offer, standing offer not time-limited). Deferred until payment gateway is reliable again — no point driving paid traffic to a broken checkout. |
+| P2 | ⏳ | Zone-based delivery rate accuracy | Current flat zone rates (₹89/₹149/₹189) may not match actual Shiprocket cost — user reported paying ₹80–250 for Bangalore/Telangana in practice. Revisit rates once more real shipment data is available; consider Shiprocket's live rate API long-term. |
 | P2 | ⏳ | Post-delivery feedback message | SMS+email ~1 day after delivery, asking how they liked the pickles. Needs: timing (immediate vs 1 day), feedback link (Google Form vs WhatsApp reply), specific questions. Not started. |
 | P2 | ⏳ | WhatsApp Cloud API | Replace Fast2SMS with Meta's WhatsApp Cloud API. Needs Meta Business verification (GST docs + Facebook Business Manager + dedicated phone number). User deferred to "a few days". |
 | P2 | ⏳ | Blog content | `/blog` shows "Coming Soon". Need actual posts. |
@@ -303,6 +305,16 @@ Email fonts: **Cormorant Garamond** (headings) + **Lato** (body)
 | P3 | ⏳ | DTDC commercial account | Visit Ongole office for ₹60/kg AP rate |
 
 ---
+
+## Known Issue: Cashfree Permanently Blocked (2026-09-08)
+
+Cashfree sent an official account-block email: *"our payment gateway is not supported for your business... this has led to the blocking of your Cashfree Payments account."* Confirmed genuine (DKIM/SPF/DMARC all pass, from `gocashfree.com`). This is **not a bug, not a config issue, not reversible by re-verification** — settlement balance was refunded to bank as final closure.
+
+**Root cause (most likely):** No GST registration — payment aggregators increasingly require registered business entities under RBI PA-PG compliance.
+
+**Fix applied:** Removed the "UPI / Card / Net Banking" (Cashfree) option from checkout UI (`src/components/checkout/PaymentOptions.tsx`) and made **PhonePe QR the default + recommended** payment method. Cashfree code (`handleCashfreePayment`, `cashfree-create` API route) left intact but unused — re-enable once GST is done and either Cashfree re-approves or a new gateway is set up.
+
+**Currently working payment methods:** PhonePe QR (manual) + Cash on Delivery. Online card/UPI-via-Cashfree is down until GST registration is complete.
 
 ## Known Issues & Workarounds
 
