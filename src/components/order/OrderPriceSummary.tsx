@@ -41,6 +41,7 @@ export default function OrderPriceSummary({
 
   const isPaid = paymentStatus === "paid" || paymentMethod === "cod";
   const isCOD = paymentMethod === "cod";
+  const isVerifying = paymentMethod === "phonepe_qr" && !isPaid;
 
   const rows = [
     {
@@ -126,13 +127,13 @@ export default function OrderPriceSummary({
         <div
           className="mt-3 px-4 py-3 rounded-xl flex items-center gap-3"
           style={{
-            background: isCOD
+            background: isCOD || isVerifying
               ? "rgba(200,150,12,0.06)"
               : isPaid
               ? "rgba(46,125,50,0.07)"
               : "rgba(192,39,45,0.06)",
             border: `1px solid ${
-              isCOD
+              isCOD || isVerifying
                 ? "rgba(200,150,12,0.2)"
                 : isPaid
                 ? "rgba(46,125,50,0.2)"
@@ -147,7 +148,7 @@ export default function OrderPriceSummary({
             <p
               className="font-dm-sans font-semibold text-sm"
               style={{
-                color: isCOD
+                color: isCOD || isVerifying
                   ? "var(--color-gold)"
                   : isPaid
                   ? "#2E7D32"
@@ -158,8 +159,18 @@ export default function OrderPriceSummary({
                 ? "Cash on Delivery"
                 : isPaid
                 ? "Payment Confirmed"
+                : isVerifying
+                ? "Payment received, verifying"
                 : "Payment Pending"}
             </p>
+            {isVerifying && (
+              <p
+                className="font-dm-sans text-xs mt-0.5"
+                style={{ color: "var(--color-grey)" }}
+              >
+                We're confirming your UPI payment. This usually takes a few hours.
+              </p>
+            )}
             {paymentId && (
               <p
                 className="font-dm-sans text-xs mt-0.5"
